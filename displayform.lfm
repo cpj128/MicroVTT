@@ -1,0 +1,32 @@
+object fmDisplay: TfmDisplay
+  Left = 997
+  Height = 768
+  Top = 55
+  Width = 1024
+  BorderIcons = [biMaximize]
+  Caption = 'Display'
+  Constraints.MinHeight = 768
+  Constraints.MinWidth = 1024
+  KeyPreview = True
+  OnCloseQuery = FormCloseQuery
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  OnKeyUp = FormKeyUp
+  OnPaint = FormPaint
+  OnResize = FormResize
+  OnShow = FormShow
+  LCLVersion = '2.2.4.0'
+  object tMapAnim: TTimer
+    Enabled = False
+    Interval = 20
+    OnTimer = tMapAnimTimer
+    Left = 39
+    Top = 30
+  end
+  object tTokenAnim: TTimer
+    Interval = 20
+    OnTimer = tTokenAnimTimer
+    Left = 112
+    Top = 32
+  end
+end
