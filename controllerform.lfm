@@ -3,7 +3,7 @@ object fmController: TfmController
   Height = 900
   Top = 121
   Width = 1597
-  Caption = 'RPG Presenter'
+  Caption = 'MicroVTT'
   ClientHeight = 900
   ClientWidth = 1597
   KeyPreview = True

@@ -15,6 +15,7 @@ uses
 
 begin
   RequireDerivedFormResource:=True;
+  Application.Title:='MicroVTT';
   Application.Scaled:=True;
   Application.Initialize;
   Application.CreateForm(TfmController, fmController);

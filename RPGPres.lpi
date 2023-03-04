@@ -8,12 +8,14 @@
         <CompatibilityMode Value="True"/>
       </Flags>
       <SessionStorage Value="InProjectDir"/>
-      <Title Value="RPGPres"/>
+      <Title Value="MicroVTT"/>
       <Scaled Value="True"/>
       <ResourceType Value="res"/>
       <UseXPManifest Value="True"/>
       <XPManifest>
         <DpiAware Value="True"/>
+        <TextName Value="MicroVTT"/>
+        <TextDesc Value="A minimalistic VTT for local play."/>
       </XPManifest>
       <Icon Value="0"/>
       <Resources Count="2">
