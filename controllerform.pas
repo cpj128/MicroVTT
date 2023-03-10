@@ -66,6 +66,7 @@ type
     tbLibrary: TToolButton;
     tbLoadSession: TToolButton;
     tbSaveSession: TToolButton;
+    tbShowMap: TToolButton;
     tvTokens: TTreeView;
     procedure bFullscreenClick(Sender: TObject);
     procedure bRefreshMapsClick(Sender: TObject);
@@ -114,6 +115,7 @@ type
     procedure tbSaveSessionClick(Sender: TObject);
     procedure tbSettingsClick(Sender: TObject);
     procedure tbShowGridClick(Sender: TObject);
+    procedure tbShowMapClick(Sender: TObject);
     procedure tbSnapTokensToGridClick(Sender: TObject);
     procedure tvTokensDeletion(Sender: TObject; Node: TTreeNode);
     procedure tvTokensDragOver(Sender, Source: TObject; X, Y: Integer;
@@ -142,6 +144,7 @@ type
     FOldGridType: TGridType;
     FOldGridColor: TColor;
     FMarkerPosX, FMarkerPosY: Integer; // In MapPic-coordinates
+    FShowMap: Boolean;
     FShowMarker: Boolean;
     FShowTokens: Boolean;
     FCombatMode: Boolean;
@@ -192,6 +195,7 @@ type
     property MapDir: string read FMapDir;
     property TokenDir: string read FTokenDir;
     property OverlayDir: string read FOverlayDir;
+    property ShowMap: Boolean read FShowMap;
     property ShowMarker: Boolean read FShowMarker;
     property ShowGrid: Boolean read FShowGrid;
     property ShowTokens: Boolean read FShowTokens;
@@ -257,6 +261,7 @@ begin
   tbSaveSession.Hint := GetString(LangStrings.LanguageID, 'ControllerSaveHint');
 
   tbFullScreen.Hint := GetString(LangStrings.LanguageID, 'ControllerFullscreenHint');
+  tbShowMap.Hint := GetString(LangStrings.LanguageID, 'ControllerHideMapHint');
   tbShowgrid.Hint := GetString(LangStrings.LanguageID, 'ControllerToggleGridHint');
   tbGridSettings.Hint := GetString(LangStrings.LanguageID, 'ControllerGridSettingsHint'); 
   tbSnapTokensToGrid.Hint := GetString(LangStrings.LanguageID, 'ControllerSnapToGridHint');
@@ -1137,6 +1142,12 @@ begin
   pbViewPort.Invalidate;
 end;
 
+procedure TfmController.tbShowMapClick(Sender: TObject);
+begin
+  FShowMap := tbShowMap.Down;
+  fmDisplay.Invalidate;
+end;
+
 procedure TfmController.tbSnapTokensToGridClick(Sender: TObject);
 var i: Integer;
 begin
@@ -1540,6 +1551,7 @@ begin
   FGridSizeX := 100;
   FGridSizeY := 100;
   FGridColor := clSilver;
+  FShowMap := False;
   FShowGrid := True;
   FGridType := gtRect;
   FShowMarker := False;
@@ -1632,8 +1644,12 @@ begin
   i := 0;
   FullPic := TBGRABitmap.Create(0, 0);
   while (not Terminated) and (i < FFileList.Count) do
-  begin  
-    FullPic.LoadFromFile(FFileList[i]);
+  begin
+    try
+      FullPic.LoadFromFile(FFileList[i]);
+    except
+
+    end;
     try
       ScaledPic := FullPic.Resample(Thumbnail.Width, Thumbnail.Height, rmSimpleStretch);
       ScaledPic.Draw(Thumbnail.Canvas, Rect(0, 0, Thumbnail.Width, Thumbnail.Height));

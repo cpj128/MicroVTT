@@ -124,8 +124,11 @@ procedure TfmDisplay.SetMapFile(FileName: string);
 begin
   FMapFileName := FileName;
   if FileExists(FileName) and MatchText(ExtractFileExt(FileName), ['.jpg', '.jpeg', '.png', '.bmp', '.webp']) then
+  try
     FMapPic.LoadFromFile(FileName);
-  Invalidate;
+  finally
+    Invalidate;
+  end;
 end;
 
 procedure TfmDisplay.FormCloseQuery(Sender: TObject; var CanClose: boolean);
@@ -289,7 +292,12 @@ procedure TfmDisplay.SetPortraitFile(FileName: string);
 begin
   FPortraitFile := FileName;
   if FileExists(FileName) and MatchText(ExtractFileExt(FileName), ['.jpg', '.jpeg', '.png', '.bmp', '.webp']) then
-    FPortrait.LoadFromFile(FileName)
+  begin
+    try
+      FPortrait.LoadFromFile(FileName);
+    finally
+    end;
+  end
   else if Assigned(FPortrait) then
   begin
     FPortrait.Free;
@@ -392,193 +400,195 @@ begin
     FMapFrame.Draw(Canvas, ClipRect.Left - FRAMESIZE, ClipRect.Top - FRAMESIZE, False);
 
   // Map
-  MapWidth := ClientWidth - VMARGIN - VMARGIN - PORTRAITHEIGHT - VMARGIN;
-  MapHeight := ClientHeight - HMARGIN - HMARGIN;
-  // MapRect: Rectangle we want to fill with our map, might be smaller than MapWidth * MapHeight
-  MapRect := Bounds(HMARGIN, VMARGIN, Round(Min(MapWidth, FMapPic.Width * FMapZoom)), Round(Min(MapHeight, FMapPic.Height * FMapZoom)));
-  // We need to trim MapSegment to match the aspect ratio
-  MapSegment := TBGRABitmap.Create(Round(MapRect.Width / FMapZoom), Round(MapRect.Height / FMapZoom));
-  try
-    MapSegment.Canvas.Brush.Style := bsClear;
-    MapSegment.Canvas.Pen.Color := clBlack;
-    MapSegment.Canvas.FillRect(0, 0, MapSegment.Width, MapSegment.Height);
-    if Assigned(FMapPic) then
-    begin
+  if fmController.ShowMap then
+  begin
+    MapWidth := ClientWidth - VMARGIN - VMARGIN - PORTRAITHEIGHT - VMARGIN;
+    MapHeight := ClientHeight - HMARGIN - HMARGIN;
+    // MapRect: Rectangle we want to fill with our map, might be smaller than MapWidth * MapHeight
+    MapRect := Bounds(HMARGIN, VMARGIN, Round(Min(MapWidth, FMapPic.Width * FMapZoom)), Round(Min(MapHeight, FMapPic.Height * FMapZoom)));
+    // We need to trim MapSegment to match the aspect ratio
+    MapSegment := TBGRABitmap.Create(Round(MapRect.Width / FMapZoom), Round(MapRect.Height / FMapZoom));
+    try
+      MapSegment.Canvas.Brush.Style := bsClear;
+      MapSegment.Canvas.Pen.Color := clBlack;
+      MapSegment.Canvas.FillRect(0, 0, MapSegment.Width, MapSegment.Height);
+      if Assigned(FMapPic) then
+      begin
 
-      MapSegment.Canvas.CopyRect(Rect(0, 0, MapSegment.Width, MapSegment.Height),
-                                 FMapPic.Canvas,
-                                 Bounds(Round(FMapOffsetX / FMapZoom), Round(FMapOffsetY / FMapZoom), MapSegment.Width, MapSegment.Height));
+        MapSegment.Canvas.CopyRect(Rect(0, 0, MapSegment.Width, MapSegment.Height),
+                                   FMapPic.Canvas,
+                                   Bounds(Round(FMapOffsetX / FMapZoom), Round(FMapOffsetY / FMapZoom), MapSegment.Width, MapSegment.Height));
 
-      try
-        if FMapZoom > 1 then
-          MapSegment.ResampleFilter := rfSpline
-        else
-          MapSegment.ResampleFilter := rfMitchell;
-        MapSegmentStretched := MapSegment.Resample(MapRect.Width, MapRect.Height, rmSimpleStretch);
+        try
+          if FMapZoom > 1 then
+            MapSegment.ResampleFilter := rfSpline
+          else
+            MapSegment.ResampleFilter := rfMitchell;
+          MapSegmentStretched := MapSegment.Resample(MapRect.Width, MapRect.Height, rmSimpleStretch);
 
-        // Grid
-        if fmController.ShowGrid then
-        begin
-          case FGridType of
-            gtRect:
-            begin
-              // Horizontal lines
-              for i := 0 to Ceil(((FMapPic.Height - (FGridOffsetY mod FGridSizeY)) / FGridSizeY)) do
-              begin
-                CurGridPos := Round((FGridOffsetY + i * FGridSizeY) * FMapZoom - FMapOffsetY);
-                if InRange(CurGridPos, 0, MapHeight) then
-                begin
-                  MapSegmentStretched.DrawLineAntialias(0, CurGridPos,
-                                                        MapSegmentStretched.Width, CurGridPos,
-                                                        FGridColor, 1);
-                end;
-              end;
-              // Vertical lines
-              for i := 0 to Ceil(((FMapPic.Width - (FGridOffsetX mod FGridSizeX)) / FGridSizeX)) do
-              begin
-                CurGridPos := Round((FGridOffsetX + i * FGridSizeX) * FMapZoom - FMapOffsetX);
-                if InRange(CurGridPos, 0, MapWidth) then
-                begin
-                  MapSegmentStretched.DrawLineAntialias(CurGridPos, 0,
-                                                        CurGridPos, MapSegmentStretched.Height,
-                                                        FGridColor, 1);
-                end;
-              end;
-
-            end;
-            gtHexH:
-            begin
-              tmpGridSize := FGridSizeY  * 3 / 4;
-              for i := 0 to Ceil(((FMapPic.Height - (FGridOffsetY mod tmpGridSize)) / tmpGridSize)) do
-                for j := 0 to Ceil(((FMapPic.Width - (FGridOffsetX mod FGridSizeX)) / FGridSizeX)) do
-                begin
-                  CellRect := Rect(Round((FGridOffsetX + j * FGridSizeX) * FMapZoom - FMapOffsetX),
-                                   Round((FGridOffsetY + i * tmpGridSize) * FMapZoom - FMapOffsetY),
-                                   Round((FGridOffsetX + (j + 1) * FGridSizeX) * FMapZoom - FMapOffsetX),
-                                   Round((FGridOffsetY + i * tmpGridSize + FGridSizeY) * FMapZoom - FMapOffsetY));
-                  if Odd(i) then
-                    CellRect.Offset(Round(FGridSizeX  * FMapZoom / 2), 0);
-                  Hex[0] := Point(CellRect.Left, CellRect.Bottom - CellRect.Height div 4);
-                  Hex[1] := Point(CellRect.Left, CellRect.Top + CellRect.Height div 4);
-                  Hex[2] := Point(CellRect.Left + CellRect.Width div 2, CellRect.Top);
-                  Hex[3] := Point(CellRect.Right, CellRect.Top + CellRect.Height div 4);
-                  Hex[4] := Point(CellRect.Right, CellRect.Bottom - CellRect.Height div 4);
-                  Hex[5] := Point(CellRect.Left + CellRect.Width div 2, CellRect.Bottom);
-                  MapSegmentStretched.DrawPolygonAntialias(Hex, FGridColor, 1, BGRAPixelTransparent);
-                end;
-            end;
-            gtHexV:
-            begin
-              tmpGridSize := FGridSizeX  * 3 / 4;
-              for i := 0 to Ceil(((FMapPic.Height - (FGridOffsetY mod FGridSizeY)) / FGridSizeY)) do
-                for j := 0 to Ceil(((FMapPic.Width - (FGridOffsetX mod tmpGridSize)) / tmpGridSize)) do
-                begin
-                  CellRect := Rect(Round((FGridOffsetX + j * tmpGridSize) * FMapZoom - FMapOffsetX),
-                                   Round((FGridOffsetY + i * FGridSizeY) * FMapZoom - FMapOffsetY),
-                                   Round((FGridOffsetX + j * tmpGridSize + FGridSizeX) * FMapZoom - FMapOffsetX),
-                                   Round((FGridOffsetY + (i + 1) * FGridSizeY) * FMapZoom - FMapOffsetY));
-                  if Odd(j) then
-                    CellRect.Offset(0, Round(FGridSizeY  * FMapZoom / 2));
-                  Hex[0] := Point(CellRect.Left, CellRect.Top + CellRect.Height div 2);
-                  Hex[1] := Point(CellRect.Left + CellRect.Width div 4, CellRect.Top);
-                  Hex[2] := Point(CellRect.Right - CellRect.Width div 4, CellRect.Top);
-                  Hex[3] := Point(CellRect.Right, CellRect.Top + CellRect.Height div 2);
-                  Hex[4] := Point(CellRect.Right - CellRect.Width div 4, CellRect.Bottom);
-                  Hex[5] := Point(CellRect.Left + CellRect.Width div 4, CellRect.Bottom);
-                  MapSegmentStretched.DrawPolygonAntialias(Hex, FGridColor, 1, BGRAPixelTransparent);
-                end;
-            end;
-          end;
-        end;
-
-        // Marker
-        if fmController.ShowMarker then
-        begin
-          Canvas.Pen.Color := clRed;
-          Canvas.Pen.Width := 2;
-          Canvas.Brush.Style := bsClear;
-          CurMarkerX := FMarkerX * FMapZoom - FMapOffsetX;
-          CurMarkerY := FMarkerY * FMapZoom - FMapOffsetY;
-          if InRange(CurMarkerX, 0, MapWidth) and InRange(CurMarkerY, 0, MapHeight) then
+          // Grid
+          if fmController.ShowGrid then
           begin
-            MapSegmentStretched.EllipseAntialias(CurMarkerX, CurMarkerY, 10, 10, clRed, 2, BGRAPixelTransparent);
-
-            MapSegmentStretched.DrawLineAntialias(CurMarkerX - 15, CurMarkerY, CurMarkerX - 5, CurMarkerY, clRed, 2);
-            MapSegmentStretched.DrawLineAntialias(CurMarkerX + 5, CurMarkerY, CurMarkerX + 15, CurMarkerY, clRed, 2);
-
-            MapSegmentStretched.DrawLineAntialias(CurMarkerX, CurMarkerY - 15, CurMarkerX, CurMarkerY - 5, clRed, 2);
-            MapSegmentStretched.DrawLineAntialias(CurMarkerX, CurMarkerY + 5, CurMarkerX, CurMarkerY + 15, clRed, 2);
-          end;
-        end;
-
-        // Token
-        if fmController.ShowTokens then
-        begin
-          for i := 0 to fmController.GetTokenCount - 1 do
-          begin
-            CurToken := fmController.GetToken(i);
-            if CurToken.Visible then
-            begin
-              CurTokenPosX := Round(CurToken.XPos * FMapZoom - FMapOffsetX - (FMapZoom * CurToken.Width / 2));
-              CurTokenPosY := Round(CurToken.YPos * FMapZoom - FMapOffsetY - (FMapZoom * CurToken.Height / 2));
-              TokenRect := Bounds(CurTokenPosX, CurTokenPosY,
-                                  Round(CurToken.Width * FMapZoom),
-                                  Round(CurToken.Height * FMapZoom));
-
-              TokenBmp := CurToken.Glyph.Resample(Round(CurToken.Width), Round(CurToken.Height), rmSimpleStretch);
-              try         
-                BoundingRect := CurToken.GetBoundingRect;
-                Rotation := TBGRAAffineBitmapTransform.Create(TokenBmp);
-                Rotation.Translate(-TokenBmp.Width / 2, -TokenBmp.Height / 2);
-                Rotation.RotateRad(CurToken.Angle);
-                //Rotation.Translate(Hypot(CurToken.Width, CurToken.Height) * SQRT05, Hypot(CurToken.Width, CurToken.Height) * SQRT05);
-                Rotation.Translate(BoundingRect.Width / 2, BoundingRect.Height / 2); 
-                Rotation.Scale(FMapZoom, FMapZoom);
-                try
-                  //RotatedBmp := TBGRABitmap.Create(Round(Hypot(CurToken.Width, CurToken.Height) * SQRT2),
-                  //                                 Round(Hypot(CurToken.Width, CurToken.Height) * SQRT2));
-                  RotatedBmp := TBGRABitmap.Create(Round(BoundingRect.Width * FMapZoom),
-                                               Round(BoundingRect.Height * FMapZoom));
-                  RotatedBmp.Fill(Rotation, dmDrawWithTransparencY);
-                  RotatedRect := Bounds(TokenRect.Left - RotatedBmp.Width div 2 + Round(TokenBmp.Width * FMapZoom / 2),
-                                        TokenRect.Top - RotatedBmp.Height div 2 + Round(TokenBmp.Height * FMapZoom / 2),
-                                        RotatedBmp.Width,
-                                        RotatedBmp.Height);
-                  // Add overlay
-                  OverlayBmp := fmController.GetOverlay(CurToken.OverlayIdx);
-                  if Assigned(OverlayBmp) then
+            case FGridType of
+              gtRect:
+              begin
+                // Horizontal lines
+                for i := 0 to Ceil(((FMapPic.Height - (FGridOffsetY mod FGridSizeY)) / FGridSizeY)) do
+                begin
+                  CurGridPos := Round((FGridOffsetY + i * FGridSizeY) * FMapZoom - FMapOffsetY);
+                  if InRange(CurGridPos, 0, MapHeight) then
                   begin
-                    OverlayScaled := OverlayBmp.Resample(Round(OverlayBmp.Width * FMapZoom), Round(OverlayBmp.Height  * FMapZoom), rmSimpleStretch);
-                    OverlayScaled.Draw(RotatedBmp.Canvas,
-                                       Round(RotatedBmp.Width - TokenBmp.Width * FMapZoom) div 2,
-                                       Round(RotatedBmp.Height - TokenBmp.Height * FMapZoom) div 2,
-                                       False);
-                    OverlayScaled.Free;
+                    MapSegmentStretched.DrawLineAntialias(0, CurGridPos,
+                                                          MapSegmentStretched.Width, CurGridPos,
+                                                          FGridColor, 1);
                   end;
-                  RotatedBmp.Draw(MapSegmentStretched.Canvas,
-                                  RotatedRect,
-                                  False);
-                finally
-                  Rotation.Free;
-                  RotatedBmp.Free;
                 end;
-              finally
-                TokenBmp.Free;
+                // Vertical lines
+                for i := 0 to Ceil(((FMapPic.Width - (FGridOffsetX mod FGridSizeX)) / FGridSizeX)) do
+                begin
+                  CurGridPos := Round((FGridOffsetX + i * FGridSizeX) * FMapZoom - FMapOffsetX);
+                  if InRange(CurGridPos, 0, MapWidth) then
+                  begin
+                    MapSegmentStretched.DrawLineAntialias(CurGridPos, 0,
+                                                          CurGridPos, MapSegmentStretched.Height,
+                                                          FGridColor, 1);
+                  end;
+                end;
+
+              end;
+              gtHexH:
+              begin
+                tmpGridSize := FGridSizeY  * 3 / 4;
+                for i := 0 to Ceil(((FMapPic.Height - (FGridOffsetY mod tmpGridSize)) / tmpGridSize)) do
+                  for j := 0 to Ceil(((FMapPic.Width - (FGridOffsetX mod FGridSizeX)) / FGridSizeX)) do
+                  begin
+                    CellRect := Rect(Round((FGridOffsetX + j * FGridSizeX) * FMapZoom - FMapOffsetX),
+                                     Round((FGridOffsetY + i * tmpGridSize) * FMapZoom - FMapOffsetY),
+                                     Round((FGridOffsetX + (j + 1) * FGridSizeX) * FMapZoom - FMapOffsetX),
+                                     Round((FGridOffsetY + i * tmpGridSize + FGridSizeY) * FMapZoom - FMapOffsetY));
+                    if Odd(i) then
+                      CellRect.Offset(Round(FGridSizeX  * FMapZoom / 2), 0);
+                    Hex[0] := Point(CellRect.Left, CellRect.Bottom - CellRect.Height div 4);
+                    Hex[1] := Point(CellRect.Left, CellRect.Top + CellRect.Height div 4);
+                    Hex[2] := Point(CellRect.Left + CellRect.Width div 2, CellRect.Top);
+                    Hex[3] := Point(CellRect.Right, CellRect.Top + CellRect.Height div 4);
+                    Hex[4] := Point(CellRect.Right, CellRect.Bottom - CellRect.Height div 4);
+                    Hex[5] := Point(CellRect.Left + CellRect.Width div 2, CellRect.Bottom);
+                    MapSegmentStretched.DrawPolygonAntialias(Hex, FGridColor, 1, BGRAPixelTransparent);
+                  end;
+              end;
+              gtHexV:
+              begin
+                tmpGridSize := FGridSizeX  * 3 / 4;
+                for i := 0 to Ceil(((FMapPic.Height - (FGridOffsetY mod FGridSizeY)) / FGridSizeY)) do
+                  for j := 0 to Ceil(((FMapPic.Width - (FGridOffsetX mod tmpGridSize)) / tmpGridSize)) do
+                  begin
+                    CellRect := Rect(Round((FGridOffsetX + j * tmpGridSize) * FMapZoom - FMapOffsetX),
+                                     Round((FGridOffsetY + i * FGridSizeY) * FMapZoom - FMapOffsetY),
+                                     Round((FGridOffsetX + j * tmpGridSize + FGridSizeX) * FMapZoom - FMapOffsetX),
+                                     Round((FGridOffsetY + (i + 1) * FGridSizeY) * FMapZoom - FMapOffsetY));
+                    if Odd(j) then
+                      CellRect.Offset(0, Round(FGridSizeY  * FMapZoom / 2));
+                    Hex[0] := Point(CellRect.Left, CellRect.Top + CellRect.Height div 2);
+                    Hex[1] := Point(CellRect.Left + CellRect.Width div 4, CellRect.Top);
+                    Hex[2] := Point(CellRect.Right - CellRect.Width div 4, CellRect.Top);
+                    Hex[3] := Point(CellRect.Right, CellRect.Top + CellRect.Height div 2);
+                    Hex[4] := Point(CellRect.Right - CellRect.Width div 4, CellRect.Bottom);
+                    Hex[5] := Point(CellRect.Left + CellRect.Width div 4, CellRect.Bottom);
+                    MapSegmentStretched.DrawPolygonAntialias(Hex, FGridColor, 1, BGRAPixelTransparent);
+                  end;
               end;
             end;
           end;
+
+          // Marker
+          if fmController.ShowMarker then
+          begin
+            Canvas.Pen.Color := clRed;
+            Canvas.Pen.Width := 2;
+            Canvas.Brush.Style := bsClear;
+            CurMarkerX := FMarkerX * FMapZoom - FMapOffsetX;
+            CurMarkerY := FMarkerY * FMapZoom - FMapOffsetY;
+            if InRange(CurMarkerX, 0, MapWidth) and InRange(CurMarkerY, 0, MapHeight) then
+            begin
+              MapSegmentStretched.EllipseAntialias(CurMarkerX, CurMarkerY, 10, 10, clRed, 2, BGRAPixelTransparent);
+
+              MapSegmentStretched.DrawLineAntialias(CurMarkerX - 15, CurMarkerY, CurMarkerX - 5, CurMarkerY, clRed, 2);
+              MapSegmentStretched.DrawLineAntialias(CurMarkerX + 5, CurMarkerY, CurMarkerX + 15, CurMarkerY, clRed, 2);
+
+              MapSegmentStretched.DrawLineAntialias(CurMarkerX, CurMarkerY - 15, CurMarkerX, CurMarkerY - 5, clRed, 2);
+              MapSegmentStretched.DrawLineAntialias(CurMarkerX, CurMarkerY + 5, CurMarkerX, CurMarkerY + 15, clRed, 2);
+            end;
+          end;
+
+          // Token
+          if fmController.ShowTokens then
+          begin
+            for i := 0 to fmController.GetTokenCount - 1 do
+            begin
+              CurToken := fmController.GetToken(i);
+              if CurToken.Visible then
+              begin
+                CurTokenPosX := Round(CurToken.XPos * FMapZoom - FMapOffsetX - (FMapZoom * CurToken.Width / 2));
+                CurTokenPosY := Round(CurToken.YPos * FMapZoom - FMapOffsetY - (FMapZoom * CurToken.Height / 2));
+                TokenRect := Bounds(CurTokenPosX, CurTokenPosY,
+                                    Round(CurToken.Width * FMapZoom),
+                                    Round(CurToken.Height * FMapZoom));
+
+                TokenBmp := CurToken.Glyph.Resample(Round(CurToken.Width), Round(CurToken.Height), rmSimpleStretch);
+                try
+                  BoundingRect := CurToken.GetBoundingRect;
+                  Rotation := TBGRAAffineBitmapTransform.Create(TokenBmp);
+                  Rotation.Translate(-TokenBmp.Width / 2, -TokenBmp.Height / 2);
+                  Rotation.RotateRad(CurToken.Angle);
+                  //Rotation.Translate(Hypot(CurToken.Width, CurToken.Height) * SQRT05, Hypot(CurToken.Width, CurToken.Height) * SQRT05);
+                  Rotation.Translate(BoundingRect.Width / 2, BoundingRect.Height / 2);
+                  Rotation.Scale(FMapZoom, FMapZoom);
+                  try
+                    //RotatedBmp := TBGRABitmap.Create(Round(Hypot(CurToken.Width, CurToken.Height) * SQRT2),
+                    //                                 Round(Hypot(CurToken.Width, CurToken.Height) * SQRT2));
+                    RotatedBmp := TBGRABitmap.Create(Round(BoundingRect.Width * FMapZoom),
+                                                 Round(BoundingRect.Height * FMapZoom));
+                    RotatedBmp.Fill(Rotation, dmDrawWithTransparencY);
+                    RotatedRect := Bounds(TokenRect.Left - RotatedBmp.Width div 2 + Round(TokenBmp.Width * FMapZoom / 2),
+                                          TokenRect.Top - RotatedBmp.Height div 2 + Round(TokenBmp.Height * FMapZoom / 2),
+                                          RotatedBmp.Width,
+                                          RotatedBmp.Height);
+                    // Add overlay
+                    OverlayBmp := fmController.GetOverlay(CurToken.OverlayIdx);
+                    if Assigned(OverlayBmp) then
+                    begin
+                      OverlayScaled := OverlayBmp.Resample(Round(OverlayBmp.Width * FMapZoom), Round(OverlayBmp.Height  * FMapZoom), rmSimpleStretch);
+                      OverlayScaled.Draw(RotatedBmp.Canvas,
+                                         Round(RotatedBmp.Width - TokenBmp.Width * FMapZoom) div 2,
+                                         Round(RotatedBmp.Height - TokenBmp.Height * FMapZoom) div 2,
+                                         False);
+                      OverlayScaled.Free;
+                    end;
+                    RotatedBmp.Draw(MapSegmentStretched.Canvas,
+                                    RotatedRect,
+                                    False);
+                  finally
+                    Rotation.Free;
+                    RotatedBmp.Free;
+                  end;
+                finally
+                  TokenBmp.Free;
+                end;
+              end;
+            end;
+          end;
+
+          MapSegmentStretched.Draw(Canvas, MapRect);
+
+        finally
+          MapSegmentStretched.Free;
         end;
-
-        MapSegmentStretched.Draw(Canvas, MapRect);
-
-      finally
-        MapSegmentStretched.Free;
       end;
+    finally
+      MapSegment.Free;
     end;
-  finally
-    MapSegment.Free;
   end;
-     
   {$IFDEF DEBUG}OutputDebugString(PChar(IntToStr(GetTickCount64 - StartTime) + ' ms'));{$ENDIF}
   // Frame of Portrait
   Canvas.Pen.Color := clBlack;

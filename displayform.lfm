@@ -1,5 +1,5 @@
 object fmDisplay: TfmDisplay
-  Left = 997
+  Left = 567
   Height = 768
   Top = 55
   Width = 1024

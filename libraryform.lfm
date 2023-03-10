@@ -1,7 +1,7 @@
 object fmLibrary: TfmLibrary
-  Left = 497
+  Left = 285
   Height = 459
-  Top = 85
+  Top = 79
   Width = 506
   Caption = 'Libraries'
   ClientHeight = 459
