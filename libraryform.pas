@@ -106,7 +106,7 @@ begin
   sgItemData.ColWidths[0] := 22;
   sgItemData.Rows[0].CommaText := StrMapsHeader;
   try
-    FindAllFiles(FileList, fmController.MapDir, PICFILEFILTER, True);
+    FindAllFiles(FileList, fmController.MapDir, PicFilterStr, True);
     sgItemData.RowCount := FileList.Count + 1;
     for i := 0 to FileList.Count - 1 do
     begin
@@ -146,7 +146,7 @@ begin
   sgItemData.ColCount := 10;
   sgItemData.Rows[0].CommaText := StrTokensHeader;
   try
-    FindAllFiles(FileList, fmController.TokenDir, PICFILEFILTER, True);
+    FindAllFiles(FileList, fmController.TokenDir, PicFilterStr, True);
     sgItemData.RowCount := FileList.Count + 1;
     for i := 0 to FileList.Count - 1 do
     begin
@@ -214,7 +214,7 @@ begin
   sgItemData.ColCount := 6;
   sgItemData.Rows[0].CommaText := StrOverlaysHeader;
   try
-    FindAllFiles(FileList, fmController.OverlayDir, PICFILEFILTER, True);
+    FindAllFiles(FileList, fmController.OverlayDir, PicFilterStr, True);
     sgItemData.RowCount := FileList.Count + 1;
     for i := 0 to FileList.Count - 1 do
     begin

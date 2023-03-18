@@ -19,7 +19,10 @@ interface
 
 uses
   Classes, SysUtils;
-        
+
+var
+  PicFilterStr: string;
+
 const
   HMARGIN = 16;
   VMARGIN = 16;
@@ -33,6 +36,7 @@ const
   SQRT05 = 0.7071067811;
 
   PICFILEFILTER = '*.jpg;*.jpeg;*.png;*.bmp;*.webp';
+  PICFILEFILTEREXWEBP = '*.jpg;*.jpeg;*.png;*.bmp';
 
   SAVESECTIONMAP = 'Map';
   SAVESECTIONGRID = 'Grid';
@@ -41,6 +45,20 @@ const
   SAVESECTIONTOKENS = 'Tokens';
 
 implementation
+
+var WebpHandle: TLibHandle;
+
+initialization
+
+  // Check if we can load webp-files
+  PicFilterStr := PICFILEFILTER;
+  WebpHandle := LoadLibrary('libwebp.dll');
+  if WebpHandle = NilHandle then
+    PicFilterStr := PICFILEFILTEREXWEBP
+  else
+    UnloadLibrary(WebpHandle);
+
+finalization
 
 end.
 

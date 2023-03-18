@@ -1186,7 +1186,7 @@ begin
   lvMaps.Clear;
   FileList := TStringList.Create;
   try
-    FindAllFiles(FileList, FMapDir, PICFILEFILTER, True);
+    FindAllFiles(FileList, FMapDir, PicFilterStr, True);
     for i := 0 to FileList.Count - 1 do
     begin
       FileName := FileList[i];
@@ -1218,7 +1218,7 @@ procedure TfmController.UpdateTokenList;
   begin
     if DirectoryExists(Dir) then
     begin
-      FileList := FindAllFiles(Dir, PICFILEFILTER, False);
+      FileList := FindAllFiles(Dir, PicFilterStr, False);
       DirList := FindAllDirectories(Dir, False);
       tmp := DirList.CommaText;
       for i := 0 to FileList.Count - 1 do
@@ -1525,19 +1525,22 @@ begin
 end;
 
 procedure TfmController.FormCreate(Sender: TObject);
-var LangID, FallbackLangID, LangName: string;
+var
+  LangID, FallbackLangID, LangName: string;
 begin
   FMapPic := nil;
   FTokenList := TList.Create;
   FInitiativeList := TList.Create;
   FAppSettings := TIniFile.Create('Settings.ini', [ifoWriteStringBoolean]);
 
+  // Load settings
   FMapDir := FAppSettings.ReadString('Settings', 'MapDir', 'Content\Maps\');
   FTokenDir := FAppSettings.ReadString('Settings', 'TokenDir', 'Content\Tokens\');
   FOverlayDir := FAppSettings.ReadString('Settings', 'OverlayDir', 'Content\Overlays\');
   FInitiativeDesc := StrToBoolDef(FAppSettings.ReadString('Settings', 'InitiativeDesc', 'true'), True);
   FTokensStartInvisible := StrToBoolDef(FAppSettings.ReadString('Settings', 'TokensStartInvisible', 'true'), True);
 
+  // Set language
   LangName := 'English';
   GetLanguageIDs(LangID, FallbackLangID);
   if SameText(FallbackLangID, 'de') then
@@ -1559,6 +1562,7 @@ begin
   FSnapTokensToGrid := False;
   FCombatMode := False;
 
+  // Load / create library files
   FMapLib := TStringList.Create;
   if FileExists(MAPLIBFILE) then
     FMapLib.LoadFromFile(MAPLIBFILE)
