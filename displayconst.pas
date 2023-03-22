@@ -18,7 +18,7 @@ unit DisplayConst;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, Types;
 
 var
   PicFilterStr: string;
@@ -43,6 +43,8 @@ const
   SAVESECTIONPORTRAIT = 'Portrait';
   SAVESECTIONINITIATIVE = 'Initiative';
   SAVESECTIONTOKENS = 'Tokens';
+
+  ARROW: array[0..3] of TPointF = ((x: 0; y: -1), (x: 0.5; y: -0.5), (x: 0; y: -0.61), (x: -0.5; y: -0.5));
 
 implementation
 

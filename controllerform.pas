@@ -153,6 +153,7 @@ type
     FTokenList: TList;
     FMapDir, FTokenDir, FOverlayDir: string;
     FInitiativeDesc, FTokensStartInvisible: Boolean;
+    FTokenRotationStyle: TTokenRotationStyle;
     FAppSettings: TIniFile;
     FMapLib, FTokenLib, FOverlayLib: TStringList;
     procedure UpdateMapList;
@@ -188,6 +189,7 @@ type
     property GridOffsetY: Single read FGridOffsetY write FGridOffsetY;
     property GridColor: TColor read FGridColor write FGridColor;
     property GridType: TGridType read FGridType write FGridType;
+    property TokenRotationStyle: TTokenRotationStyle read FTokenRotationStyle;
     property CurInitiativeIndex: Integer read FCurInitiativeIndex write SetCurInitiativeIndex;
     property MapLib: TStringList read FMapLib;
     property TokenLib: TStringList read FTokenLib;
@@ -521,6 +523,9 @@ var
   tmpGridSize: Single;
   Rotation: TBGRAAffineBitmapTransform;
   RotatedBmp, OverlayBmp, OverlayScaled: TBGRABitmap;
+  ArrowLen, ArrowWid: Double;
+  ArrowPnt: TPointF;
+  ArrowPntsTrans: array[0..3] of TPointF;
 begin
   // Draw Map
   if Assigned(FMapPic) then
@@ -621,16 +626,22 @@ begin
             if not FShowTokens then
             begin
               TokenBmp.DrawLineAntialias(TokenBmp.Width, 0, 0, TokenBmp.Height, clRed, 2);
-            end;    
-            BoundingRect := CurToken.GetBoundingRect;
+            end;
             Rotation := TBGRAAffineBitmapTransform.Create(TokenBmp);
-            Rotation.Translate(-TokenBmp.Width / 2, -TokenBmp.Height / 2);
-            Rotation.RotateRad(CurToken.Angle);
-            Rotation.Translate(BoundingRect.Width * FDisplayScale * FZoomFactor / 2, BoundingRect.Height * FDisplayScale * FZoomFactor / 2);
+            if FTokenRotationStyle = rsRotateToken then
+            begin           
+              BoundingRect := CurToken.GetBoundingRect;
+              Rotation.Translate(-TokenBmp.Width / 2, -TokenBmp.Height / 2);
+              Rotation.RotateRad(CurToken.Angle);
+              Rotation.Translate(BoundingRect.Width * FDisplayScale * FZoomFactor / 2, BoundingRect.Height * FDisplayScale * FZoomFactor / 2);
+            end
+            else
+              BoundingRect := Bounds(CurToken.XPos - CurToken.Width div 2, CurToken.YPos - CurToken.Height div 2, CurToken.Width, CurToken.Height);
             try
               RotatedBmp := TBGRABitmap.Create(Round(BoundingRect.Width * FDisplayScale * FZoomFactor),
                                                Round(BoundingRect.Height * FDisplayScale * FZoomFactor));
               RotatedBmp.Fill(Rotation, dmDrawWithTransparencY);
+
               // Add overlay
               OverlayBmp := GetOverlay(CurToken.OverlayIdx);
               if Assigned(OverlayBmp) then
@@ -642,6 +653,23 @@ begin
                                    False);
                 OverlayScaled.Free;
               end;
+
+              // Add direction arrow
+              if FTokenRotationStyle = rsShowArrow then
+              begin
+                ArrowLen := Min(CurToken.Width, CurToken.Height) * 0.4 * FDisplayScale * FZoomFactor;
+                ArrowWid := ArrowLen / 4;
+                for j := 0 to 3 do
+                begin
+                  ArrowPnt.x := ARROW[j].x * ArrowWid;
+                  ArrowPnt.y := ARROW[j].y * ArrowLen;
+                  ArrowPntsTrans[j].x := RotatedBmp.Width div 2  + ArrowPnt.x * Cos(-CurToken.Angle) - ArrowPnt.y * Sin(-CurToken.Angle);
+                  ArrowPntsTrans[j].y := RotatedBmp.Height div 2 + ArrowPnt.x * Sin(-CurToken.Angle) + ArrowPnt.y * Cos(CurToken.Angle);
+                end;
+                RotatedBmp.FillPoly(ArrowPntsTrans, clWhite);               
+                RotatedBmp.DrawPolygonAntialias(ArrowPntsTrans, clBlack, 2);
+              end;
+
               RotatedBmp.Draw(DrawnMapSegment.Canvas,
                               MapToViewPortX(CurToken.XEndPos) - RotatedBmp.Width div 2,
                               MapToViewPortY(CurToken.YEndPos) - RotatedBmp.Height div 2,
@@ -1130,6 +1158,7 @@ begin
   fmSettings.eOverlayDirectory.Text := FOverlayDir;
   fmSettings.cbTokensStartInvisible.Checked := FTokensStartInvisible;
   fmSettings.cbInitiativeOrder.ItemIndex := IfThen(FInitiativeDesc, 0, 1);
+  fmSettings.cbTokenRotation.ItemIndex := Ord(FTokenRotationStyle);
   fmSettings.cbLanguage.Items := GetLanguages;
   fmSettings.cbLanguage.ItemIndex := fmSettings.cbLanguage.Items.IndexOf(LanguageID);
   fmSettings.Show;
@@ -1421,6 +1450,7 @@ begin
   end;
   FTokensStartInvisible := fmSettings.cbTokensStartInvisible.Checked;
   FInitiativeDesc := fmSettings.cbInitiativeOrder.ItemIndex = 0;
+  FTokenRotationStyle := TTokenRotationStyle(fmSettings.cbTokenRotation.ItemIndex);
   LanguageID := fmSettings.cbLanguage.Items[fmSettings.cbLanguage.ItemIndex];
   // Save changes to ini
   FAppSettings.WriteString('Settings', 'MapDir', FMapDir);
@@ -1428,6 +1458,7 @@ begin
   FAppSettings.WriteString('Settings', 'OverlayDir', FOverlayDir);
   FAppSettings.WriteString('Settings', 'InitiativeDesc', BoolToStr(FInitiativeDesc));
   FAppSettings.WriteString('Settings', 'TokensStartInvisible', BoolToStr(FTokensStartInvisible));
+  FAppSettings.WriteInteger('Settings', 'TokenRotationStyle', Ord(FTokenRotatioNStyle));
   FAppSettings.WriteString('Settings', 'Language', LanguageID);
   FAppSettings.UpdateFile;
 end;
@@ -1539,6 +1570,7 @@ begin
   FOverlayDir := FAppSettings.ReadString('Settings', 'OverlayDir', 'Content\Overlays\');
   FInitiativeDesc := StrToBoolDef(FAppSettings.ReadString('Settings', 'InitiativeDesc', 'true'), True);
   FTokensStartInvisible := StrToBoolDef(FAppSettings.ReadString('Settings', 'TokensStartInvisible', 'true'), True);
+  FTokenRotationStyle := TTokenRotationStyle(FAppSettings.ReadInteger('Settings', 'TokenRotationStyle', 0));
 
   // Set language
   LangName := 'English';
@@ -1590,7 +1622,8 @@ begin
   FAppSettings.WriteString('Settings', 'TokenDir', FTokenDir);
   FAppSettings.WriteString('Settings', 'OverlayDir', FOverlayDir);
   FAppSettings.WriteString('Settings', 'InitiativeDesc', BoolToStr(FInitiativeDesc));
-  FAppSettings.WriteString('Settings', 'TokensStartInvisible', BoolToStr(FTokensStartInvisible));
+  FAppSettings.WriteString('Settings', 'TokensStartInvisible', BoolToStr(FTokensStartInvisible)); 
+  FAppSettings.WriteInteger('Settings', 'TokenRotationStyle', Ord(FTokenRotatioNStyle));
   FAppSettings.UpdateFile;
   FAppSettings.Free;
   FMapLib.Free;

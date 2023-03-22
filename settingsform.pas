@@ -28,6 +28,7 @@ type
     bOk: TButton;
     bCancel: TButton;
     cbInitiativeOrder: TComboBox;
+    cbTokenRotation: TComboBox;
     cbLanguage: TComboBox;
     cbTokensStartInvisible: TCheckBox;
     eMapDirectory: TEdit;
@@ -39,6 +40,7 @@ type
     Label4: TLabel;
     Label5: TLabel;
     Label6: TLabel;
+    Label7: TLabel;
     sbSelectMapDirectory: TSpeedButton;
     sbSelectTokenDirectory: TSpeedButton;
     sbSelectOverlayDirectory: TSpeedButton;
@@ -98,6 +100,11 @@ begin
   cbInitiativeOrder.Items[0] := GetString(LangStrings.LanguageID, 'SettingsInitiativeOrderHighest');
   cbInitiativeOrder.Items[1] := GetString(LangStrings.LanguageID, 'SettingsInitiativeOrderLowest');
   cbTokensStartInvisible.Caption := GetString(LangStrings.LanguageID, 'SettingsTokenStartInvisible');
+  Label7.Caption := GetString(LangStrings.LanguageID, 'SettingsTokenRotation');
+  while cbTokenRotation.Items.Count < 2 do
+    cbTokenRotation.Items.Add('');
+  cbTokenRotation.Items[0] := GetString(LangStrings.LanguageID, 'SettingsTokenRotationStyle1');
+  cbTokenRotation.Items[1] := GetString(LangStrings.LanguageID, 'SettingsTokenRotationStyle2');
   Label4.Caption := GetString(LangStrings.LanguageID, 'SettingsLanguage');
   Label5.Caption := GetString(LangStrings.LanguageID, 'SettingsLanguageHint');
   bCancel.Caption := GetString(LangStrings.LanguageID, 'ButtonCancel');

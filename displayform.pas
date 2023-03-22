@@ -322,7 +322,10 @@ var
   tmpPicture: TPicture;
   CellRect: TRect;
   Hex: array[0..5] of TPoint;
-  tmpGridSize: Single;
+  tmpGridSize: Single; 
+  ArrowLen, ArrowWid: Double;
+  ArrowPnt: TPointF;
+  ArrowPntsTrans: array[0..3] of TPointF;
   {$IFDEF DEBUG}StartTime: Int64;{$ENDIF}
 
 procedure Draw3DFrame(pRect: TRect);
@@ -537,12 +540,17 @@ begin
 
                 TokenBmp := CurToken.Glyph.Resample(Round(CurToken.Width), Round(CurToken.Height), rmSimpleStretch);
                 try
-                  BoundingRect := CurToken.GetBoundingRect;
                   Rotation := TBGRAAffineBitmapTransform.Create(TokenBmp);
-                  Rotation.Translate(-TokenBmp.Width / 2, -TokenBmp.Height / 2);
-                  Rotation.RotateRad(CurToken.Angle);
-                  //Rotation.Translate(Hypot(CurToken.Width, CurToken.Height) * SQRT05, Hypot(CurToken.Width, CurToken.Height) * SQRT05);
-                  Rotation.Translate(BoundingRect.Width / 2, BoundingRect.Height / 2);
+                  if fmController.TokenRotationStyle = rsRotateToken then
+                  begin
+                    BoundingRect := CurToken.GetBoundingRect;
+                    Rotation.Translate(-TokenBmp.Width / 2, -TokenBmp.Height / 2);
+                    Rotation.RotateRad(CurToken.Angle);
+                    //Rotation.Translate(Hypot(CurToken.Width, CurToken.Height) * SQRT05, Hypot(CurToken.Width, CurToken.Height) * SQRT05);
+                    Rotation.Translate(BoundingRect.Width / 2, BoundingRect.Height / 2);
+                  end
+                  else
+                    BoundingRect := Bounds(0, 0, CurToken.Width, CurToken.Height);
                   Rotation.Scale(FMapZoom, FMapZoom);
                   try
                     //RotatedBmp := TBGRABitmap.Create(Round(Hypot(CurToken.Width, CurToken.Height) * SQRT2),
@@ -565,6 +573,23 @@ begin
                                          False);
                       OverlayScaled.Free;
                     end;
+
+                    // Add direction arrow
+                    if fmController.TokenRotationStyle = rsShowArrow then
+                    begin
+                      ArrowLen := Min(CurToken.Width, CurToken.Height) * 0.4 * FMapZoom;
+                      ArrowWid := ArrowLen / 4;
+                      for j := 0 to 3 do
+                      begin
+                        ArrowPnt.x := ARROW[j].x * ArrowWid;
+                        ArrowPnt.y := ARROW[j].y * ArrowLen;
+                        ArrowPntsTrans[j].x := RotatedBmp.Width div 2  + ArrowPnt.x * Cos(-CurToken.Angle) - ArrowPnt.y * Sin(-CurToken.Angle);
+                        ArrowPntsTrans[j].y := RotatedBmp.Height div 2 + ArrowPnt.x * Sin(-CurToken.Angle) + ArrowPnt.y * Cos(CurToken.Angle);
+                      end;
+                      RotatedBmp.FillPoly(ArrowPntsTrans, clWhite);
+                      RotatedBmp.DrawPolygonAntialias(ArrowPntsTrans, clBlack, 2);
+                    end;
+
                     RotatedBmp.Draw(MapSegmentStretched.Canvas,
                                     RotatedRect,
                                     False);

@@ -29,6 +29,8 @@ type
 
   TGridType = (gtRect, gtHexH, gtHexV);
 
+  TTokenRotationStyle = (rsRotateToken, rsShowArrow);
+
   TToken = class
     private
       FGlyph: TBGRABitmap;

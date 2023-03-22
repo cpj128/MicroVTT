@@ -1,11 +1,11 @@
 object fmSettings: TfmSettings
   Left = 944
-  Height = 217
+  Height = 245
   Top = 328
   Width = 344
   BorderStyle = bsSingle
   Caption = 'Settings'
-  ClientHeight = 217
+  ClientHeight = 245
   ClientWidth = 344
   FormStyle = fsStayOnTop
   OnDeactivate = bCancelClick
@@ -162,7 +162,7 @@ object fmSettings: TfmSettings
   object Label4: TLabel
     Left = 5
     Height = 15
-    Top = 152
+    Top = 180
     Width = 55
     Caption = 'Language:'
     ParentColor = False
@@ -170,7 +170,7 @@ object fmSettings: TfmSettings
   object cbLanguage: TComboBox
     Left = 121
     Height = 23
-    Top = 148
+    Top = 176
     Width = 104
     ItemHeight = 15
     Style = csDropDownList
@@ -179,7 +179,7 @@ object fmSettings: TfmSettings
   object bOk: TButton
     Left = 5
     Height = 25
-    Top = 184
+    Top = 212
     Width = 75
     Caption = 'Ok'
     OnClick = bOkClick
@@ -188,7 +188,7 @@ object fmSettings: TfmSettings
   object bCancel: TButton
     Left = 88
     Height = 25
-    Top = 184
+    Top = 212
     Width = 75
     Cancel = True
     Caption = 'Cancel'
@@ -198,7 +198,7 @@ object fmSettings: TfmSettings
   object Label5: TLabel
     Left = 233
     Height = 52
-    Top = 144
+    Top = 172
     Width = 100
     AutoSize = False
     Caption = 'Restart program after changing'
@@ -262,5 +262,28 @@ object fmSettings: TfmSettings
       0000000000000000000000000000000000000000000000000000
     }
     OnClick = sbSelectOverlayDirectoryClick
+  end
+  object Label7: TLabel
+    Left = 5
+    Height = 15
+    Top = 152
+    Width = 79
+    Caption = 'Token rotation:'
+    ParentColor = False
+  end
+  object cbTokenRotation: TComboBox
+    Left = 120
+    Height = 23
+    Top = 144
+    Width = 184
+    ItemHeight = 15
+    ItemIndex = 0
+    Items.Strings = (
+      'Rotate entire token'
+      'Show arrow'
+    )
+    Style = csDropDownList
+    TabOrder = 8
+    Text = 'Rotate entire token'
   end
 end
