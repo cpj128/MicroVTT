@@ -1,7 +1,7 @@
 object fmController: TfmController
-  Left = 197
+  Left = 155
   Height = 900
-  Top = 94
+  Top = 40
   Width = 1597
   Caption = 'MicroVTT'
   ClientHeight = 900

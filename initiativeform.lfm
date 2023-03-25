@@ -7,6 +7,7 @@ object fmSetInitiative: TfmSetInitiative
   ClientHeight = 97
   ClientWidth = 255
   FormStyle = fsStayOnTop
+  OnClose = FormClose
   OnDeactivate = bCancelClick
   OnShow = FormShow
   LCLVersion = '2.2.4.0'

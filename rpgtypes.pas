@@ -35,6 +35,8 @@ type
     private
       FGlyph: TBGRABitmap;
       FPath: string;
+      FName: string;
+      FBaseInitiative: Integer;
       FXPos, FYPos,
       FXStartPos, FYStartPos,
       FXTargetPos, FYTargetPos,
@@ -43,6 +45,7 @@ type
       FOverlayIdx: Integer;
       FVisible: Boolean;
       FGridSlotsX, FGridSlotsY: Integer;
+      FNumber: Integer;
       FCurAnimationStep: Integer;
       FIsMoving: Boolean;
       procedure SetXPos(val: Integer);
@@ -69,9 +72,12 @@ type
       property GridSlotsY: Integer read FGridSlotsY write FGridSlotsY;
       property Angle: Double read FAngle write SetAngle;
       property OverlayIdx: Integer read FOverlayIdx write FOverlayIdx;
+      property Number: Integer read FNumber write FNumber;
       property Glyph: TBGRABitmap read FGlyph;
       property IsMoving: Boolean read FIsMoving;
       property Path: string read FPath;
+      property Name: string read FName write FName;
+      property BaseInitiative: Integer read FBaseInitiative write FBaseInitiative;
   end;
 
 

@@ -39,12 +39,14 @@ type
     udRolledInitiative: TUpDown;
     procedure bCancelClick(Sender: TObject);
     procedure bOkClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormShow(Sender: TObject);
     procedure sbRoll6Click(Sender: TObject);
   private
 
   public
     TokenName, TokenPath: string;
+    TokenNo: Integer;
   end;
 
 var
@@ -66,9 +68,19 @@ begin
 end;
 
 procedure TfmSetInitiative.bOkClick(Sender: TObject);
+var tmpName: string;
 begin
-  fmController.AddToInitiative(TokenName, TokenPath, udBaseInitiative.Position + udRolledInitiative.Position);
+  tmpName := TokenName;
+  if TokenNo > 0 then
+    tmpName := tmpName + ' ' + IntToStr(TokenNo);
+  fmController.AddToInitiative(tmpName, TokenPath, udBaseInitiative.Position + udRolledInitiative.Position);
   Close;
+end;
+
+procedure TfmSetInitiative.FormClose(Sender: TObject;
+  var CloseAction: TCloseAction);
+begin
+  TokenNo := 0;
 end;
 
 procedure TfmSetInitiative.FormShow(Sender: TObject);

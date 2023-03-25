@@ -326,6 +326,7 @@ var
   ArrowLen, ArrowWid: Double;
   ArrowPnt: TPointF;
   ArrowPntsTrans: array[0..3] of TPointF;
+  NumSize: TSize;
   {$IFDEF DEBUG}StartTime: Int64;{$ENDIF}
 
 procedure Draw3DFrame(pRect: TRect);
@@ -572,6 +573,17 @@ begin
                                          Round(RotatedBmp.Height - TokenBmp.Height * FMapZoom) div 2,
                                          False);
                       OverlayScaled.Free;
+                    end;
+
+                    // Add number
+                    if CurToken.Number > 0 then
+                    begin
+                      NumSize := RotatedBmp.TextSize(IntToStr(CurToken.Number));
+                      RotatedBmp.FontStyle := [fsBold];
+                      // Should the text size change with the zoom factor?
+                      RotatedBmp.TextOut((RotatedBmp.Width - NumSize.Width) div 2, (RotatedBmp.Height - NumSize.Height) div 2, IntToStr(CurToken.Number), clBlack, taLeftJustify);
+                      RotatedBmp.FontStyle := [];
+                      RotatedBmp.TextOut((RotatedBmp.Width - NumSize.Width) div 2, (RotatedBmp.Height - NumSize.Height) div 2, IntToStr(CurToken.Number), clWhite, taLeftJustify);
                     end;
 
                     // Add direction arrow

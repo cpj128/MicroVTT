@@ -350,6 +350,8 @@ begin
     tmpToken.GridSlotsX := TTokenNodeData(TTreeView(Source).Selected.Data).DefaultGridSlotsX;
     tmpToken.GridSlotsY := TTokenNodeData(TTreeView(Source).Selected.Data).DefaultGridSlotsY;
     tmpToken.Angle := TTokenNodeData(TTreeView(Source).Selected.Data).DefaultAngle;
+    tmpToken.Name := TTokenNodeData(TTreeView(Source).Selected.Data).Name;
+    tmpToken.BaseInitiative := TTokenNodeData(TTreeView(Source).Selected.Data).BaseInitiative;
     tmpToken.Visible := FTokensStartInvisible;
     if FSnapTokensToGrid then
       tmpToken.SnapToGrid(FGridSizeX, FGridSizeY, FGridOffsetX, FGridOffsetY, FGridType);
@@ -502,10 +504,12 @@ begin
       fmTokenSettings.fseRotation.Value := -RadToDeg(ClickedToken.Angle);
       fmTokenSettings.udGridSlotsX.Position := ClickedToken.GridSlotsX;
       fmTokenSettings.udGridSlotsY.Position := ClickedToken.GridSlotsY;
+      fmTokenSettings.seNumber.Value := ClickedToken.Number;
       fmTokenSettings.cbOverlay.ItemIndex := ClickedToken.OverlayIdx + 1;
       fmTokenSettings.Left := Left + pbViewPort.Left + X;
       fmTokenSettings.Top  := Top  + pbViewPort.Top  + Y;
       fmTokenSettings.LinkedToken := ClickedToken;
+      fmTokenSettings.bAddToInitiative.Enabled := not FCombatMode;
       fmTokenSettings.Show; // So apparently ShowModal is broken and I have to do everything like this now?
 
     end;
@@ -526,6 +530,7 @@ var
   ArrowLen, ArrowWid: Double;
   ArrowPnt: TPointF;
   ArrowPntsTrans: array[0..3] of TPointF;
+  NumSize: TSize;
 begin
   // Draw Map
   if Assigned(FMapPic) then
@@ -652,6 +657,17 @@ begin
                                    (RotatedBmp.Height - TokenBmp.Height) div 2,
                                    False);
                 OverlayScaled.Free;
+              end;
+
+              // Add number
+              if CurToken.Number > 0 then
+              begin
+                NumSize := RotatedBmp.TextSize(IntToStr(CurToken.Number));
+                RotatedBmp.FontStyle := [fsBold];
+                // Should the text size change with the zoom factor?
+                RotatedBmp.TextOut((RotatedBmp.Width - NumSize.Width) div 2, (RotatedBmp.Height - NumSize.Height) div 2, IntToStr(CurToken.Number), clBlack, taLeftJustify);
+                RotatedBmp.FontStyle := [];
+                RotatedBmp.TextOut((RotatedBmp.Width - NumSize.Width) div 2, (RotatedBmp.Height - NumSize.Height) div 2, IntToStr(CurToken.Number), clWhite, taLeftJustify);
               end;
 
               // Add direction arrow
@@ -1263,7 +1279,7 @@ procedure TfmController.UpdateTokenList;
             ContentList.DelimitedText := FTokenLib.Values[FileList[i]];
             if Length(ContentList[0]) > 0 then
               title := ContentList[0];
-            // TODO: Create template object with further token data
+
             NodeData.Name              := title;
             NodeData.BaseInitiative    := StrToIntDef(ContentList[1], 0);
             NodeData.DefaultWidth      := StrToIntDef(ContentList[2], Round(FGridSizeX));

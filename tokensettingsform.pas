@@ -19,13 +19,14 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ComCtrls,
-  Spin, RPGTypes;
+  Spin, SpinEx, RPGTypes;
 
 type
 
   { TfmTokenSettings }
 
   TfmTokenSettings = class(TForm)
+    bAddToInitiative: TButton;
     bOk: TButton;
     bDelete: TButton;
     bCancel: TButton;
@@ -42,10 +43,13 @@ type
     Label4: TLabel;
     Label5: TLabel;
     Label6: TLabel;
+    Label7: TLabel;
+    seNumber: TSpinEditEx;
     udGridSlotsY: TUpDown;
     udWidth: TUpDown;
     udHeight: TUpDown;
     udGridSlotsX: TUpDown;
+    procedure bAddToInitiativeClick(Sender: TObject);
     procedure bCancelClick(Sender: TObject);
     procedure bDeleteClick(Sender: TObject);
     procedure bOkClick(Sender: TObject);
@@ -68,7 +72,8 @@ uses
   Math,
   LangStrings,
   ControllerForm,
-  DisplayForm;
+  DisplayForm,
+  InitiativeForm;
 
 { TfmTokenSettings }
 
@@ -88,6 +93,7 @@ begin
     LinkedToken.GridSlotsX := udGridSlotsX.Position;
     LinkedToken.GridSlotsY := udGridSlotsY.Position;
     LinkedToken.OverlayIdx := cbOverlay.ItemIndex - 1;
+    LinkedToken.Number  := seNumber.Value;
     fmController.SnapTokenToGrid(LinkedToken);
 
     LinkedToken := nil;
@@ -101,6 +107,20 @@ procedure TfmTokenSettings.bCancelClick(Sender: TObject);
 begin               
   LinkedToken := nil;
   Close;
+end;
+
+procedure TfmTokenSettings.bAddToInitiativeClick(Sender: TObject);
+begin
+  if Assigned(LinkedToken) then
+  begin
+    fmSetInitiative.udBaseInitiative.Position := LinkedToken.BaseInitiative;
+    fmSetInitiative.udRolledInitiative.Position := 1;
+    fmSetInitiative.TokenName := LinkedToken.Name;
+    fmSetInitiative.TokenPath := LinkedToken.Path;
+    fmSetInitiative.TokenNo := seNumber.Value;
+    bOkClick(self);
+    fmSetInitiative.Show;
+  end;
 end;
 
 procedure TfmTokenSettings.bDeleteClick(Sender: TObject);
@@ -123,9 +143,11 @@ begin
   Label5.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsRotation');
   Label3.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsSlotsX');
   Label4.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsSlotsY');
+  Label7.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsNumber');
   bDelete.Caption := GetString(LangStrings.LanguageID, 'ButtonDelete');      
   bCancel.Caption := GetString(LangStrings.LanguageID, 'ButtonCancel');
   bOk.Caption := GetString(LangStrings.LanguageID, 'ButtonOk');
+  bAddToInitiative.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsAddToInit');
 
   PrevIdx := cbOverlay.ItemIndex;
   cbOverlay.Items.Clear;
