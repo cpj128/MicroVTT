@@ -1051,6 +1051,8 @@ begin
       begin
         CurToken := TToken(FTokenList[i]);
         saveFile.WriteString(SAVESECTIONTOKENS, 'Path' + IntToStr(i), CurToken.Path);
+        saveFile.WriteString(SAVESECTIONTOKENS, 'Name' + IntToStr(i), CurToken.Name);
+        saveFile.WriteInteger(SAVESECTIONTOKENS, 'No' + IntToStr(i), CurToken.Number);
         saveFile.WriteInteger(SAVESECTIONTOKENS, 'XPos' + IntToStr(i), CurToken.XEndPos);
         saveFile.WriteInteger(SAVESECTIONTOKENS, 'YPos' + IntToStr(i), CurToken.YEndPos);
         saveFile.WriteInteger(SAVESECTIONTOKENS, 'Width' + IntToStr(i), CurToken.Width);
@@ -1151,6 +1153,8 @@ begin
           CurToken.Visible := saveFile.ReadBool(SAVESECTIONTOKENS, 'Visible' + IntToStr(i), FTokensStartInvisible);
           CurToken.GridSlotsX := saveFile.ReadInteger(SAVESECTIONTOKENS, 'XSlots' + IntToStr(i), 1);               
           CurToken.GridSlotsY := saveFile.ReadInteger(SAVESECTIONTOKENS, 'YSlots' + IntToStr(i), 1);
+          CurToken.Name := saveFile.ReadString(SAVESECTIONTOKENS, 'Name' + IntToStr(i), '');
+          CurToken.Number:= saveFile.ReadInteger(SAVESECTIONTOKENS, 'No' + IntToStr(i), 0);
 
           FTokenList.Add(CurToken);
         end;
