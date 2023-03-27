@@ -148,7 +148,8 @@ type
     FShowMarker: Boolean;
     FShowTokens: Boolean;
     FCombatMode: Boolean;
-    FInitiativeList: TList;
+    FInitiativePicList: TList;
+    FInitiativeNumList: TList;
     FCurInitiativeIndex: Integer;
     FTokenList: TList;
     FMapDir, FTokenDir, FOverlayDir: string;
@@ -174,6 +175,7 @@ type
     function GetOverlay(idx: Integer): TBGRABitmap;
     procedure RemoveToken(token: TToken);
     function GetInitiative(idx: Integer): TPicture;
+    function GetInitiativeNum(idx: Integer): Integer;
     function GetInitiativeCount: Integer;
     function GetCurInitiativeIdx: Integer;
     procedure SnapAllTokensToGrid;
@@ -182,7 +184,7 @@ type
     procedure SaveSettings;
     procedure RestoreGridData;
     procedure SaveGridData;
-    procedure AddToInitiative(pName, Path: string; Value: Integer);
+    procedure AddToInitiative(pName, Path: string; Num, Value: Integer);
     property GridSizeX: Single read FGridSizeX write FGridSizeX; 
     property GridSizeY: Single read FGridSizeY write FGridSizeY;
     property GridOffsetX: Single read FGridOffsetX write FGridOffsetX;
@@ -393,6 +395,7 @@ begin
     fmSetInitiative.udRolledInitiative.Position := 1;
     fmSetInitiative.TokenName := TTokenNodeData(TTreeView(Source).Selected.Data).Name;
     fmSetInitiative.TokenPath := TTokenNodeData(TTreeView(Source).Selected.Data).FullPath;
+    fmSetInitiative.TokenNo := 0;
     fmSetInitiative.Show;
   end;
 end;
@@ -788,7 +791,8 @@ begin
     begin
       bmp := TPicture.Create;
       bmp.LoadFromFile(lvInitiative.Items[i].SubItems[2]);
-      FInitiativeList.Add(bmp);
+      FInitiativePicList.Add(bmp);
+      FInitiativeNumList.Add(lvInitiative.Items[i].Data); // TODO
     end;
     // Mark first item
     lvInitiative.Items[0].Caption := '>';
@@ -797,10 +801,11 @@ begin
   begin
     for i := 0 to lvInitiative.Items.Count - 1 do
       lvInitiative.Items[i].Caption := '';
-    for i := FInitiativeList.Count - 1 downto 0 do
+    for i := FInitiativePicList.Count - 1 downto 0 do
     begin
-      bmp := TPicture(FInitiativeList[i]);
-      FInitiativeList.Delete(i);
+      bmp := TPicture(FInitiativePicList[i]);
+      FInitiativePicList.Delete(i);
+      FInitiativeNumList.Delete(i);
       bmp.Free;
     end;
   end;
@@ -989,8 +994,9 @@ begin
     NewIndex := FCurInitiativeIndex;
     if FCurInitiativeIndex > lvInitiative.ItemIndex then
       Dec(NewIndex);
-    tmpPic := TPicture(FInitiativeList.Items[lvInitiative.ItemIndex]);
-    FInitiativeList.Delete(lvInitiative.ItemIndex);
+    tmpPic := TPicture(FInitiativePicList.Items[lvInitiative.ItemIndex]);
+    FInitiativePicList.Delete(lvInitiative.ItemIndex);
+    FInitiativeNumList.Delete(lvInitiative.ItemIndex);
     tmpPic.Free;
     lvInitiative.Items.Delete(lvInitiative.ItemIndex);
     FCurInitiativeIndex := NewIndex;
@@ -1403,13 +1409,20 @@ end;
 function TfmController.GetInitiative(idx: Integer): TPicture;
 begin
   Result := nil;
-  if (idx >= 0) and (idx < FInitiativeList.Count) then
-    Result := TPicture(FInitiativeList.Items[idx]);
+  if (idx >= 0) and (idx < FInitiativePicList.Count) then
+    Result := TPicture(FInitiativePicList.Items[idx]);
+end;
+
+function TfmController.GetInitiativeNum(idx: Integer): Integer;
+begin
+  Result := 0;
+  if (idx >= 0) and (idx < FInitiativeNumList.Count) then
+    Result := Integer(FInitiativeNumList.Items[idx]);
 end;
 
 function TfmController.GetInitiativeCount: Integer;
 begin
-  Result := FInitiativeList.Count;
+  Result := FInitiativePicList.Count;
 end;
 
 function TfmController.GetCurInitiativeIdx: Integer;
@@ -1504,7 +1517,7 @@ begin
   pbViewPort.Invalidate;
 end;
 
-procedure TfmController.AddToInitiative(pName, Path: string; Value: Integer);
+procedure TfmController.AddToInitiative(pName, Path: string; Num, Value: Integer);
 var
   tmpItem: TListItem;
 begin
@@ -1513,6 +1526,7 @@ begin
   tmpItem.SubItems.Add(pName);
   tmpItem.SubItems.Add(IntToStr(Value));
   tmpItem.SubItems.Add(Path);
+  tmpItem.Data := Pointer(Num);
 end;
 
 procedure TfmController.UpdateViewport;
@@ -1581,7 +1595,8 @@ var
 begin
   FMapPic := nil;
   FTokenList := TList.Create;
-  FInitiativeList := TList.Create;
+  FInitiativePicList := TList.Create;
+  FInitiativeNumList := TList.Create;
   FAppSettings := TIniFile.Create('Settings.ini', [ifoWriteStringBoolean]);
 
   // Load settings
@@ -1637,7 +1652,8 @@ begin
   if Assigned(FMapPic) then
     FMapPic.Free;
   FTokenList.Free;
-  FInitiativeList.Free;
+  FInitiativePicList.Free;
+  FInitiativeNumList.Free;
   FAppSettings.WriteString('Settings', 'MapDir', FMapDir);
   FAppSettings.WriteString('Settings', 'TokenDir', FTokenDir);
   FAppSettings.WriteString('Settings', 'OverlayDir', FOverlayDir);

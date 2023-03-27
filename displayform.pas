@@ -327,6 +327,7 @@ var
   ArrowPnt: TPointF;
   ArrowPntsTrans: array[0..3] of TPointF;
   NumSize: TSize;
+  PortraitText: string;
   {$IFDEF DEBUG}StartTime: Int64;{$ENDIF}
 
 procedure Draw3DFrame(pRect: TRect);
@@ -668,7 +669,23 @@ begin
                           IfThen(i = 0, PORTRAITHEIGHT, INITIATIVEHEIGHT));
       tmpPicture := fmController.GetInitiative((i + fmController.CurInitiativeIndex) mod fmController.GetInitiativeCount);
       if Assigned(tmpPicture) then
+      begin
         Canvas.StretchDraw(TokenRect, tmpPicture.Graphic);
+        if fmController.GetInitiativeNum((i + fmController.CurInitiativeIndex) mod fmController.GetInitiativeCount) > 0 then
+        begin
+          PortraitText := IntToStr(fmController.GetInitiativeNum((i + fmController.CurInitiativeIndex) mod fmController.GetInitiativeCount));
+          Canvas.Font.Style := [fsBold];
+          Canvas.Font.Color := clBlack;
+          Canvas.Font.Size := 30;
+
+          NumSize := Canvas.TextExtent(PortraitText);
+
+          Canvas.TextOut(TokenRect.Left + (TokenRect.Width - NumSize.Width) div 2, TokenRect.Top + (TokenRect.Height - NumSize.Height) div 2, PortraitText);
+          Canvas.Font.Style := [];
+          Canvas.Font.Color := clWhite;
+          Canvas.TextOut(TokenRect.Left + (TokenRect.Width - NumSize.Width) div 2, TokenRect.Top + (TokenRect.Height - NumSize.Height) div 2, PortraitText);
+        end;
+      end;
     end;
 
   end;

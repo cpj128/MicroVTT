@@ -73,7 +73,7 @@ begin
   tmpName := TokenName;
   if TokenNo > 0 then
     tmpName := tmpName + ' ' + IntToStr(TokenNo);
-  fmController.AddToInitiative(tmpName, TokenPath, udBaseInitiative.Position + udRolledInitiative.Position);
+  fmController.AddToInitiative(tmpName, TokenPath, TokenNo, udBaseInitiative.Position + udRolledInitiative.Position);
   Close;
 end;
 
