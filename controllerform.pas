@@ -724,6 +724,13 @@ begin
   pbViewPort.Canvas.Pen.Width := 3;
   pbViewPort.Canvas.Pen.Color := clBlack;
   pbViewPort.Canvas.Rectangle(0, 0, FViewRectWidth, FViewRectHeight);
+  if not FShowMap then
+  begin
+    // Draw marker, if player's view is disabled
+    pbViewPort.Canvas.Pen.Color := clRed;
+    pbViewPort.Canvas.MoveTo(0, 0);
+    pbViewPort.Canvas.LineTo(FViewRectWidth, FViewRectHeight);
+  end;
 end;
 
 procedure TfmController.pPortraitDragDrop(Sender, Source: TObject; X, Y: Integer
@@ -1200,6 +1207,7 @@ end;
 procedure TfmController.tbShowMapClick(Sender: TObject);
 begin
   FShowMap := tbShowMap.Down;
+  pbViewPort.Invalidate;
   fmDisplay.Invalidate;
 end;
 
