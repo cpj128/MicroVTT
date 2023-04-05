@@ -1,7 +1,7 @@
 object fmDisplay: TfmDisplay
-  Left = 567
+  Left = 831
   Height = 768
-  Top = 55
+  Top = 31
   Width = 1024
   BorderIcons = [biMaximize]
   Caption = 'Display'

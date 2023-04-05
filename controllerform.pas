@@ -174,6 +174,8 @@ type
     function GetTokenCount: Integer;
     function GetOverlay(idx: Integer): TBGRABitmap;
     procedure RemoveToken(token: TToken);
+    procedure TokenToFront(token: TToken);
+    procedure TokenToBack(token: TToken);
     function GetInitiative(idx: Integer): TPicture;
     function GetInitiativeNum(idx: Integer): Integer;
     function GetInitiativeCount: Integer;
@@ -1412,6 +1414,23 @@ begin
   FTokenList.Remove(token);
   pbViewPort.Invalidate;
   fmDisplay.Invalidate;
+end;
+
+
+procedure TfmController.TokenToFront(token: TToken);
+var CurIdx: Integer;
+begin
+  CurIdx := FTokenList.IndexOf(token);
+  if CurIdx >= 0 then
+    FTokenList.Move(CurIdx, FTokenList.Count - 1);
+end;
+
+procedure TfmController.TokenToBack(token: TToken); 
+var CurIdx: Integer;
+begin
+  CurIdx := FTokenList.IndexOf(token);
+  if CurIdx >= 0 then
+    FTokenList.Move(CurIdx, 0);
 end;
 
 function TfmController.GetInitiative(idx: Integer): TPicture;

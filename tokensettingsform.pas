@@ -27,9 +27,11 @@ type
 
   TfmTokenSettings = class(TForm)
     bAddToInitiative: TButton;
+    bSendToBack: TButton;
     bOk: TButton;
     bDelete: TButton;
     bCancel: TButton;
+    bBringToFront: TButton;
     cbVisible: TCheckBox;
     cbOverlay: TComboBox;
     eGridSlotsY: TEdit;
@@ -50,9 +52,11 @@ type
     udHeight: TUpDown;
     udGridSlotsX: TUpDown;
     procedure bAddToInitiativeClick(Sender: TObject);
+    procedure bBringToFrontClick(Sender: TObject);
     procedure bCancelClick(Sender: TObject);
     procedure bDeleteClick(Sender: TObject);
     procedure bOkClick(Sender: TObject);
+    procedure bSendToBackClick(Sender: TObject);
     procedure FormDeactivate(Sender: TObject);
     procedure FormShow(Sender: TObject);
   private
@@ -123,6 +127,26 @@ begin
   end;
 end;
 
+procedure TfmTokenSettings.bBringToFrontClick(Sender: TObject);
+begin
+  if Assigned(LinkedToken) then
+  begin
+    fmController.TokenToFront(LinkedToken);
+    fmController.pbViewport.Invalidate;
+    fmDisplay.Invalidate;
+  end;
+end;
+
+procedure TfmTokenSettings.bSendToBackClick(Sender: TObject);
+begin
+  if Assigned(LinkedToken) then
+  begin
+    fmController.TokenToBack(LinkedToken);
+    fmController.pbViewport.Invalidate;
+    fmDisplay.Invalidate;
+  end;
+end;
+
 procedure TfmTokenSettings.bDeleteClick(Sender: TObject);
 begin
   fmController.RemoveToken(LinkedToken);
@@ -148,6 +172,8 @@ begin
   bCancel.Caption := GetString(LangStrings.LanguageID, 'ButtonCancel');
   bOk.Caption := GetString(LangStrings.LanguageID, 'ButtonOk');
   bAddToInitiative.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsAddToInit');
+  bBringToFront.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsBringToFront');
+  bSendToBack.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsSendToBack');
 
   PrevIdx := cbOverlay.ItemIndex;
   cbOverlay.Items.Clear;
