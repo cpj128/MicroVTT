@@ -241,7 +241,8 @@ uses
   StrUtils,
   Math,
   GetText,
-  BGRABitmapTypes,
+  BGRABitmapTypes, 
+  BGRATextFX,
   BGRATransform,
   DisplayConst,
   LangStrings,
@@ -536,6 +537,7 @@ var
   ArrowPnt: TPointF;
   ArrowPntsTrans: array[0..3] of TPointF;
   NumSize: TSize;
+  TextRenderer: TBGRATextEffectFontRenderer;
 begin
   // Draw Map
   if Assigned(FMapPic) then
@@ -667,11 +669,13 @@ begin
               // Add number
               if CurToken.Number > 0 then
               begin
+                TextRenderer := TBGRATextEffectFontRenderer.Create;
+                TextRenderer.OutlineVisible := True;
+                TextRenderer.OutlineColor := clBlack;
                 NumSize := RotatedBmp.TextSize(IntToStr(CurToken.Number));
                 RotatedBmp.FontStyle := [fsBold];
+                RotatedBmp.FontRenderer := TextRenderer;
                 // Should the text size change with the zoom factor?
-                RotatedBmp.TextOut((RotatedBmp.Width - NumSize.Width) div 2, (RotatedBmp.Height - NumSize.Height) div 2, IntToStr(CurToken.Number), clBlack, taLeftJustify);
-                RotatedBmp.FontStyle := [];
                 RotatedBmp.TextOut((RotatedBmp.Width - NumSize.Width) div 2, (RotatedBmp.Height - NumSize.Height) div 2, IntToStr(CurToken.Number), clWhite, taLeftJustify);
               end;
 
