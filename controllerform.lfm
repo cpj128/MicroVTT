@@ -4,451 +4,451 @@ object fmController: TfmController
   Top = 82
   Width = 1597
   Caption = 'MicroVTT'
-  ClientHeight = 900
+  ClientHeight = 880
   ClientWidth = 1597
   KeyPreview = True
+  Menu = MainMenu1
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnKeyUp = FormKeyUp
   OnResize = FormResize
   OnShow = FormShow
   LCLVersion = '2.2.4.0'
-  object lvMaps: TListView
-    Left = 8
-    Height = 768
-    Top = 34
-    Width = 210
-    Anchors = [akTop, akLeft, akBottom]
-    Columns = <>
-    DragMode = dmAutomatic
-    LargeImages = ilMapIcons
-    ReadOnly = True
-    ScrollBars = ssAutoVertical
-    StateImagesWidth = 32
-    TabOrder = 0
-    ViewStyle = vsIcon
-    OnDblClick = lvMapsDblClick
-  end
-  object pbViewport: TPaintBox
-    Left = 226
-    Height = 768
-    Top = 34
-    Width = 1024
-    Anchors = [akTop, akLeft, akRight, akBottom]
-    OnDblClick = pbViewportDblClick
-    OnDragDrop = pbViewportDragDrop
-    OnDragOver = pbViewportDragOver
-    OnMouseDown = pbViewportMouseDown
-    OnMouseMove = pbViewportMouseMove
-    OnMouseUp = pbViewportMouseUp
-    OnPaint = pbViewportPaint
-  end
-  object tbMapZoom: TTrackBar
-    Left = 228
-    Height = 25
-    Top = 818
-    Width = 948
-    Max = 200
-    OnChange = tbMapZoomChange
-    Position = 100
-    Anchors = [akLeft, akRight, akBottom]
-    Enabled = False
-    TabOrder = 1
-  end
-  object bResetZoom: TButton
-    Left = 1216
-    Height = 25
-    Top = 818
-    Width = 34
-    Anchors = [akRight, akBottom]
-    Caption = '100%'
-    Enabled = False
-    OnClick = bResetZoomClick
-    TabOrder = 2
-  end
-  object lZoom: TLabel
-    Left = 1184
-    Height = 15
-    Top = 824
-    Width = 28
-    Anchors = [akRight, akBottom]
-    Caption = '100%'
-    ParentColor = False
-  end
-  object tbControl: TToolBar
+  object pcMain: TPageControl
     Left = 0
-    Height = 26
+    Height = 880
     Top = 0
     Width = 1597
-    ButtonHeight = 24
-    ButtonWidth = 24
-    Caption = 'tbControl'
-    Images = ilMenuItems
-    ParentShowHint = False
-    ShowHint = True
-    TabOrder = 5
-    object tbExit: TToolButton
-      Left = 1
-      Hint = 'Exit program'
-      Top = 2
-      Caption = 'tbExit'
-      ImageIndex = 0
-      OnClick = tbExitClick
+    ActivePage = tsController
+    Align = alClient
+    TabIndex = 0
+    TabOrder = 0
+    object tsController: TTabSheet
+      Caption = 'Map Controller'
+      ClientHeight = 852
+      ClientWidth = 1589
+      object lvMaps: TListView
+        Left = 8
+        Height = 748
+        Top = 34
+        Width = 210
+        Anchors = [akTop, akLeft, akBottom]
+        Columns = <>
+        DragMode = dmAutomatic
+        LargeImages = ilMapIcons
+        ReadOnly = True
+        ScrollBars = ssAutoVertical
+        StateImagesWidth = 32
+        TabOrder = 0
+        ViewStyle = vsIcon
+        OnDblClick = lvMapsDblClick
+      end
+      object pbViewport: TPaintBox
+        Left = 226
+        Height = 748
+        Top = 34
+        Width = 1024
+        Anchors = [akTop, akLeft, akRight, akBottom]
+        OnDblClick = pbViewportDblClick
+        OnDragDrop = pbViewportDragDrop
+        OnDragOver = pbViewportDragOver
+        OnMouseDown = pbViewportMouseDown
+        OnMouseMove = pbViewportMouseMove
+        OnMouseUp = pbViewportMouseUp
+        OnPaint = pbViewportPaint
+      end
+      object tbMapZoom: TTrackBar
+        Left = 228
+        Height = 25
+        Top = 798
+        Width = 948
+        Max = 200
+        OnChange = tbMapZoomChange
+        Position = 100
+        Anchors = [akLeft, akRight, akBottom]
+        Enabled = False
+        TabOrder = 1
+      end
+      object bResetZoom: TButton
+        Left = 1216
+        Height = 25
+        Top = 798
+        Width = 34
+        Anchors = [akRight, akBottom]
+        Caption = '100%'
+        Enabled = False
+        OnClick = bResetZoomClick
+        TabOrder = 2
+      end
+      object lZoom: TLabel
+        Left = 1184
+        Height = 15
+        Top = 804
+        Width = 28
+        Anchors = [akRight, akBottom]
+        Caption = '100%'
+        ParentColor = False
+      end
+      object tbControl: TToolBar
+        Left = 0
+        Height = 26
+        Top = 0
+        Width = 1589
+        ButtonHeight = 24
+        ButtonWidth = 24
+        Caption = 'tbControl'
+        Images = ilMenuItems
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 3
+        object tbFullscreen: TToolButton
+          Left = 129
+          Hint = 'Toggle fullscreen of display window'
+          Top = 2
+          Caption = 'tbFullscreen'
+          ImageIndex = 1
+          OnClick = bFullscreenClick
+          Style = tbsCheck
+        end
+        object tbShowGrid: TToolButton
+          Left = 177
+          Hint = 'Show Grid'
+          Top = 2
+          Caption = 'tbShowGrid'
+          Down = True
+          ImageIndex = 2
+          OnClick = tbShowGridClick
+          Style = tbsCheck
+        end
+        object tbGridSettings: TToolButton
+          Left = 201
+          Hint = 'Grid Settings'
+          Top = 2
+          Caption = 'tbGridSettings'
+          ImageIndex = 3
+          OnClick = tbGridSettingsClick
+        end
+        object ToolButton1: TToolButton
+          Left = 121
+          Height = 24
+          Top = 2
+          Caption = 'ToolButton1'
+          Style = tbsSeparator
+        end
+        object tbHideMarker: TToolButton
+          Left = 281
+          Hint = 'Hide Marker'
+          Top = 2
+          Caption = 'tbHideMarker'
+          ImageIndex = 4
+          OnClick = tbHideMarkerClick
+        end
+        object tbHidePortrait: TToolButton
+          Left = 305
+          Hint = 'Hide portrait'
+          Top = 2
+          Caption = 'tbHidePortrait'
+          ImageIndex = 5
+          OnClick = tbHidePortraitClick
+        end
+        object tbSnapTokensToGrid: TToolButton
+          Left = 225
+          Hint = 'Snap tokens to grid'
+          Top = 2
+          Caption = 'tbSnapTokensToGrid'
+          ImageIndex = 6
+          OnClick = tbSnapTokensToGridClick
+          Style = tbsCheck
+        end
+        object tbHideTokens: TToolButton
+          Left = 249
+          Hint = 'Show / Hide all tokens'
+          Top = 2
+          Caption = 'tbHideTokens'
+          Down = True
+          ImageIndex = 7
+          OnClick = tbHideTokensClick
+          Style = tbsCheck
+        end
+        object ToolButton2: TToolButton
+          Left = 353
+          Height = 24
+          Top = 2
+          Caption = 'ToolButton2'
+          Style = tbsSeparator
+        end
+        object tbCombatMode: TToolButton
+          Left = 361
+          Hint = 'Toggle Combat'
+          Top = 2
+          Caption = 'tbCombatMode'
+          ImageIndex = 8
+          OnClick = tbCombatModeClick
+          Style = tbsCheck
+        end
+        object tbNextCombatant: TToolButton
+          Left = 385
+          Hint = 'Next combattant'
+          Top = 2
+          Caption = 'tbNextCombatant'
+          Enabled = False
+          ImageIndex = 9
+          OnClick = tbNextCombatantClick
+        end
+        object tbClearTokens: TToolButton
+          Left = 329
+          Hint = 'Remove all tokens'
+          Top = 2
+          Caption = 'tbClearTokens'
+          ImageIndex = 10
+          OnClick = tbClearTokensClick
+        end
+        object ToolButton3: TToolButton
+          Left = 273
+          Height = 24
+          Top = 2
+          Caption = 'ToolButton3'
+          Style = tbsSeparator
+        end
+        object tbRefreshMaps: TToolButton
+          Left = 1
+          Hint = 'Refresh maps'
+          Top = 2
+          Caption = 'tbRefreshMaps'
+          ImageIndex = 11
+          OnClick = tbRefreshMapsClick
+        end
+        object tbRefreshTokens: TToolButton
+          Left = 25
+          Hint = 'Refresh tokens'
+          Top = 2
+          Caption = 'tbRefreshTokens'
+          ImageIndex = 12
+          OnClick = tbRefreshTokensClick
+        end
+        object tbClearInitiative: TToolButton
+          Left = 433
+          Hint = 'Clear initiative list'
+          Top = 2
+          Caption = 'tbClearInitiative'
+          ImageIndex = 14
+          OnClick = tbClearInitiativeClick
+        end
+        object tbRemoveFromInitiative: TToolButton
+          Left = 409
+          Hint = 'Remove from initiative list'
+          Top = 2
+          Caption = 'tbRemoveFromInitiative'
+          Enabled = False
+          ImageIndex = 15
+          OnClick = tbRemoveFromInitiativeClick
+        end
+        object tbLibrary: TToolButton
+          Left = 49
+          Hint = 'Manage Libraries'
+          Top = 2
+          Caption = 'tbLibrary'
+          ImageIndex = 16
+          OnClick = tbLibraryClick
+        end
+        object tbLoadSession: TToolButton
+          Left = 73
+          Top = 2
+          Caption = 'tbLoadSession'
+          ImageIndex = 17
+          OnClick = tbLoadSessionClick
+        end
+        object tbSaveSession: TToolButton
+          Left = 97
+          Top = 2
+          Caption = 'tbSaveSession'
+          ImageIndex = 18
+          OnClick = tbSaveSessionClick
+        end
+        object tbShowMap: TToolButton
+          Left = 153
+          Hint = 'Show / Hide player''s map'
+          Top = 2
+          Caption = 'tbShowMap'
+          ImageIndex = 19
+          OnClick = tbShowMapClick
+          Style = tbsCheck
+        end
+      end
+      object tvTokens: TTreeView
+        Left = 1258
+        Height = 280
+        Top = 34
+        Width = 280
+        Anchors = [akTop, akRight]
+        Constraints.MaxHeight = 1000
+        Constraints.MaxWidth = 280
+        Constraints.MinHeight = 100
+        Constraints.MinWidth = 280
+        DragMode = dmAutomatic
+        TabOrder = 4
+        OnDeletion = tvTokensDeletion
+        OnDragOver = tvTokensDragOver
+      end
+      object pPortrait: TPanel
+        Left = 1259
+        Height = 104
+        Top = 322
+        Width = 280
+        Anchors = [akTop, akRight]
+        ClientHeight = 104
+        ClientWidth = 280
+        TabOrder = 5
+        OnDragDrop = pPortraitDragDrop
+        OnDragOver = pPortraitDragOver
+        OnResize = pPortraitResize
+        object Image1: TImage
+          Left = 90
+          Height = 100
+          Top = 0
+          Width = 100
+          OnDragDrop = pPortraitDragDrop
+          OnDragOver = pPortraitDragOver
+          Picture.Data = {
+            1754506F727461626C654E6574776F726B47726170686963140A000089504E47
+            0D0A1A0A0000000D494844520000006400000064080600000070E29554000001
+            85694343504943432070726F66696C65000028917D913D48C35014854F53A552
+            2A0E561071C8D03A59101571942A16C142692BB4EA60F2D23F68D290A4B8380A
+            AE05077F16AB0E2ECEBA3AB80A82E00F88AB8B93A28B94785F526811E385977C
+            9C77CFE1BDFB00A15965AAD93301A89A65A4137131975F1503AFF0610841FA46
+            2566EAC9CC62169EF5754F7D5477319EE5DDF767F52B0593013E91788EE98645
+            BC413CB369E99CF789C3AC2C29C4E7C4E3061D90F891EBB2CB6F9C4B0E0B3C33
+            6C64D3F3C46162B1D4C57217B3B2A1124F13471455A37C21E7B2C2798BB35AAD
+            B3F639F90D43056D25C3755AA348600949A42042461D15546121467F8D141369
+            DA8F7BF8471C7F8A5C32B92A60E458400D2A24C70FFE06BF676B16A726DDA450
+            1CE87DB1ED8F2810D8055A0DDBFE3EB6EDD609E07F06AEB48EBFD604663F496F
+            74B4C81130B00D5C5C7734790FB8DC01869F74C9901CC94F4B281681F7337AA6
+            3C30780B04D7DCB9B5F771FA00646956CB37C0C1213056A2EC758F7BF775CFED
+            DF9EF6FC7E0040A37293EC6BF50F00000006624B474400FF00FF00FFA0BDA793
+            000000097048597300000DD700000DD70142289B780000000774494D4507E701
+            151510261F10F9B0000008104944415478DAED9D796C174514C73FFD49A5C5CA
+            59E4900A082A8715A814051411E28582A24411914850434854A2A8781114AF48
+            9010A302318A226A108D8A82A052A807315215132510B1294605E4127AD352FF
+            9869F8757EB3BF637F7BB5B3DF64936E777F336FE6BB3B6FDE9B376FC11A6701
+            DF0175404312C709A004380F73D01FF851B63D993EAA03BE01F2EC54F67A9295
+            A8C7C70611B2D6661FBD665560244E65BD6D0A99631021A7D9FC5D1F3B84D8C1
+            6160BE4184CC078E385960AB14EE7D1E5813E77A1DB013A836889062A09BD49B
+            F1FA721230D76942FE944A3B44535403DB13DC7351B28545C2FE0C1642424242
+            4238A5438280B3E578DC571AAEED806C204B5EAF052AE4B107D80D6C0376C8F9
+            7F488803381F980EDC0CF4B059C601E043E04DE97D68962852ACCB593EB8253E
+            49C12D91EC510C0CF7B82DB314198AECE8905AE5BCC623E1338007819F80F1F2
+            DC495C8AF0272D06323D6A534D82BE4D6AC85A075C29FFAE023679207826C287
+            3635CE3DFB809F81FD72283A288DD2C607AC933C3A0317A077E44580D9F2FA44
+            E0A807A34D95D477009FD97D526F059E050679F466BC6531CC1C009E91FAC4CE
+            4460AE54F2BAB2B74475949B182CFB72B20B6FBD2B9883DE5DBD10FB4E3CF5ED
+            9B03546AEA591E4EB89B225FBA20A23BE91870B50B7515007F6B48B92EA4E124
+            362B9D733C4A7FB9818108CF74749D65C0A921157089E6699DE741BD9335F5DE
+            19D2210CB6E84EF9DDC327F54BA5EE1DA69371BA9C0E4677CA3D1ED67F95E62D
+            19643221EAB05103E47A58FF299AE9F0537E7688DFDEDE91CAF906697378857A
+            E03D8D256F2C21C394F3AD3EC8A03A1B87CA37C748FCA70C17637D90A19B468F
+            F434918C8E9A8EC8F34996638A1CA34C1CB2BA68FEF7AF4FB2EC53CEBB9A4888
+            EA9FAAC0BF1022F541C8319110D5F57FC24759D4BA334D24A43240B2A8EEF0AA
+            901068837F6BFC6D13C8660421799AA7B4938F33BE68E4621816A00F5E18E183
+            2C59D262576559698A817823D61121E37D90A77B1C79169840C8D758EF2EEAE7
+            833CADE5B45727D3619C593E0E2C3235C3C32AE05DDC5D214C847C60853C6AF0
+            DF9DE3197A699EC2EC80C9B855916F7A4B9E656529E70D3E1B843A942BE7ED5A
+            32217B3553DDFE0123A4AF72BEAFA52BF59DCA90B02840B2156A86D4FE2D9D90
+            1794065722A20B8380F58A6C7F9830EDED8908368E6EF8F71AFDE235EED2BC1D
+            0F9862A92FD234FE731F49B941F390ECC1A03DF739C02FE8039FBDF6674DD5D8
+            1EF5C0B51886DE1616F2060F651887DEA7F6088662387088D82436DD3DAABF08
+            7D1E920C0C463EB1D1275E28D3819AB76389E96434E20D62E37BDD365A572A75
+            EE0FC04C2F30B84233744C74D91A3FAED4F764484353174A89D241BB70CFF1B8
+            5AA9EB28FEAD5606163769DE92975DA84717F1FE5CD8FDB18800DFBA6C2DE720
+            B23BA8BAA363D8FD7A0C4004CCA9A43C4FFAB15211E07D4DD97784DD1E1FD3D0
+            2FA76E03CE4CA3DCE5169E81709A9B041EB620E5559BE5E9F6131EC4D02877BB
+            9849AC8FA9D866598B89DDA93526A88A34A8584A6C42CD3A87DAB90A6F5285B4
+            2842203669CB7187CAAD0DF25433C8C8748910424252474784E3D10D42CEC17E
+            3234A3908508275DAD51E80DF2FF76B04453563D226FD6DDB4F0E8443BC3D238
+            E06D62F7FA39E54A793441B947A49D32D254BB2403B11FFC15ACE36AD5E32FE0
+            5C9BF5E54AC332997A76018F23926CB678F4009E004A93EC9C4AE003E016D2F7
+            FC363E04CB885DA56CB018D2D603136861DB125A21A23A3E25B96F91D4021F01
+            5310B950DCC0BDA49638B30C780C1F77E73A815C69D8FD9362E3EB118B456ECC
+            00332D147C63D84F22D96A80776866096A7ACA469727D1C05F11C93675D7363A
+            EC6BEA8B08C8D3D5F5927C0086CA21ED2889BF26B416EFD3CDA66C37AC2036E0
+            4C37A359CAC92F0664002F5ADC5B21754E3A6BDDD9888468951675CCD7FC2607
+            9841ECD604DDB109B16C1038AC4E20F86644509A95727E288E8E29432C54A5B2
+            CCDA1991FF776F9C09C3ED4994938F080DAA8ED3B652029625BC93C59B518388
+            EE2848B29CB1E81354462BFC75B2A32F93435A16D001B156320AB85FDE539B60
+            6A5B90621BBB22F61C1EB0283350DEE3198A7055881CB57602DE3AC8A1CFE914
+            E38D1386C5883DF176D106913A5C9DAC2C09F270B5C681320B81AF1C24E30B60
+            88836D9EA794BF3D28644434D6F63407CB1F81C8785D6583846A39645EEC42BB
+            0B356F5F2082258668A68467B8504F5BE07A39452D412CC1366886CA12A98427
+            E1EEFEC0889C3146D73F210884A829C27FF3B0EE1CC4EEABDE52F778ED18DCA8
+            B47DA1136E0D27869468147BD821E5C4EE9AF5125B1161B08D18E6C46B972E54
+            3742B3FD828D0DFCA09CFBBE41B4AD667A5A681021FD347AACB39F020DD608D4
+            DE204274998486FA3964A991847B71F8DBB00147B53410A3D1C54F42544BBC14
+            F3B047E362F18D107501E988818454688631DF08094CF2481FE168D05DC4E1DF
+            671B4888EAA84CEB8BA2E91A86873436C932C3081990A04F1C4306701BC28D6E
+            E5251D83F32EF2E67E5859EB05B22FA760D3C5339BC4197B7A8504C41CBA14B3
+            7D68EAADBECF8E0EB946D10D976BEE2943785743086C41FF419AD1CAEC6B9C1D
+            1DA27E98ABB5E69E06C4B70667E2DFA72682825244F0860EAD13F4AD634A1DF9
+            443C1DBE1CC198F68608090909091112121212222048659695075C18E77A1D22
+            22D034076336622351AB047D97368A6C58A98711219EA66034B1A140C91C455E
+            0D59EDF1E6D3DB41C13C1C8EFD8A4788DDACCEE5061162B7ADBBEDFC280FB16D
+            B88EE40399B7617F636673443F842FAF3EC93EAA437CD0C6728FFCFFCC58676E
+            DBFC7C430000000049454E44AE426082
+          }
+        end
+      end
+      object lvInitiative: TListView
+        Left = 1259
+        Height = 346
+        Top = 434
+        Width = 280
+        Anchors = [akTop, akRight, akBottom]
+        AutoSort = False
+        Columns = <        
+          item
+            MaxWidth = 20
+            MinWidth = 20
+            Width = 20
+          end        
+          item
+            Caption = 'Name'
+            MaxWidth = 200
+            MinWidth = 75
+            Width = 190
+          end        
+          item
+            Caption = 'Initiative'
+            MaxWidth = 200
+            MinWidth = 75
+            Width = 80
+          end        
+          item
+            Caption = 'Path'
+            MaxWidth = 1
+            MinWidth = 1
+            Visible = False
+            Width = 1
+          end>
+        ColumnClick = False
+        RowSelect = True
+        SortColumn = 2
+        SortDirection = sdDescending
+        SortType = stText
+        TabOrder = 6
+        ViewStyle = vsReport
+        OnCompare = lvInitiativeCompare
+        OnDragDrop = lvInitiativeDragDrop
+        OnDragOver = lvInitiativeDragOver
+      end
     end
-    object tbFullscreen: TToolButton
-      Left = 177
-      Hint = 'Toggle fullscreen of display window'
-      Top = 2
-      Caption = 'tbFullscreen'
-      ImageIndex = 1
-      OnClick = bFullscreenClick
-      Style = tbsCheck
-    end
-    object tbShowGrid: TToolButton
-      Left = 225
-      Hint = 'Show Grid'
-      Top = 2
-      Caption = 'tbShowGrid'
-      Down = True
-      ImageIndex = 2
-      OnClick = tbShowGridClick
-      Style = tbsCheck
-    end
-    object tbGridSettings: TToolButton
-      Left = 249
-      Hint = 'Grid Settings'
-      Top = 2
-      Caption = 'tbGridSettings'
-      ImageIndex = 3
-      OnClick = tbGridSettingsClick
-    end
-    object ToolButton1: TToolButton
-      Left = 169
-      Height = 24
-      Top = 2
-      Caption = 'ToolButton1'
-      Style = tbsSeparator
-    end
-    object tbHideMarker: TToolButton
-      Left = 329
-      Hint = 'Hide Marker'
-      Top = 2
-      Caption = 'tbHideMarker'
-      ImageIndex = 4
-      OnClick = tbHideMarkerClick
-    end
-    object tbHidePortrait: TToolButton
-      Left = 353
-      Hint = 'Hide portrait'
-      Top = 2
-      Caption = 'tbHidePortrait'
-      ImageIndex = 5
-      OnClick = tbHidePortraitClick
-    end
-    object tbSnapTokensToGrid: TToolButton
-      Left = 273
-      Hint = 'Snap tokens to grid'
-      Top = 2
-      Caption = 'tbSnapTokensToGrid'
-      ImageIndex = 6
-      OnClick = tbSnapTokensToGridClick
-      Style = tbsCheck
-    end
-    object tbHideTokens: TToolButton
-      Left = 297
-      Hint = 'Show / Hide all tokens'
-      Top = 2
-      Caption = 'tbHideTokens'
-      Down = True
-      ImageIndex = 7
-      OnClick = tbHideTokensClick
-      Style = tbsCheck
-    end
-    object ToolButton2: TToolButton
-      Left = 401
-      Height = 24
-      Top = 2
-      Caption = 'ToolButton2'
-      Style = tbsSeparator
-    end
-    object tbCombatMode: TToolButton
-      Left = 409
-      Hint = 'Toggle Combat'
-      Top = 2
-      Caption = 'tbCombatMode'
-      ImageIndex = 8
-      OnClick = tbCombatModeClick
-      Style = tbsCheck
-    end
-    object tbNextCombatant: TToolButton
-      Left = 433
-      Hint = 'Next combattant'
-      Top = 2
-      Caption = 'tbNextCombatant'
-      Enabled = False
-      ImageIndex = 9
-      OnClick = tbNextCombatantClick
-    end
-    object tbClearTokens: TToolButton
-      Left = 377
-      Hint = 'Remove all tokens'
-      Top = 2
-      Caption = 'tbClearTokens'
-      ImageIndex = 10
-      OnClick = tbClearTokensClick
-    end
-    object ToolButton3: TToolButton
-      Left = 321
-      Height = 24
-      Top = 2
-      Caption = 'ToolButton3'
-      Style = tbsSeparator
-    end
-    object tbSettings: TToolButton
-      Left = 25
-      Hint = 'Settings'
-      Top = 2
-      Caption = 'tbSettings'
-      ImageIndex = 13
-      OnClick = tbSettingsClick
-    end
-    object tbRefreshMaps: TToolButton
-      Left = 49
-      Hint = 'Refresh maps'
-      Top = 2
-      Caption = 'tbRefreshMaps'
-      ImageIndex = 11
-      OnClick = tbRefreshMapsClick
-    end
-    object tbRefreshTokens: TToolButton
-      Left = 73
-      Hint = 'Refresh tokens'
-      Top = 2
-      Caption = 'tbRefreshTokens'
-      ImageIndex = 12
-      OnClick = tbRefreshTokensClick
-    end
-    object tbClearInitiative: TToolButton
-      Left = 481
-      Hint = 'Clear initiative list'
-      Top = 2
-      Caption = 'tbClearInitiative'
-      ImageIndex = 14
-      OnClick = tbClearInitiativeClick
-    end
-    object tbRemoveFromInitiative: TToolButton
-      Left = 457
-      Hint = 'Remove from initiative list'
-      Top = 2
-      Caption = 'tbRemoveFromInitiative'
-      Enabled = False
-      ImageIndex = 15
-      OnClick = tbRemoveFromInitiativeClick
-    end
-    object tbLibrary: TToolButton
-      Left = 97
-      Hint = 'Manage Libraries'
-      Top = 2
-      Caption = 'tbLibrary'
-      ImageIndex = 16
-      OnClick = tbLibraryClick
-    end
-    object tbLoadSession: TToolButton
-      Left = 121
-      Top = 2
-      Caption = 'tbLoadSession'
-      ImageIndex = 17
-      OnClick = tbLoadSessionClick
-    end
-    object tbSaveSession: TToolButton
-      Left = 145
-      Top = 2
-      Caption = 'tbSaveSession'
-      ImageIndex = 18
-      OnClick = tbSaveSessionClick
-    end
-    object tbShowMap: TToolButton
-      Left = 201
-      Hint = 'Show / Hide player''s map'
-      Top = 2
-      Caption = 'tbShowMap'
-      ImageIndex = 19
-      OnClick = tbShowMapClick
-      Style = tbsCheck
-    end
-  end
-  object tvTokens: TTreeView
-    Left = 1258
-    Height = 280
-    Top = 34
-    Width = 280
-    Anchors = [akTop, akRight]
-    Constraints.MaxHeight = 1000
-    Constraints.MaxWidth = 280
-    Constraints.MinHeight = 100
-    Constraints.MinWidth = 280
-    DragMode = dmAutomatic
-    TabOrder = 3
-    OnDeletion = tvTokensDeletion
-    OnDragOver = tvTokensDragOver
-  end
-  object pPortrait: TPanel
-    Left = 1259
-    Height = 104
-    Top = 322
-    Width = 280
-    Anchors = [akTop, akRight]
-    ClientHeight = 104
-    ClientWidth = 280
-    TabOrder = 6
-    OnDragDrop = pPortraitDragDrop
-    OnDragOver = pPortraitDragOver
-    OnResize = pPortraitResize
-    object Image1: TImage
-      Left = 90
-      Height = 100
-      Top = 0
-      Width = 100
-      OnDragDrop = pPortraitDragDrop
-      OnDragOver = pPortraitDragOver
-      Picture.Data = {
-        1754506F727461626C654E6574776F726B47726170686963140A000089504E47
-        0D0A1A0A0000000D494844520000006400000064080600000070E29554000001
-        85694343504943432070726F66696C65000028917D913D48C35014854F53A552
-        2A0E561071C8D03A59101571942A16C142692BB4EA60F2D23F68D290A4B8380A
-        AE05077F16AB0E2ECEBA3AB80A82E00F88AB8B93A28B94785F526811E385977C
-        9C77CFE1BDFB00A15965AAD93301A89A65A4137131975F1503AFF0610841FA46
-        2566EAC9CC62169EF5754F7D5477319EE5DDF767F52B0593013E91788EE98645
-        BC413CB369E99CF789C3AC2C29C4E7C4E3061D90F891EBB2CB6F9C4B0E0B3C33
-        6C64D3F3C46162B1D4C57217B3B2A1124F13471455A37C21E7B2C2798BB35AAD
-        B3F639F90D43056D25C3755AA348600949A42042461D15546121467F8D141369
-        DA8F7BF8471C7F8A5C32B92A60E458400D2A24C70FFE06BF676B16A726DDA450
-        1CE87DB1ED8F2810D8055A0DDBFE3EB6EDD609E07F06AEB48EBFD604663F496F
-        74B4C81130B00D5C5C7734790FB8DC01869F74C9901CC94F4B281681F7337AA6
-        3C30780B04D7DCB9B5F771FA00646956CB37C0C1213056A2EC758F7BF775CFED
-        DF9EF6FC7E0040A37293EC6BF50F00000006624B474400FF00FF00FFA0BDA793
-        000000097048597300000DD700000DD70142289B780000000774494D4507E701
-        151510261F10F9B0000008104944415478DAED9D796C174514C73FFD49A5C5CA
-        59E4900A082A8715A814051411E28582A24411914850434854A2A8781114AF48
-        9010A302318A226A108D8A82A052A807315215132510B1294605E4127AD352FF
-        9869F8757EB3BF637F7BB5B3DF64936E777F336FE6BB3B6FDE9B376FC11A6701
-        DF0175404312C709A004380F73D01FF851B63D993EAA03BE01F2EC54F67A9295
-        A8C7C70611B2D6661FBD665560244E65BD6D0A99631021A7D9FC5D1F3B84D8C1
-        6160BE4184CC078E385960AB14EE7D1E5813E77A1DB013A836889062A09BD49B
-        F1FA721230D76942FE944A3B44535403DB13DC7351B28545C2FE0C1642424242
-        4238A5438280B3E578DC571AAEED806C204B5EAF052AE4B107D80D6C0376C8F9
-        7F488803381F980EDC0CF4B059C601E043E04DE97D68962852ACCB593EB8253E
-        49C12D91EC510C0CF7B82DB314198AECE8905AE5BCC623E1338007819F80F1F2
-        DC495C8AF0272D06323D6A534D82BE4D6AC85A075C29FFAE023679207826C287
-        3635CE3DFB809F81FD72283A288DD2C607AC933C3A0317A077E44580D9F2FA44
-        E0A807A34D95D477009FD97D526F059E050679F466BC6531CC1C009E91FAC4CE
-        4460AE54F2BAB2B74475949B182CFB72B20B6FBD2B9883DE5DBD10FB4E3CF5ED
-        9B03546AEA591E4EB89B225FBA20A23BE91870B50B7515007F6B48B92EA4E124
-        362B9D733C4A7FB9818108CF74749D65C0A921157089E6699DE741BD9335F5DE
-        19D2210CB6E84EF9DDC327F54BA5EE1DA69371BA9C0E4677CA3D1ED67F95E62D
-        19643221EAB05103E47A58FF299AE9F0537E7688DFDEDE91CAF906697378857A
-        E03D8D256F2C21C394F3AD3EC8A03A1B87CA37C748FCA70C17637D90A19B468F
-        F434918C8E9A8EC8F34996638A1CA34C1CB2BA68FEF7AF4FB2EC53CEBB9A4888
-        EA9FAAC0BF1022F541C8319110D5F57FC24759D4BA334D24A43240B2A8EEF0AA
-        901068837F6BFC6D13C8660421799AA7B4938F33BE68E4621816A00F5E18E183
-        2C59D262576559698A817823D61121E37D90A77B1C79169840C8D758EF2EEAE7
-        833CADE5B45727D3619C593E0E2C3235C3C32AE05DDC5D214C847C60853C6AF0
-        DF9DE3197A699EC2EC80C9B855916F7A4B9E656529E70D3E1B843A942BE7ED5A
-        32217B3553DDFE0123A4AF72BEAFA52BF59DCA90B02840B2156A86D4FE2D9D90
-        1794065722A20B8380F58A6C7F9830EDED8908368E6EF8F71AFDE235EED2BC1D
-        0F9862A92FD234FE731F49B941F390ECC1A03DF739C02FE8039FBDF6674DD5D8
-        1EF5C0B51886DE1616F2060F651887DEA7F6088662387088D82436DD3DAABF08
-        7D1E920C0C463EB1D1275E28D3819AB76389E96434E20D62E37BDD365A572A75
-        EE0FC04C2F30B84233744C74D91A3FAED4F764484353174A89D241BB70CFF1B8
-        5AA9EB28FEAD5606163769DE92975DA84717F1FE5CD8FDB18800DFBA6C2DE720
-        B23BA8BAA363D8FD7A0C4004CCA9A43C4FFAB15211E07D4DD97784DD1E1FD3D0
-        2FA76E03CE4CA3DCE5169E81709A9B041EB620E5559BE5E9F6131EC4D02877BB
-        9849AC8FA9D866598B89DDA93526A88A34A8584A6C42CD3A87DAB90A6F5285B4
-        2842203669CB7187CAAD0DF25433C8C8748910424252474784E3D10D42CEC17E
-        3234A3908508275DAD51E80DF2FF76B04453563D226FD6DDB4F0E8443BC3D238
-        E06D62F7FA39E54A793441B947A49D32D254BB2403B11FFC15ACE36AD5E32FE0
-        5C9BF5E54AC332997A76018F23926CB678F4009E004A93EC9C4AE003E016D2F7
-        FC363E04CB885DA56CB018D2D603136861DB125A21A23A3E25B96F91D4021F01
-        5310B950DCC0BDA49638B30C780C1F77E73A815C69D8FD9362E3EB118B456ECC
-        00332D147C63D84F22D96A80776866096A7ACA469727D1C05F11C93675D7363A
-        EC6BEA8B08C8D3D5F5927C0086CA21ED2889BF26B416EFD3CDA66C37AC2036E0
-        4C37A359CAC92F0664002F5ADC5B21754E3A6BDDD9888468951675CCD7FC2607
-        9841ECD604DDB109B16C1038AC4E20F86644509A95727E288E8E29432C54A5B2
-        CCDA1991FF776F9C09C3ED4994938F080DAA8ED3B652029625BC93C59B518388
-        EE2848B29CB1E81354462BFC75B2A32F93435A16D001B156320AB85FDE539B60
-        6A5B90621BBB22F61C1EB0283350DEE3198A7055881CB57602DE3AC8A1CFE914
-        E38D1386C5883DF176D106913A5C9DAC2C09F270B5C681320B81AF1C24E30B60
-        88836D9EA794BF3D28644434D6F63407CB1F81C8785D6583846A39645EEC42BB
-        0B356F5F2082258668A68467B8504F5BE07A39452D412CC1366886CA12A98427
-        E1EEFEC0889C3146D73F210884A829C27FF3B0EE1CC4EEABDE52F778ED18DCA8
-        B47DA1136E0D27869468147BD821E5C4EE9AF5125B1161B08D18E6C46B972E54
-        3742B3FD828D0DFCA09CFBBE41B4AD667A5A681021FD347AACB39F020DD608D4
-        DE204274998486FA3964A991847B71F8DBB00147B53410A3D1C54F42544BBC14
-        F3B047E362F18D107501E988818454688631DF08094CF2481FE168D05DC4E1DF
-        671B4888EAA84CEB8BA2E91A86873436C932C3081990A04F1C4306701BC28D6E
-        E5251D83F32EF2E67E5859EB05B22FA760D3C5339BC4197B7A8504C41CBA14B3
-        7D68EAADBECF8E0EB946D10D976BEE2943785743086C41FF419AD1CAEC6B9C1D
-        1DA27E98ABB5E69E06C4B70667E2DFA72682825244F0860EAD13F4AD634A1DF9
-        443C1DBE1CC198F68608090909091112121212222048659695075C18E77A1D22
-        22D034076336622351AB047D97368A6C58A98711219EA66034B1A140C91C455E
-        0D59EDF1E6D3DB41C13C1C8EFD8A4788DDACCEE5061162B7ADBBEDFC280FB16D
-        B88EE40399B7617F636673443F842FAF3EC93EAA437CD0C6728FFCFFCC58676E
-        DBFC7C430000000049454E44AE426082
-      }
-    end
-  end
-  object lvInitiative: TListView
-    Left = 1259
-    Height = 366
-    Top = 434
-    Width = 280
-    Anchors = [akTop, akRight, akBottom]
-    AutoSort = False
-    Columns = <    
-      item
-        MaxWidth = 20
-        MinWidth = 20
-        Width = 20
-      end    
-      item
-        Caption = 'Name'
-        MaxWidth = 200
-        MinWidth = 75
-        Width = 190
-      end    
-      item
-        Caption = 'Initiative'
-        MaxWidth = 200
-        MinWidth = 75
-        Width = 80
-      end    
-      item
-        Caption = 'Path'
-        MaxWidth = 1
-        MinWidth = 1
-        Visible = False
-        Width = 1
-      end>
-    ColumnClick = False
-    RowSelect = True
-    SortColumn = 2
-    SortDirection = sdDescending
-    SortType = stText
-    TabOrder = 4
-    ViewStyle = vsReport
-    OnCompare = lvInitiativeCompare
-    OnDragDrop = lvInitiativeDragDrop
-    OnDragOver = lvInitiativeDragOver
   end
   object ilMapIcons: TImageList
     Height = 100
     Width = 100
-    Left = 80
-    Top = 80
+    Left = 108
+    Top = 108
   end
   object ilMenuItems: TImageList
-    Left = 152
-    Top = 80
+    Left = 180
+    Top = 108
     Bitmap = {
       4C7A1400000010000000100000008D2300000000000078DAED9C075454BBDAF7
       872E82208A80140B8AA82876C582056C47111144C482288822CD828A05A5DBE8
@@ -740,12 +740,27 @@ object fmController: TfmController
   end
   object odLoadSession: TOpenDialog
     Options = [ofPathMustExist, ofFileMustExist, ofEnableSizing, ofViewDetail]
-    Left = 80
-    Top = 136
+    Left = 108
+    Top = 164
   end
   object sdSaveSession: TSaveDialog
     Options = [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist, ofEnableSizing, ofViewDetail]
-    Left = 152
-    Top = 136
+    Left = 180
+    Top = 164
+  end
+  object MainMenu1: TMainMenu
+    Left = 40
+    Top = 108
+    object miFile: TMenuItem
+      Caption = 'File'
+      object miSettings: TMenuItem
+        Caption = 'Settings'
+        OnClick = tbSettingsClick
+      end
+      object miQuit: TMenuItem
+        Caption = 'Quit'
+        OnClick = tbExitClick
+      end
+    end
   end
 end
