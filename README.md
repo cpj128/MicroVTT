@@ -63,3 +63,10 @@ And a few things that might happen, but are most likely going to take some time:
 
 Maaaaybe. For several reasons - including legal ones - system-specific things are best done as plugins with a separate codebase. Which would require a plugin-interface first. Which would firmly be located in the second list above.
 
+### I want to compile this for Mac / Linux / whatever, what do I need?
+
+Other than Lazarus, the following packages:
+
+- [BGRABitmap](https://github.com/bgrabitmap/bgrabitmap/releases)
+
+...ok, only that one package for now, but watch this list, it is not getting any shorter.
