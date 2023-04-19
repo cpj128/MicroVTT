@@ -7,9 +7,9 @@ uses
   cthreads,
   {$ENDIF}{$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, lazcontrols, ControllerForm, DisplayForm, DisplayConst,
+  Forms, lazcontrols, datetimectrls, ControllerForm, DisplayForm, DisplayConst,
   GridSettingsForm, TokenSettingsForm, SettingsForm, LangStrings, RPGTypes,
-  LibraryForm, InitiativeForm;
+  LibraryForm, InitiativeForm, Notes;
 
 {$R *.res}
 

@@ -120,24 +120,30 @@
     <RunParams>
       <FormatVersion Value="2"/>
     </RunParams>
-    <RequiredPackages Count="5">
+    <RequiredPackages Count="7">
       <Item1>
-        <PackageName Value="FCL"/>
+        <PackageName Value="DateTimeCtrls"/>
       </Item1>
       <Item2>
-        <PackageName Value="bgracontrols"/>
+        <PackageName Value="FrameViewer09"/>
       </Item2>
       <Item3>
-        <PackageName Value="LazControls"/>
+        <PackageName Value="FCL"/>
       </Item3>
       <Item4>
-        <PackageName Value="BGRABitmapPack"/>
+        <PackageName Value="bgracontrols"/>
       </Item4>
       <Item5>
-        <PackageName Value="LCL"/>
+        <PackageName Value="LazControls"/>
       </Item5>
+      <Item6>
+        <PackageName Value="BGRABitmapPack"/>
+      </Item6>
+      <Item7>
+        <PackageName Value="LCL"/>
+      </Item7>
     </RequiredPackages>
-    <Units Count="11">
+    <Units Count="12">
       <Unit0>
         <Filename Value="RPGPres.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -213,6 +219,11 @@
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="InitiativeForm"/>
       </Unit10>
+      <Unit11>
+        <Filename Value="notes.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="Notes"/>
+      </Unit11>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

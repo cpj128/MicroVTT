@@ -157,6 +157,8 @@ object fmSettings: TfmSettings
     Width = 119
     Alignment = taLeftJustify
     Caption = 'Tokens start visible'
+    Checked = True
+    State = cbChecked
     TabOrder = 3
   end
   object Label4: TLabel

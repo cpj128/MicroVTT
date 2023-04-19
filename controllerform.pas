@@ -19,7 +19,8 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ComCtrls,
-  ExtCtrls, Menus, IniFiles, BGRABitmap, RPGTypes;
+  ExtCtrls, Menus, DateTimePicker, IniFiles, BGRABitmap, RPGTypes, HtmlView,
+  Notes, HtmlGlobals;
 
 const
   MAPLIBFILE = 'Maps.txt';
@@ -32,21 +33,58 @@ type
 
   TfmController = class(TForm)
     bResetZoom: TButton;
+    bAddCategory: TButton;
+    bDeleteCategory: TButton;
+    bOkCategory: TButton;
+    bCancelCategory: TButton;
+    bAddAnnotation: TButton;
+    bEditAnnotation: TButton;
+    bDeleteAnnotation: TButton;
+    bEntryOK: TButton;
+    bEntryCancel: TButton;
+    bAddEntry: TButton;
+    bDeleteEntry: TButton;
+    bOKEntryList: TButton;
+    bCancelEntryList: TButton;
+    cbCategory: TComboBox;
+    cbDMOnly: TCheckBox;
+    cbAnnotationDMOnly: TCheckBox;
+    dtpTimestamp: TDateTimePicker;
+    dtpAnnotationTimestamp: TDateTimePicker;
+    eNewEntry: TEdit;
+    eEntryName: TEdit;
+    eNewCategory: TEdit;
+    gbAnnotations: TGroupBox;
+    hvNotesDisplay: THtmlViewer;
     ilMapIcons: TImageList;
     ilMenuItems: TImageList;
     Image1: TImage;
+    lbCategories: TListBox;
+    lbEntryList: TListBox;
+    lvAnnotations: TListView;
     lvInitiative: TListView;
     lvMaps: TListView;
     lZoom: TLabel;
     MainMenu1: TMainMenu;
+    mAnnotationContent: TMemo;
+    mEntryContent: TMemo;
     miFile: TMenuItem;
     miSettings: TMenuItem;
     miQuit: TMenuItem;
     odLoadSession: TOpenDialog;
+    pcNotesMain: TPageControl;
     pcMain: TPageControl;
     pbViewport: TPaintBox;
     pPortrait: TPanel;
     sdSaveSession: TSaveDialog;
+    tbLoadNotes: TToolButton;
+    tbSaveNotes: TToolButton;
+    tsCategoryEditor: TTabSheet;
+    tsEntryListEditor: TTabSheet;
+    tsEntryEditor: TTabSheet;
+    tsDisplay: TTabSheet;
+    ToolBar1: TToolBar;
+    tsNotes: TTabSheet;
     tsController: TTabSheet;
     tbClearInitiative: TToolButton;
     tbClearTokens: TToolButton;
@@ -72,7 +110,19 @@ type
     ToolButton2: TToolButton;
     ToolButton3: TToolButton;
     tvTokens: TTreeView;
+    procedure bAddAnnotationClick(Sender: TObject);
+    procedure bAddCategoryClick(Sender: TObject);
+    procedure bAddEntryClick(Sender: TObject);
+    procedure bCancelCategoryClick(Sender: TObject);
+    procedure bDeleteAnnotationClick(Sender: TObject);
+    procedure bDeleteCategoryClick(Sender: TObject);
+    procedure bDeleteEntryClick(Sender: TObject);
+    procedure bEditAnnotationClick(Sender: TObject);
+    procedure bEntryCancelClick(Sender: TObject);
+    procedure bEntryOKClick(Sender: TObject);
     procedure bFullscreenClick(Sender: TObject);
+    procedure bOkCategoryClick(Sender: TObject);
+    procedure bOKEntryListClick(Sender: TObject);
     procedure bRefreshMapsClick(Sender: TObject);
     procedure bResetZoomClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -80,6 +130,10 @@ type
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormResize(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure hvNotesDisplayHotSpotClick(Sender: TObject; const SRC: ThtString;
+      var Handled: Boolean);
+    procedure lvAnnotationsSelectItem(Sender: TObject; Item: TListItem;
+      Selected: Boolean);
     procedure lvInitiativeCompare(Sender: TObject; Item1, Item2: TListItem;
       Data: Integer; var Compare: Integer);
     procedure lvInitiativeDragDrop(Sender, Source: TObject; X, Y: Integer);
@@ -110,12 +164,14 @@ type
     procedure tbHidePortraitClick(Sender: TObject);
     procedure tbHideTokensClick(Sender: TObject);
     procedure tbLibraryClick(Sender: TObject);
+    procedure tbLoadNotesClick(Sender: TObject);
     procedure tbLoadSessionClick(Sender: TObject);
     procedure tbMapZoomChange(Sender: TObject);
     procedure tbNextCombatantClick(Sender: TObject);
     procedure tbRefreshMapsClick(Sender: TObject);
     procedure tbRefreshTokensClick(Sender: TObject);
     procedure tbRemoveFromInitiativeClick(Sender: TObject);
+    procedure tbSaveNotesClick(Sender: TObject);
     procedure tbSaveSessionClick(Sender: TObject);
     procedure tbSettingsClick(Sender: TObject);
     procedure tbShowGridClick(Sender: TObject);
@@ -161,6 +217,10 @@ type
     FTokenRotationStyle: TTokenRotationStyle;
     FAppSettings: TIniFile;
     FMapLib, FTokenLib, FOverlayLib: TStringList;
+    // Notes module
+    FNotesList: TEntryList; 
+    FEditedEntry: TNoteEntry;
+
     procedure UpdateMapList;
     procedure UpdateTokenList;
     procedure UpdateOverlayList;
@@ -172,6 +232,8 @@ type
     procedure SetCurInitiativeIndex(val: Integer);
     procedure LoadMap(FileName: string);
     procedure SetCombatMode(val: Boolean);
+    // Notes module
+    procedure LoadHTML(Entry: string);
   public
     procedure UpdateViewport;
     function GetToken(idx: Integer): TToken;
@@ -1637,6 +1699,7 @@ begin
   FInitiativePicList := TList.Create;
   FInitiativeNumList := TList.Create;
   FAppSettings := TIniFile.Create('Settings.ini', [ifoWriteStringBoolean]);
+  pcMain.ActivePage := tsController;
 
   // Load settings
   FMapDir := FAppSettings.ReadString('Settings', 'MapDir', 'Content\Maps\');
@@ -1645,6 +1708,12 @@ begin
   FInitiativeDesc := StrToBoolDef(FAppSettings.ReadString('Settings', 'InitiativeDesc', 'true'), True);
   FTokensStartInvisible := StrToBoolDef(FAppSettings.ReadString('Settings', 'TokensStartInvisible', 'true'), True);
   FTokenRotationStyle := TTokenRotationStyle(FAppSettings.ReadInteger('Settings', 'TokenRotationStyle', 0));
+
+  // Settings for the note module
+  pcNotesMain.ActivePage := tsDisplay;
+  pcNotesMain.ShowTabs := False;
+  FNotesList := TEntryList.Create;
+  LoadHTML('Main');
 
   // Set language
   LangName := 'English';
@@ -1779,6 +1848,268 @@ begin
   Thumbnail.Free;
   FFileList.Free;
 end;
+
+{ Notes module }
+
+// I wanted to do this in a separate frame, but apparently those are broken in
+// Freepascal, too. This does not bode well for the planned plugin interface.
+
+procedure TfmController.bOkCategoryClick(Sender: TObject);
+begin
+  FNotesList.Categories.AddStrings(lbCategories.Items, True);
+  pcNotesMain.ActivePage := tsDisplay;
+end;
+
+procedure TfmController.bOKEntryListClick(Sender: TObject);
+var
+  i: Integer;
+  tmpEntry: TNoteEntry;
+begin
+  // Check for new entries
+  for i := 0 to lbEntryList.Items.Count - 1 do
+  begin
+    if not FNotesList.HasEntry(lbEntryList.Items[i]) then
+    begin
+      tmpEntry := TNoteEntry.Create;
+      tmpEntry.EntryName := lbEntryList.Items[i];
+      tmpEntry.Date := Now;
+      FNotesList.AddEntry(tmpEntry);
+    end;
+  end;
+  // Check for deleted entries
+  for i := FNotesList.EntryCount - 1 downto 0 do
+  begin
+    tmpEntry := FNotesList.GetEntry(i);
+    if lbEntryList.Items.IndexOf(tmpEntry.EntryName) < 0 then
+    begin
+      FNotesList.DeleteEntry(tmpEntry.EntryName);
+      tmpEntry.Free;
+    end;
+  end;
+  LoadHTML('Main');
+  pcNotesMain.ActivePage := tsDisplay;
+end;
+
+procedure TfmController.bCancelCategoryClick(Sender: TObject);
+begin
+  pcNotesMain.ActivePage := tsDisplay;
+end;
+
+procedure TfmController.bAddCategoryClick(Sender: TObject);
+begin
+  if (eNewCategory.Text <> '') and (lbCategories.Items.IndexOf(eNewCategory.Text) < 0) then
+    lbCategories.Items.Add(eNewCategory.Text);
+end;
+
+procedure TfmController.bAddAnnotationClick(Sender: TObject);
+var tmpItem: TListItem;
+begin
+  tmpItem := lvAnnotations.Items.Add;
+  tmpItem.Caption := DateTimeToStr(Now);
+  tmpItem.SubItems.Add('');
+  tmpItem.SubItems.Add(BoolToStr(False));
+  dtpAnnotationTimestamp.Datetime := Now;
+  mAnnotationContent.Text := '';
+end;
+
+procedure TfmController.bAddEntryClick(Sender: TObject);
+var i: Integer;
+begin
+  if (eNewEntry.Text <> '') and (lbEntryList.Items.IndexOf(eNewEntry.Text) < 0) then
+  begin
+    lbEntryList.Items.Add(eNewEntry.Text);
+  end;
+end;
+
+procedure TfmController.bDeleteAnnotationClick(Sender: TObject);
+begin
+  if Assigned(lvAnnotations.Selected) then
+    lvAnnotations.Items.Delete(lvAnnotations.ItemIndex);
+end;
+
+procedure TfmController.bDeleteCategoryClick(Sender: TObject);
+begin
+  if (lbCategories.ItemIndex >= 0) and (lbCategories.ItemIndex < lbCategories.Items.Count) then
+    lbCategories.Items.Delete(lbCategories.ItemIndex);
+end;
+
+procedure TfmController.bDeleteEntryClick(Sender: TObject);
+begin
+  if lbEntryList.ItemIndex >= 0 then
+    lbEntryList.Items.Delete(lbEntryList.ItemIndex);
+end;
+
+procedure TfmController.bEditAnnotationClick(Sender: TObject);
+var tmpItem: TListItem;
+begin
+  tmpItem := lvAnnotations.Selected;
+  if Assigned(tmpItem) then
+  begin
+    tmpItem.Caption := DateTimeToStr(dtpAnnotationTimestamp.DateTime);
+    tmpItem.SubItems[0] := mAnnotationContent.Text;
+    tmpItem.SubItems[1] := BoolToStr(cbAnnotationDMOnly.Checked);
+  end;
+end;
+
+procedure TfmController.bEntryCancelClick(Sender: TObject);
+begin
+  FEditedEntry := nil;
+  pcNotesMain.ActivePage := tsDisplay;
+end;
+
+procedure TfmController.bEntryOKClick(Sender: TObject);
+var
+  i: Integer;
+begin
+  if Assigned(FEditedEntry) then
+  begin
+    FEditedEntry.Content := mEntryContent.Text;
+    FEditedEntry.Date := dtpTimestamp.DateTime;
+    FEditedEntry.DMOnly := cbDMOnly.Checked;
+    FEditedEntry.Category := cbCategory.Text;
+    FEditedEntry.EntryName := eEntryName.Text;
+
+    FEditedEntry.ClearAnnotations;
+    for i := 0 to lvAnnotations.Items.Count - 1 do
+    begin
+      FEditedEntry.AddAnnotation(StrToDateTime(lvAnnotations.Items[i].Caption), lvAnnotations.Items[i].SubItems[0], StrToBool(lvAnnotations.Items[i].SubItems[1]));
+    end;
+
+    LoadHTML(FEditedEntry.EntryName);
+  end;
+  FEditedEntry := nil;
+  pcNotesMain.ActivePage := tsDisplay;
+end;
+ 
+procedure TfmController.hvNotesDisplayHotSpotClick(Sender: TObject;
+  const SRC: ThtString; var Handled: Boolean);
+begin
+  Handled := True;
+  LoadHtml(SRC);
+end;
+
+procedure TfmController.lvAnnotationsSelectItem(Sender: TObject;
+  Item: TListItem; Selected: Boolean);
+begin
+  if Selected and Assigned(Item) then
+  begin
+    dtpAnnotationTimestamp.DateTime := StrToDateTime(Item.Caption);
+    mAnnotationContent.Text := Item.SubItems[0];
+    cbAnnotationDMOnly.Checked := StrToBool(Item.SubItems[1]);
+  end
+  else if not Selected then
+  begin
+    dtpAnnotationTimestamp.DateTime := Now;
+    mAnnotationContent.Text := '';
+    cbAnnotationDMOnly.Checked := False;
+  end;
+end;
+
+procedure TfmController.LoadHTML(Entry: string);
+var
+  fs: TStream;
+  str: string;
+  idx: Integer;
+  tmpEntry: TNoteEntry;
+  tmpAnnotation: TNoteAnnotation;
+  tmpItem: TListItem;
+begin
+  if SameText(Entry, 'Main') then
+    fs := FNotesList.EntryListToHTML(False)
+  else if SameText(Entry, 'Categories') then
+    fs := FNotesList.CategoryListToHTML
+  else if StartsStr('edit|', Entry) then
+  begin
+    // Show Editor for selected entry - TBI
+    // Also need to return the stream for the edited item here :/
+    fs := nil;
+    if SameText(Entry, 'edit|categories') then
+    begin
+      lbCategories.Items.AddStrings(FNotesList.Categories, True);
+      eNewCategory.Text := '';
+      pcNotesMain.ActivePage := tsCategoryEditor;
+    end
+    else if SameText(Entry, 'edit|entrylist') then
+    begin
+      lbEntryList.Items.Clear;
+      for idx := 0 to FNotesList.EntryCount - 1 do
+      begin
+        lbEntryList.Items.Add(FNotesList.GetEntry(idx).EntryName);
+      end;
+      eNewEntry.Text := '';
+
+      pcNotesMain.ActivePage := tsEntryListEditor;
+    end
+    else
+    begin
+      str := Copy(Entry, Length('edit|') + 1, Length(Entry));
+      tmpEntry := FNotesList.GetEntry(str);
+      if Assigned(tmpEntry) then
+      begin
+        eEntryName.Text := tmpEntry.EntryName;
+        cbDMOnly.Checked := tmpEntry.DMOnly;
+        dtpTimeStamp.DateTime := tmpEntry.Date;
+        cbCategory.Items.AddStrings(FNotesList.Categories, True);
+        idx := cbCategory.Items.IndexOf(tmpEntry.Category);
+        if idx >= 0 then
+          cbCategory.ItemIndex := idx
+        else
+          cbCategory.Text := '';
+        mEntryContent.Text := tmpEntry.Content;
+
+        // Set Annotation data
+        mAnnotationContent.Lines.Clear;
+        dtpAnnotationTimestamp.Date := Now;
+        lvAnnotations.Items.Clear;
+        for idx := 0 to tmpEntry.GetAnnotationCount - 1 do
+        begin
+          tmpAnnotation := tmpEntry.GetAnnotation(idx);
+          tmpItem := lvAnnotations.Items.Add;
+          tmpItem.Caption := DateTimeToStr(tmpAnnotation.Date);
+          tmpItem.SubItems.Add(tmpAnnotation.Content);
+          tmpItem.SubItems.Add(BoolToStr(tmpAnnotation.DMOnly));
+        end;
+
+        FEditedEntry := tmpEntry;
+        pcNotesMain.ActivePage := tsEntryEditor;
+      end;
+    end;
+  end
+  else if StartsStr('cat|', Entry) then
+  begin
+    // Show list of all entries of that category - TBI
+    str := Copy(Entry, Length('cat|') + 1, Length(Entry));
+    fs := FNotesList.EntriesByCategoryToHTML(str, False);
+  end
+  else if FNotesList.HasEntry(Entry) then
+    fs := FNotesList.EntryToHTML(Entry, False)
+  else
+    fs := FNotesList.NotFoundToHTML;
+  try
+    if Assigned(fs) then
+      hvNotesDisplay.LoadFromStream(fs);
+  finally
+    if Assigned(fs) then
+      fs.Free;
+  end;
+end;
+
+procedure TfmController.tbLoadNotesClick(Sender: TObject);
+begin
+  if odLoadSession.Execute then
+  begin
+    FNotesList.LoadFromFile(odLoadSession.FileName);
+    LoadHTML('Main');
+  end;
+end;
+
+procedure TfmController.tbSaveNotesClick(Sender: TObject);
+begin
+  if sdSaveSession.Execute then
+    FNotesList.SaveToFile(sdSaveSession.FileName);
+end;
+
+
 
 end.
 
