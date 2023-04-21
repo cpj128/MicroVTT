@@ -33,6 +33,7 @@ type
     procedure bCloseClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure sgItemDataButtonClick(Sender: TObject; aCol, aRow: Integer);
     procedure sgItemDataDrawCell(Sender: TObject; aCol, aRow: Integer;
       aRect: TRect; aState: TGridDrawState);
     procedure sgItemDataEditingDone(Sender: TObject);
@@ -46,7 +47,9 @@ type
     StrEntryNotFound,
     StrMapsHeader,
     StrTokensHeader,
-    StrOverlaysHeader: string;
+    StrOverlaysHeader,
+    StrAddNote,
+    StrGoToNote: string;
     procedure ShowMaps;
     procedure ShowTokens;
     procedure ShowOverlays;
@@ -67,9 +70,11 @@ implementation
 
 uses
   FileUtil,
+  StrUtils,
   ControllerForm,
   DisplayConst,
-  LangStrings;
+  LangStrings,
+  Notes;
 
 { TfmLibrary }
 
@@ -86,6 +91,8 @@ begin
   StrMapsHeader    := GetString(LangStrings.LanguageID, 'LibraryGridHeaderMaps');
   StrTokensHeader  := GetString(LangStrings.LanguageID, 'LibraryGridHeaderTokens');
   StrOverlaysHeader:= GetString(LangStrings.LanguageID, 'LibraryGridHeaderOverlays');
+  StrAddNote       := GetString(LangStrings.LanguageID, 'LibraryAddNote');
+  StrGoToNote      := GetString(LangStrings.LanguageID, 'LibraryGoToNote');
 end;
 
 procedure TfmLibrary.bCloseClick(Sender: TObject);
@@ -98,13 +105,25 @@ end;
 
 procedure TfmLibrary.ShowMaps;
 var
-  FileList: TStringList;
+  FileList, HeaderList: TStringList;
   i: Integer;
 begin
   FileList := TStringList.Create;
-  sgItemData.ColCount := 4;
+  HeaderList := TStringList.Create;
+  HeaderList.Delimiter := ',';
+  HeaderList.StrictDelimiter := True;
+  HeaderList.DelimitedText := StrMapsHeader;
+  sgItemData.Columns.Clear;
   sgItemData.ColWidths[0] := 22;
-  sgItemData.Rows[0].CommaText := StrMapsHeader;
+  sgItemData.Columns.Insert(0);   
+  sgItemData.Columns.Insert(0);
+  sgItemData.Columns.Insert(0);
+  sgItemData.Columns.Insert(0);
+  sgItemData.Columns[0].Title.Caption := HeaderList[1];
+  sgItemData.Columns[1].Title.Caption := HeaderList[2];
+  sgItemData.Columns[2].Title.Caption := HeaderList[3];
+  sgItemData.Columns[3].Title.Caption := HeaderList[4];
+  sgItemData.Columns.Items[3].ButtonStyle := cbsButtonColumn;
   try
     FindAllFiles(FileList, fmController.MapDir, PicFilterStr, True);
     sgItemData.RowCount := FileList.Count + 1;
@@ -113,9 +132,19 @@ begin
       sgItemData.Cells[1, i + 1] := ExtractFileName(FileList[i]);
       sgItemData.Cells[2, i + 1] := FileList[i];
       if fmController.MapLib.IndexOfName(FileList[i]) >= 0 then
-        sgItemData.Cells[3, i + 1] := fmController.MapLib.Values[FileList[i]]
+      begin
+        sgItemData.Cells[3, i + 1] := fmController.MapLib.Values[FileList[i]];
+        if fmController.NotesList.HasEntry(fmController.MapLib.Values[FileList[i]]) then
+          sgItemData.Cells[4, i + 1] := StrGoToNote
+        else
+          sgItemData.Cells[4, i + 1] := StrAddNote;
+      end
       else
+      begin
         sgItemData.Cells[3, i + 1] := '';
+        sgItemData.Cells[4, i + 1] := StrAddNote;
+      end;
+
     end;
 
     // Add orphaned entries from database
@@ -127,24 +156,57 @@ begin
         sgItemData.Cells[1, sgItemData.RowCount - 1] := ExtractFileName(fmController.MapLib.Names[i]);
         sgItemData.Cells[2, sgItemData.RowCount - 1] := fmController.MapLib.Names[i];
         sgItemData.Cells[3, sgItemData.RowCount - 1] := fmController.MapLib.ValueFromIndex[i];
+        if fmController.MapLib.IndexOfName(FileList[i]) >= 0 then
+        begin
+          sgItemData.Cells[3, i + 1] := fmController.MapLib.Values[FileList[i]];
+          if fmController.NotesList.HasEntry(fmController.MapLib.Values[FileList[i]]) then
+            sgItemData.Cells[4, i + 1] := StrGoToNote
+          else
+            sgItemData.Cells[4, i + 1] := StrAddNote;
+        end
+        else
+        begin
+          sgItemData.Cells[3, i + 1] := '';
+          sgItemData.Cells[4, i + 1] := StrAddNote;
+        end;
       end;
     end;
   finally
     FileList.Free;
+    HeaderList.Free;
   end;
 end;
 
 procedure TfmLibrary.ShowTokens;  
 var
-  FileList, ContentList: TStringList;
+  FileList, ContentList, HeaderList: TStringList;
   i, j: Integer;
 begin
   FileList := TStringList.Create;
   ContentList := TStringList.Create;
   ContentList.Delimiter := '|';
   ContentList.StrictDelimiter := True;
-  sgItemData.ColCount := 10;
-  sgItemData.Rows[0].CommaText := StrTokensHeader;
+  HeaderList := TStringList.Create;
+  HeaderList.Delimiter := ',';
+  HeaderList.StrictDelimiter := True;
+  HeaderList.DelimitedText := StrTokensHeader;
+  //sgItemData.ColCount := 10;
+  //sgItemData.Rows[0].CommaText := StrTokensHeader;
+  sgItemData.Columns.Clear;
+  sgItemData.ColWidths[0] := 22;
+  sgItemData.Columns.Insert(0);
+  sgItemData.Columns.Insert(0);
+  sgItemData.Columns.Insert(0);
+  sgItemData.Columns.Insert(0);  
+  sgItemData.Columns.Insert(0);
+  sgItemData.Columns.Insert(0);
+  sgItemData.Columns.Insert(0);
+  sgItemData.Columns.Insert(0);
+  sgItemData.Columns.Insert(0);     
+  sgItemData.Columns.Insert(0);
+  for i := 0 to 8 do
+    sgItemData.Columns[i].Title.Caption := HeaderList[i + 1];
+  sgItemData.Columns.Items[9].ButtonStyle := cbsButtonColumn;
   try
     FindAllFiles(FileList, fmController.TokenDir, PicFilterStr, True);
     sgItemData.RowCount := FileList.Count + 1;
@@ -159,6 +221,8 @@ begin
         begin
           for j := 0 to ContentList.Count - 1 do
             sgItemData.Cells[3 + j, i + 1] := ContentList[j];
+
+          sgItemData.Cells[10, i + 1] := IfThen(fmController.NotesList.HasEntry(sgItemData.Cells[3, i + 1]), StrGotoNote, StrAddNote);
         end
         else
         begin
@@ -169,6 +233,7 @@ begin
           sgItemData.Cells[7, i + 1] := '1';
           sgItemData.Cells[8, i + 1] := '1';
           sgItemData.Cells[9, i + 1] := '0';
+          sgItemData.Cells[10, i + 1] := StrAddNote;
         end;
       end
       else
@@ -179,7 +244,8 @@ begin
         sgItemData.Cells[6, i + 1] := '100';
         sgItemData.Cells[7, i + 1] := '1';
         sgItemData.Cells[8, i + 1] := '1';
-        sgItemData.Cells[9, i + 1] := '0';
+        sgItemData.Cells[9, i + 1] := '0';  
+        sgItemData.Cells[10, i + 1] := StrAddNote;
       end;
     end;
 
@@ -194,25 +260,44 @@ begin
           sgItemData.Cells[3 + j, i + 1] := ContentList[j];
         sgItemData.Cells[1, sgItemData.RowCount - 1] := ExtractFileName(fmController.TokenLib.Names[i]);
         sgItemData.Cells[2, sgItemData.RowCount - 1] := fmController.TokenLib.Names[i];
+        sgItemData.Cells[10, i + 1] := IfThen(fmController.NotesList.HasEntry(sgItemData.Cells[3, i + 1]), StrGotoNote, StrAddNote);
       end;
     end;
   finally
     FileList.Free;
     ContentList.Free;
+    HeaderList.Free;
   end;
 end;
 
 procedure TfmLibrary.ShowOverlays;
 var
-  FileList, ContentList: TStringList;
+  FileList, ContentList, HeaderList: TStringList;
   i, j: Integer;
 begin
   FileList := TStringList.Create; 
   ContentList := TStringList.Create;
   ContentList.Delimiter := '|';
   ContentList.StrictDelimiter := True;
-  sgItemData.ColCount := 6;
-  sgItemData.Rows[0].CommaText := StrOverlaysHeader;
+  HeaderList := TStringList.Create; 
+  HeaderList.Delimiter := ',';
+  HeaderList.StrictDelimiter := True;
+  HeaderList.DelimitedText := StrOverlaysHeader;
+
+  sgItemData.Columns.Clear;
+  sgItemData.ColWidths[0] := 22;
+  sgItemData.Columns.Insert(0);
+  sgItemData.Columns.Insert(0);
+  sgItemData.Columns.Insert(0);
+  sgItemData.Columns.Insert(0);
+  sgItemData.Columns.Insert(0);
+  sgItemData.Columns.Insert(0);
+
+  for i := 0 to 4 do
+    sgItemData.Columns[i].Title.Caption := HeaderList[i + 1];
+  sgItemData.Columns.Items[5].ButtonStyle := cbsButtonColumn;
+  //sgItemData.ColCount := 6;
+  //sgItemData.Rows[0].CommaText := StrOverlaysHeader;
   try
     FindAllFiles(FileList, fmController.OverlayDir, PicFilterStr, True);
     sgItemData.RowCount := FileList.Count + 1;
@@ -220,26 +305,29 @@ begin
     begin
       sgItemData.Cells[1, i + 1] := ExtractFileName(FileList[i]);
       sgItemData.Cells[2, i + 1] := FileList[i];
-      if fmController.TokenLib.IndexOfName(FileList[i]) >= 0 then
+      if fmController.OverlayLib.IndexOfName(FileList[i]) >= 0 then
       begin
         ContentList.DelimitedText := fmController.OverlayLib.Values[FileList[i]];
         if ContentList.Count = 3 then
         begin
           for j := 0 to ContentList.Count - 1 do
             sgItemData.Cells[3 + j, i + 1] := ContentList[j];
+          sgItemData.Cells[6, i + 1] := IfThen(fmController.NotesList.HasEntry(sgItemData.Cells[3, i + 1]), StrGotoNote, StrAddNote);
         end
         else
         begin
           sgItemData.Cells[3, i + 1] := '';
           sgItemData.Cells[4, i + 1] := '32';
-          sgItemData.Cells[5, i + 1] := '32';
+          sgItemData.Cells[5, i + 1] := '32'; 
+          sgItemData.Cells[6, i + 1] := StrAddNote;
         end;
       end
       else
       begin
           sgItemData.Cells[3, i + 1] := '';
           sgItemData.Cells[4, i + 1] := '32';
-          sgItemData.Cells[5, i + 1] := '32';
+          sgItemData.Cells[5, i + 1] := '32';  
+          sgItemData.Cells[6, i + 1] := StrAddNote;
       end;
     end;
 
@@ -254,11 +342,13 @@ begin
           sgItemData.Cells[3 + j, i + 1] := ContentList[j];
         sgItemData.Cells[1, sgItemData.RowCount - 1] := ExtractFileName(fmController.TokenLib.Names[i]);
         sgItemData.Cells[2, sgItemData.RowCount - 1] := fmController.TokenLib.Names[i];
+        sgItemData.Cells[6, i + 1] := IfThen(fmController.NotesList.HasEntry(sgItemData.Cells[3, i + 1]), StrGotoNote, StrAddNote);
       end;
     end;
   finally
     FileList.Free;
     ContentList.Free;
+    HeaderList.Free;
   end;
 end;
    
@@ -281,7 +371,7 @@ begin
     for i := 1 to sgItemData.RowCount - 1 do
     begin
       ContentList.Clear;
-      for j := 3 to sgItemData.ColCount - 1 do
+      for j := 3 to sgItemData.ColCount - 1 - 1 do // extra -1 for the Notes-column
       begin
         ContentList.Add(sgItemData.Cells[j, i]);
       end;
@@ -304,7 +394,7 @@ begin
     for i := 1 to sgItemData.RowCount - 1 do
     begin
       ContentList.Clear;
-      for j := 3 to sgItemData.ColCount - 1 do
+      for j := 3 to sgItemData.ColCount - 1 - 1 do // extra -1 for the Notes-column
       begin
         ContentList.Add(sgItemData.Cells[j, i]);
       end;
@@ -319,6 +409,52 @@ procedure TfmLibrary.FormShow(Sender: TObject);
 begin
   tcHeader.TabIndex := 0;
   ShowMaps;
+end;
+
+procedure TfmLibrary.sgItemDataButtonClick(Sender: TObject; aCol, aRow: Integer
+  );
+var
+  EntryName: string;
+  tmpEntry: TNoteEntry;
+begin
+  EntryName := '';
+  // ...ok, this is the exact same code for all three branches.
+  if tcHeader.TabIndex = 0 then
+  begin
+    EntryName := sgItemData.Cells[3, aRow];
+  end
+  else if tcHeader.TabIndex = 1 then
+  begin
+    EntryName := sgItemData.Cells[3, aRow];
+  end
+  else if tcHeader.TabIndex = 2 then
+  begin
+    EntryName := sgItemData.Cells[3, aRow];
+  end;
+  if EntryName = '' then
+    Exit;
+
+  if fmController.NotesList.HasEntry(EntryName) then
+  begin
+    fmController.pcMain.ActivePage := fmController.tsNotes;
+    fmController.LoadHTML(EntryName);
+    fmController.AddToHistory(EntryName);
+    Close;
+  end
+  else
+  begin
+    // Remove pipes before creating entry
+    EntryName := ReplaceStr(EntryName, '|', '');
+    tmpEntry := TNoteEntry.Create;
+    tmpEntry.EntryName := EntryName;
+    tmpEntry.Date := Now;
+    fmController.NotesList.AddEntry(tmpEntry);
+
+    fmController.pcMain.ActivePage := fmController.tsNotes;
+    fmController.LoadHTML(EntryName);
+    fmController.AddToHistory(EntryName);
+    Close;
+  end;
 end;
 
 function TfmLibrary.ItemExists(path: string): Boolean;

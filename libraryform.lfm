@@ -51,11 +51,13 @@ object fmLibrary: TfmLibrary
       Top = 23
       Width = 502
       Align = alClient
+      ColCount = 1
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goEditing, goDblClickAutoSize, goSmoothScroll, goCellHints]
       ParentShowHint = False
       ShowHint = True
       TabOrder = 1
       OnDrawCell = sgItemDataDrawCell
+      OnButtonClick = sgItemDataButtonClick
       OnEditingDone = sgItemDataEditingDone
       OnGetCellHint = sgItemDataGetCellHint
       OnSelectCell = sgItemDataSelectCell
