@@ -79,11 +79,13 @@ type
     sdSaveSession: TSaveDialog;
     tbLoadNotes: TToolButton;
     tbSaveNotes: TToolButton;
+    tbHistoryBack: TToolButton;
+    tbHistoryForward: TToolButton;
     tsCategoryEditor: TTabSheet;
     tsEntryListEditor: TTabSheet;
     tsEntryEditor: TTabSheet;
     tsDisplay: TTabSheet;
-    ToolBar1: TToolBar;
+    tbNotes: TToolBar;
     tsNotes: TTabSheet;
     tsController: TTabSheet;
     tbClearInitiative: TToolButton;
@@ -125,6 +127,7 @@ type
     procedure bOKEntryListClick(Sender: TObject);
     procedure bRefreshMapsClick(Sender: TObject);
     procedure bResetZoomClick(Sender: TObject);
+    procedure eEntryNameKeyPress(Sender: TObject; var Key: char);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -163,6 +166,8 @@ type
     procedure tbHideMarkerClick(Sender: TObject);
     procedure tbHidePortraitClick(Sender: TObject);
     procedure tbHideTokensClick(Sender: TObject);
+    procedure tbHistoryBackClick(Sender: TObject);
+    procedure tbHistoryForwardClick(Sender: TObject);
     procedure tbLibraryClick(Sender: TObject);
     procedure tbLoadNotesClick(Sender: TObject);
     procedure tbLoadSessionClick(Sender: TObject);
@@ -220,6 +225,8 @@ type
     // Notes module
     FNotesList: TEntryList; 
     FEditedEntry: TNoteEntry;
+    FHistoryList: TStringList;
+    FHistoryIdx: Integer;
 
     procedure UpdateMapList;
     procedure UpdateTokenList;
@@ -233,7 +240,8 @@ type
     procedure LoadMap(FileName: string);
     procedure SetCombatMode(val: Boolean);
     // Notes module
-    procedure LoadHTML(Entry: string);
+    procedure UpdateHistoryButtons;
+    //procedure WMAppCommand(var Msg: TMessage); message WM_APPCOMMAND;
   public
     procedure UpdateViewport;
     function GetToken(idx: Integer): TToken;
@@ -253,6 +261,10 @@ type
     procedure RestoreGridData;
     procedure SaveGridData;
     procedure AddToInitiative(pName, Path: string; Num, Value: Integer);
+    // Notes module
+    procedure LoadHTML(Entry: string);
+    procedure AddToHistory(Entry: string);
+
     property GridSizeX: Single read FGridSizeX write FGridSizeX; 
     property GridSizeY: Single read FGridSizeY write FGridSizeY;
     property GridOffsetX: Single read FGridOffsetX write FGridOffsetX;
@@ -267,6 +279,7 @@ type
     property MapDir: string read FMapDir;
     property TokenDir: string read FTokenDir;
     property OverlayDir: string read FOverlayDir;
+    property NotesList: TEntryList read FNotesList;
     property ShowMap: Boolean read FShowMap;
     property ShowMarker: Boolean read FShowMarker;
     property ShowGrid: Boolean read FShowGrid;
@@ -1712,8 +1725,12 @@ begin
   // Settings for the note module
   pcNotesMain.ActivePage := tsDisplay;
   pcNotesMain.ShowTabs := False;
-  FNotesList := TEntryList.Create;
+  FNotesList := TEntryList.Create;   
+  FHistoryList := TStringList.Create;
+  FHistoryIdx := 0;
   LoadHTML('Main');
+  FHistoryList.Add('Main');
+  UpdateHistoryButtons;
 
   // Set language
   LangName := 'English';
@@ -1773,6 +1790,9 @@ begin
   FMapLib.Free;
   FTokenLib.Free;
   FOverlayLib.Free;
+  // Notes module
+  FNotesList.Free;
+  FHistoryList.Free;
 end;
 
 procedure TfmController.FormKeyUp(Sender: TObject; var Key: Word;
@@ -1854,6 +1874,21 @@ end;
 // I wanted to do this in a separate frame, but apparently those are broken in
 // Freepascal, too. This does not bode well for the planned plugin interface.
 
+{procedure TfmController.WMAppCommand(var Msg: TMessage);
+begin
+  case GET_APPCOMMAND_LPARAM(Msg.LParam) of
+    APPCOMMAND_BROWSER_BACKWARD:
+    begin
+      tbHistoryBackClick(self);
+      Msg.Result := 1;
+    end;
+    APPCOMMAND_BROWSER_FORWARD:
+    begin
+
+    end;
+  end;
+end; }
+
 procedure TfmController.bOkCategoryClick(Sender: TObject);
 begin
   FNotesList.Categories.AddStrings(lbCategories.Items, True);
@@ -1917,6 +1952,7 @@ var i: Integer;
 begin
   if (eNewEntry.Text <> '') and (lbEntryList.Items.IndexOf(eNewEntry.Text) < 0) then
   begin
+    eNewEntry.Text := ReplaceStr(eNewEntry.Text, '|', '');
     lbEntryList.Items.Add(eNewEntry.Text);
   end;
 end;
@@ -1967,6 +2003,7 @@ begin
     FEditedEntry.Date := dtpTimestamp.DateTime;
     FEditedEntry.DMOnly := cbDMOnly.Checked;
     FEditedEntry.Category := cbCategory.Text;
+    eEntryName.Text := ReplaceStr(eEntryName.Text, '|', '');
     FEditedEntry.EntryName := eEntryName.Text;
 
     FEditedEntry.ClearAnnotations;
@@ -1985,6 +2022,13 @@ procedure TfmController.hvNotesDisplayHotSpotClick(Sender: TObject;
   const SRC: ThtString; var Handled: Boolean);
 begin
   Handled := True;
+
+  if not StartsStr('edit|', SRC) then
+  begin
+    AddToHistory(SRC);
+  end;
+
+  UpdateHistoryButtons;
   LoadHtml(SRC);
 end;
 
@@ -2094,12 +2138,32 @@ begin
   end;
 end;
 
+procedure TfmController.AddToHistory(Entry: string);
+begin
+  while FHistoryIdx < FHistoryList.Count - 1 do
+    FHistoryList.Delete(FHistoryList.Count - 1);
+
+  FHistoryList.Add(Entry);
+  Inc(FHistoryIdx);
+  UpdateHistoryButtons;
+end;
+
+procedure TfmController.UpdateHistoryButtons;
+begin
+  tbHistoryBack.Enabled := FHistoryIdx > 0;
+  tbHistoryForward.Enabled := FHistoryIdx < FHistoryList.Count - 1;
+end;
+
 procedure TfmController.tbLoadNotesClick(Sender: TObject);
 begin
   if odLoadSession.Execute then
   begin
-    FNotesList.LoadFromFile(odLoadSession.FileName);
+    FNotesList.LoadFromFile(odLoadSession.FileName);    
+    FHistoryIdx := 0;
     LoadHTML('Main');
+    FHistoryList.Clear;
+    FHistoryList.Add('Main');
+    UpdateHistoryButtons;
   end;
 end;
 
@@ -2107,6 +2171,28 @@ procedure TfmController.tbSaveNotesClick(Sender: TObject);
 begin
   if sdSaveSession.Execute then
     FNotesList.SaveToFile(sdSaveSession.FileName);
+end;
+
+procedure TfmController.tbHistoryBackClick(Sender: TObject);
+begin
+  FHistoryIdx := Max(0, FHistoryIdx - 1);
+  LoadHTML(FHistoryList[FHistoryIdx]);
+  pcNotesMain.ActivePage := tsDisplay;
+  UpdateHistoryButtons;
+end;
+
+procedure TfmController.tbHistoryForwardClick(Sender: TObject);
+begin
+  FHistoryIdx := Min(FHistoryIdx + 1, FHistoryList.Count - 1);
+  LoadHTML(FHistoryList[FHistoryIdx]); 
+  pcNotesMain.ActivePage := tsDisplay;
+  UpdateHistoryButtons;
+end;
+
+procedure TfmController.eEntryNameKeyPress(Sender: TObject; var Key: char);
+begin
+  if Key = '|' then
+    Key := #0;
 end;
 
 
