@@ -146,6 +146,7 @@ object fmGridSettings: TfmGridSettings
       'Rectangle'
       'Hexagonal horizontal'
       'Hexagonal vertical'
+      'Isometric'
     )
     OnChange = fseGridSizeXChange
     Style = csDropDownList

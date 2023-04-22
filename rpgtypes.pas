@@ -27,7 +27,7 @@ function Map(Val, InValStart, InValEnd, OutValStart, OutValEnd: Double): Double;
 
 type
 
-  TGridType = (gtRect, gtHexH, gtHexV);
+  TGridType = (gtRect, gtHexH, gtHexV, gtIsometric);
 
   TTokenRotationStyle = (rsRotateToken, rsShowArrow);
 
@@ -181,6 +181,15 @@ begin
     if Odd(Count) then
       YOffset := YOffset + GridSizeY / 2;
     YPos := Round(Round((FYTargetPos - YOffset - FHeight / 2) / GridSizeY) * GridSizeY + YOffset +(FGridSlotsY * GridSizeY / 2));
+  end
+  else if GridType = gtIsometric then
+  begin
+    tmpGridSize := GridSizeY / 2;
+    Count := Round((FYTargetPos - YOffset - FHeight / 2) / tmpGridSize);
+    YPos := Round(Count * tmpGridSize + YOffset +(FGridSlotsY * GridSizeY / 2));
+    if Odd(Count) then
+      XOffset := XOffset + GridSizeX / 2;
+    XPos := Round(Round((FXTargetPos - XOffset - FWidth / 2) / GridSizeX) * GridSizeX + XOffset + (FGridSlotsX * GridSizeX / 2));
   end;
   if FVisible then
     StartAnimation;

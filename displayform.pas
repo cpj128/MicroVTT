@@ -323,6 +323,7 @@ var
   tmpPicture: TPicture;
   CellRect: TRect;
   Hex: array[0..5] of TPoint;
+  Iso: array[0..3] of TPoint;
   tmpGridSize: Single; 
   ArrowLen, ArrowWid: Double;
   ArrowPnt: TPointF;
@@ -505,6 +506,27 @@ begin
                     MapSegmentStretched.DrawPolygonAntialias(Hex, FGridColor, 1, BGRAPixelTransparent);
                   end;
               end;
+              gtIsometric:
+              begin
+                tmpGridSize := FGridSizeY / 2;
+                for i := 0 to Ceil(((FMapPic.Height - (FGridOffsetY mod tmpGridSize)) / tmpGridSize)) do
+                  for j := 0 to Ceil(((FMapPic.Width - (FGridOffsetX mod FGridSizeX)) / FGridSizeX)) do
+                  begin
+                    CellRect := Rect(Round((FGridOffsetX + j * FGridSizeX) * FMapZoom - FMapOffsetX),
+                                       Round((FGridOffsetY + i * tmpGridSize) * FMapZoom - FMapOffsetY),
+                                       Round((FGridOffsetX + (j + 1) * FGridSizeX) * FMapZoom - FMapOffsetX),
+                                       Round((FGridOffsetY + i * tmpGridSize + FGridSizeY) * FMapZoom - FMapOffsetY));
+                    if Odd(i) then
+                      CellRect.Offset(Round(FGridSizeX  * FMapZoom / 2), 0);
+
+                    Iso[0] := Point(CellRect.Left, (CellRect.Bottom + CellRect.Top) div 2);
+                    Iso[1] := Point((CellRect.Left + CellRect.Right) div 2, CellRect.Top);
+                    Iso[2] := Point(CellRect.Right, (CellRect.Top + CellRect.Bottom) div 2);
+                    Iso[3] := Point((CellRect.Left + CellRect.Right) div 2, CellRect.Bottom);
+
+                    MapSegmentStretched.DrawPolygonAntialias(Iso, FGridColor, 1, BGRAPixelTransparent);
+                  end;
+                end;
             end;
           end;
 

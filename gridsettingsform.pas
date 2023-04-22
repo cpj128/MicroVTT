@@ -89,6 +89,7 @@ begin
   cbGridType.Items[0] := GetString(LangStrings.LanguageID, 'GridSettingsType0');
   cbGridType.Items[1] := GetString(LangStrings.LanguageID, 'GridSettingsType1');
   cbGridType.Items[2] := GetString(LangStrings.LanguageID, 'GridSettingsType2');
+  cbGridType.Items[3] := GetString(LangStrings.LanguageID, 'GridSettingsType3');
   bCancel.Caption := GetString(LangStrings.LanguageID, 'ButtonCancel');
   bOk.Caption := GetString(LangStrings.LanguageID, 'ButtonOk');
 end;

@@ -613,6 +613,7 @@ var
   CurToken: TToken;
   CellRect, BoundingRect: TRect;
   Hex: array[0..5] of TPoint;
+  Iso: array[0..3] of TPoint;
   tmpGridSize: Single;
   Rotation: TBGRAAffineBitmapTransform;
   RotatedBmp, OverlayBmp, OverlayScaled: TBGRABitmap;
@@ -702,6 +703,27 @@ begin
                   Hex[4] := Point(CellRect.Right - CellRect.Width div 4, CellRect.Bottom);
                   Hex[5] := Point(CellRect.Left + CellRect.Width div 4, CellRect.Bottom);
                   DrawnMapSegment.DrawPolygonAntialias(Hex, FGridColor, 1, BGRAPixelTransparent);
+                end;
+            end;
+            gtIsometric:
+            begin
+              tmpGridSize := FGridSizeY / 2;
+              for i := 0 to Ceil(((FMapPic.Height - (FGridOffsetY mod tmpGridSize)) / tmpGridSize)) do
+                for j := 0 to Ceil(((FMapPic.Width - (FGridOffsetX mod FGridSizeX)) / FGridSizeX)) do
+                begin
+                  CellRect := Rect(MapToViewPortX(FGridOffsetX + j * FGridSizeX),
+                                   MapToViewportY(FGridOffsetY + i * tmpGridSize),
+                                   MapToViewPortX(FGridOffsetX + (j + 1) * FGridSizeX),
+                                   MapToViewportY(FGridOffsetY + i * tmpGridSize + FGridSizeY));
+                  if Odd(i) then
+                    CellRect.Offset(Round(FGridSizeX  * FDisplayScale * FZoomFactor / 2), 0);
+
+                  Iso[0] := Point(CellRect.Left, (CellRect.Bottom + CellRect.Top) div 2);
+                  Iso[1] := Point((CellRect.Left + CellRect.Right) div 2, CellRect.Top);
+                  Iso[2] := Point(CellRect.Right, (CellRect.Top + CellRect.Bottom) div 2);
+                  Iso[3] := Point((CellRect.Left + CellRect.Right) div 2, CellRect.Bottom);
+
+                  DrawnMapSegment.DrawPolygonAntialias(Iso, FGridColor, 1, BGRAPixelTransparent);
                 end;
             end;
           end;
@@ -1618,6 +1640,12 @@ begin
   FOldGridOffsetY := FGridOffsetY;
   FOldGridColor   := FGridColor;
   FOldGridType    := FGridType;
+  fmDisplay.GridOffsetX := FGridOffsetX;
+  fmDisplay.GridOffsetY := FGridOffsetY;
+  fmDisplay.GridSizeX   := FGridSizeX;
+  fmDisplay.GridSizeY   := FGridSizeY;
+  fmDisplay.GridColor   := FGridColor;
+  fmDisplay.GridType    := FGridType;
 end;
 
 procedure TfmController.RestoreGridData;
