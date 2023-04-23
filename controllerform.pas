@@ -378,6 +378,33 @@ begin
   UpdateTokenList;
   UpdateOverlayList;
   UpdateViewport;
+
+  // Notes module
+  tbLoadNotes.Hint := GetString(LangStrings.LanguageID, 'NotesLoadDBHint');
+  tbSaveNotes.Hint := GetString(LangStrings.LanguageID, 'NotesSaveDBHint');
+  tbHistoryBack.Hint := GetString(LangStrings.LanguageID, 'NotesHistoryBackHint');
+  tbHistoryForward.Hint := GetString(LangStrings.LanguageID, 'NotesHistoryForwardHint');
+  bOkCategory.Caption := GetString(LangStrings.LanguageID, 'ButtonOk');
+  bCancelCategory.Caption := GetString(LangStrings.LanguageID, 'ButtonCancel');
+  bAddCategory.Caption := GetString(LangStrings.LanguageID, 'ButtonAdd');
+  bDeleteCategory.Caption := GetString(LangStrings.LanguageID, 'ButtonDelete');
+  eNewCategory.TextHint := GetString(LangStrings.LanguageID, 'NotesNewCategoryHint');
+  bEntryOK.Caption := GetString(LangStrings.LanguageID, 'ButtonOk');    
+  bEntryCancel.Caption := GetString(LangStrings.LanguageID, 'ButtonCancel');  
+  gbAnnotations.Caption := GetString(LangStrings.LanguageID, 'NotesGroupAnnotations');
+  bAddAnnotation.Caption := GetString(LangStrings.LanguageID, 'ButtonAdd');
+  bDeleteAnnotation.Caption := GetString(LangStrings.LanguageID, 'ButtonDelete');
+  bEditAnnotation.Caption := GetString(LangStrings.LanguageID, 'ButtonEdit');
+  cbDMOnly.Caption := GetString(LangStrings.LanguageID, 'NotesCbDMOnly');
+  cbAnnotationDMOnly.Caption := GetString(LangStrings.LanguageID, 'NotesCbDMOnly');
+  lvAnnotations.Column[0].Caption := GetString(LangStrings.LanguageID, 'NotesAnnotHeaderDate');
+  lvAnnotations.Column[1].Caption := GetString(LangStrings.LanguageID, 'NotesAnnotHeaderContent');
+  lvAnnotations.Column[2].Caption := GetString(LangStrings.LanguageID, 'NotesAnnotHeaderDMOnly');
+  eNewEntry.TextHint := GetString(LangStrings.LanguageID, 'NotesNewEntryHint');
+  bAddEntry.Caption := GetString(LangStrings.LanguageID, 'ButtonAdd');
+  bDeleteEntry.Caption := GetString(LangStrings.LanguageID, 'ButtonDelete');
+  bOKEntryList.Caption := GetString(LangStrings.LanguageID, 'ButtonOk');
+  bCancelEntryList.Caption := GetString(LangStrings.LanguageID, 'ButtonCancel');
 end;
 
 procedure TfmController.lvInitiativeCompare(Sender: TObject; Item1,
@@ -1759,6 +1786,15 @@ begin
   FInitiativeDesc := StrToBoolDef(FAppSettings.ReadString('Settings', 'InitiativeDesc', 'true'), True);
   FTokensStartInvisible := StrToBoolDef(FAppSettings.ReadString('Settings', 'TokensStartInvisible', 'true'), True);
   FTokenRotationStyle := TTokenRotationStyle(FAppSettings.ReadInteger('Settings', 'TokenRotationStyle', 0));
+   
+  // Set language
+  LangName := 'English';
+  GetLanguageIDs(LangID, FallbackLangID);
+  if SameText(FallbackLangID, 'de') then
+    LangName := 'Deutsch';
+  LanguageID := FAppSettings.ReadString('Settings', 'Language', LangName);
+
+  Notes.SetLanguage(LanguageID);
 
   // Settings for the note module
   pcNotesMain.ActivePage := tsDisplay;
@@ -1769,13 +1805,6 @@ begin
   LoadHTML('Main');
   FHistoryList.Add('Main');
   UpdateHistoryButtons;
-
-  // Set language
-  LangName := 'English';
-  GetLanguageIDs(LangID, FallbackLangID);
-  if SameText(FallbackLangID, 'de') then
-    LangName := 'Deutsch';
-  LanguageID := FAppSettings.ReadString('Settings', 'Language', LangName);
 
   FIsDragging := False;
   FIsDraggingToken := False;

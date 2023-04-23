@@ -19,9 +19,9 @@ object fmController: TfmController
     Height = 880
     Top = 0
     Width = 1597
-    ActivePage = tsController
+    ActivePage = tsNotes
     Align = alClient
-    TabIndex = 0
+    TabIndex = 1
     TabOrder = 0
     object tsController: TTabSheet
       Caption = 'Map Controller'
@@ -450,6 +450,8 @@ object fmController: TfmController
         Width = 1589
         Caption = 'tbNotes'
         Images = ilMenuItems
+        ParentShowHint = False
+        ShowHint = True
         TabOrder = 0
         object tbLoadNotes: TToolButton
           Left = 1
@@ -563,7 +565,7 @@ object fmController: TfmController
             Left = 232
             Height = 23
             Top = 8
-            Width = 80
+            Width = 120
             TabOrder = 5
             TextHint = 'New category'
           end
@@ -804,7 +806,7 @@ object fmController: TfmController
             Left = 416
             Height = 23
             Top = 8
-            Width = 80
+            Width = 120
             OnKeyPress = eEntryNameKeyPress
             TabOrder = 5
             TextHint = 'New Entry'

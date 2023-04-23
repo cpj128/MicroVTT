@@ -74,15 +74,34 @@ type
     property Categories: TStringList read FCategories;
   end;
 
+  procedure SetLanguage(LangID: string);
 
 implementation
 
 uses
+  LangStrings,
   RegExpr,
   StrUtils,
   XMLRead,
   XMLWrite;
 
+var
+  strSidebarList,
+  strSidebarEdit,
+  strSidebarCategories,
+  strNoEntries,
+  strEntryNotFound,
+  strNone: string;
+
+procedure SetLanguage(LangID: string);
+begin
+  strSidebarList := GetString(LangID, 'NotesSidebarList');
+  strSidebarEdit := GetString(LangID, 'NotesSidebarEdit');
+  strSidebarCategories := GetString(LangID, 'NotesSidebarCategories');
+  strNoEntries := GetString(LangID, 'NotesContentNoEntries');
+  strEntryNotFound := GetString(LangID, 'NotesContentEntryNotFound');
+  strNone := GetString(LangID, 'NotesCategoryNone');
+end;
 
 { TNoteAnnotation }
 
@@ -282,10 +301,10 @@ end;
 
 function TEntryList.GetSidebar(EditKey: string): string;
 begin
-  Result := '<a href="main">List</a><br />';
-  Result := Result + '<a href="categories">Categories</a><br />';
+  Result := '<a href="main">' + strSidebarList + '</a><br />';
+  Result := Result + '<a href="categories">' + strSidebarCategories + '</a><br />';
   if EditKey <> '' then
-    Result := Result + '<a href="edit|' + EditKey + '">Edit</a><br />';
+    Result := Result + '<a href="edit|' + EditKey + '">' + strSidebarEdit + '</a><br />';
   Result := '<div class="sidenav">' + Result + '</div>';
 end;
 
@@ -415,7 +434,7 @@ begin
 
   end;
   if str = '' then
-    str := '<li>No entries found</li>';
+    str := '<li>' + strNoEntries + '</li>';
 
   str := '<html><head><title>Kategorien</title><link rel="stylesheet" href="styles.css"></head><body>' + GetSidebar('') +
          '<div class="main"><ul>' + str + '</ul></div></body></html>';
@@ -428,7 +447,7 @@ var
   i: Integer;
   str: string;
 begin
-  str := '<li><a href="cat|none">None</a></li>';
+  str := '<li><a href="cat|none">' + strNone + '</a></li>';
 
   for i := 0 to FCategories.Count - 1 do
     str := str + '<li><a href="cat|' + FCategories[i] + '">' + FCategories[i] + '</a></li>';
@@ -442,7 +461,7 @@ function TEntryList.NotFoundToHTML: TStream;
 var str: string;
 begin
   str := '<html><head><title>Not found</title><link rel="stylesheet" href="styles.css"></head><body>' + GetSidebar('') +
-         '<div class="main">Not found!</div></body></html>';
+         '<div class="main">' + strEntryNotFound + '</div></body></html>';
   Result := TStringStream.Create(str);
 end;
 
