@@ -40,7 +40,9 @@ type
     Label4: TLabel;
     Label5: TLabel;
     Label6: TLabel;
+    Label7: TLabel;
     pGridColor: TPanel;
+    tbGridAlpha: TTrackBar;
     procedure bCancelClick(Sender: TObject);
     procedure bOkClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -86,6 +88,7 @@ begin
   Label2.Caption := GetString(LangStrings.LanguageID, 'GridSettingsOffsetX');
   Label3.Caption := GetString(LangStrings.LanguageID, 'GridSettingsOffsetY');
   Label4.Caption := GetString(LangStrings.LanguageID, 'GridSettingsColor');
+  Label7.Caption := GetString(LangStrings.LanguageID, 'GridSettingsOpacity');
   cbGridType.Items[0] := GetString(LangStrings.LanguageID, 'GridSettingsType0');
   cbGridType.Items[1] := GetString(LangStrings.LanguageID, 'GridSettingsType1');
   cbGridType.Items[2] := GetString(LangStrings.LanguageID, 'GridSettingsType2');
@@ -114,6 +117,7 @@ begin
   fmController.GridOffsetX := fseGridOffsetX.Value;
   fmController.GridOffsetY := fseGridOffsetY.Value;
   fmController.GridType    := TGridType(cbGridType.ItemIndex);
+  fmCOntroller.GridAlpha   := tbGridAlpha.Position;
   fmController.pbViewport.Invalidate;
 end;
 

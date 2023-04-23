@@ -56,6 +56,7 @@ type
     FGridType: TGridType;
     FMarkerX, FMarkerY: Integer;
     FGridColor: TColor;
+    FGridAlpha: Byte;
     FCombatMode: Boolean;
     FPortraitFile: string;
 
@@ -71,6 +72,7 @@ type
     procedure SetMarkerX(val: Integer);
     procedure SetMarkerY(val: Integer);
     procedure SetGridColor(val: TColor);
+    procedure SetGridAlpha(val: Byte);
     procedure SetCombatMode(val: Boolean);
     procedure SetPortraitFile(FileName: string);
   public
@@ -86,6 +88,7 @@ type
     property MarkerX: Integer read FMarkerX write SetMarkerX;
     property MarkerY: Integer read FMarkerY write SetMarkerY;
     property GridColor: TColor read FGridColor write SetGridColor;
+    property GridAlpha: Byte read FGridAlpha write SetGridAlpha;
     property CombatMode: Boolean read FCombatMode write SetCombatMode;
     property PortraitFileName: string read FPortraitFile write SetPortraitFile;
   end;
@@ -144,6 +147,7 @@ begin
   FGridSizeX := 100;
   FGridSizeY := 100;
   FGridColor := clSilver;
+  FGridAlpha := 255;
   FMapPic := TBGRABitmap.Create(0, 0);
   FPortrait := TBGRABitmap.Create(0, 0);
   FBgPic := TPicture.Create;
@@ -280,6 +284,12 @@ end;
 procedure TfmDisplay.SetGridColor(val: TColor);
 begin
   FGridColor := val;
+  Invalidate;
+end;
+
+procedure TfmDisplay.SetGridAlpha(val: Byte);
+begin
+  FGridAlpha := val;
   Invalidate;
 end;
 
@@ -448,7 +458,7 @@ begin
                   begin
                     MapSegmentStretched.DrawLineAntialias(0, CurGridPos,
                                                           MapSegmentStretched.Width, CurGridPos,
-                                                          FGridColor, 1);
+                                                          ColorToBGRA(FGridColor, FGridAlpha), 1);
                   end;
                 end;
                 // Vertical lines
@@ -459,7 +469,7 @@ begin
                   begin
                     MapSegmentStretched.DrawLineAntialias(CurGridPos, 0,
                                                           CurGridPos, MapSegmentStretched.Height,
-                                                          FGridColor, 1);
+                                                          ColorToBGRA(FGridColor, FGridAlpha), 1);
                   end;
                 end;
 
@@ -482,7 +492,7 @@ begin
                     Hex[3] := Point(CellRect.Right, CellRect.Top + CellRect.Height div 4);
                     Hex[4] := Point(CellRect.Right, CellRect.Bottom - CellRect.Height div 4);
                     Hex[5] := Point(CellRect.Left + CellRect.Width div 2, CellRect.Bottom);
-                    MapSegmentStretched.DrawPolygonAntialias(Hex, FGridColor, 1, BGRAPixelTransparent);
+                    MapSegmentStretched.DrawPolygonAntialias(Hex, ColorToBGRA(FGridColor, FGridAlpha), 1, BGRAPixelTransparent);
                   end;
               end;
               gtHexV:
@@ -503,7 +513,7 @@ begin
                     Hex[3] := Point(CellRect.Right, CellRect.Top + CellRect.Height div 2);
                     Hex[4] := Point(CellRect.Right - CellRect.Width div 4, CellRect.Bottom);
                     Hex[5] := Point(CellRect.Left + CellRect.Width div 4, CellRect.Bottom);
-                    MapSegmentStretched.DrawPolygonAntialias(Hex, FGridColor, 1, BGRAPixelTransparent);
+                    MapSegmentStretched.DrawPolygonAntialias(Hex, ColorToBGRA(FGridColor, FGridAlpha), 1, BGRAPixelTransparent);
                   end;
               end;
               gtIsometric:
@@ -524,7 +534,7 @@ begin
                     Iso[2] := Point(CellRect.Right, (CellRect.Top + CellRect.Bottom) div 2);
                     Iso[3] := Point((CellRect.Left + CellRect.Right) div 2, CellRect.Bottom);
 
-                    MapSegmentStretched.DrawPolygonAntialias(Iso, FGridColor, 1, BGRAPixelTransparent);
+                    MapSegmentStretched.DrawPolygonAntialias(Iso, ColorToBGRA(FGridColor, FGridAlpha), 1, BGRAPixelTransparent);
                   end;
                 end;
             end;

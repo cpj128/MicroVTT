@@ -204,10 +204,12 @@ type
     FGridSizeX, FGridSizeY, FGridOffsetX, FGridOffsetY: Single;
     FShowGrid: Boolean;
     FGridColor: TColor;
+    FGridAlpha: Byte;
     FGridType: TGridType;
     FOldGridSizeX, FOldGridSizeY, FOldGridOffsetX, FOldGridOffsetY: Single;
     FOldGridType: TGridType;
     FOldGridColor: TColor;
+    FOldGridAlpha: Byte;
     FMarkerPosX, FMarkerPosY: Integer; // In MapPic-coordinates
     FShowMap: Boolean;
     FShowMarker: Boolean;
@@ -270,6 +272,7 @@ type
     property GridOffsetX: Single read FGridOffsetX write FGridOffsetX;
     property GridOffsetY: Single read FGridOffsetY write FGridOffsetY;
     property GridColor: TColor read FGridColor write FGridColor;
+    property GridAlpha: Byte read FGridAlpha write FGridAlpha;
     property GridType: TGridType read FGridType write FGridType;
     property TokenRotationStyle: TTokenRotationStyle read FTokenRotationStyle;
     property CurInitiativeIndex: Integer read FCurInitiativeIndex write SetCurInitiativeIndex;
@@ -647,7 +650,7 @@ begin
                 begin
                   DrawnMapSegment.DrawLineAntialias(0.0, CurGridPos,
                                                     MapToViewPortX(FMapPic.Width), CurGridPos,
-                                                    FGridColor, 1);
+                                                    ColorToBGRA(FGridColor, FGridAlpha), 1);
                 end;
               end;
               // Vertical lines
@@ -658,7 +661,7 @@ begin
                 begin
                   DrawnMapSegment.DrawLineAntialias(CurGridPos, 0,
                                                     CurGridPos, MapToViewPortY(FMapPic.Height),
-                                                    FGridColor, 1);
+                                                    ColorToBGRA(FGridColor, FGridAlpha), 1);
                 end;
               end;
 
@@ -681,7 +684,7 @@ begin
                   Hex[3] := Point(CellRect.Right, CellRect.Top + CellRect.Height div 4);
                   Hex[4] := Point(CellRect.Right, CellRect.Bottom - CellRect.Height div 4);
                   Hex[5] := Point(CellRect.Left + CellRect.Width div 2, CellRect.Bottom);
-                  DrawnMapSegment.DrawPolygonAntialias(Hex, FGridColor, 1, BGRAPixelTransparent);
+                  DrawnMapSegment.DrawPolygonAntialias(Hex, ColorToBGRA(FGridColor, FGridAlpha), 1, BGRAPixelTransparent);
                 end;
             end;
             gtHexV:
@@ -702,7 +705,7 @@ begin
                   Hex[3] := Point(CellRect.Right, CellRect.Top + CellRect.Height div 2);
                   Hex[4] := Point(CellRect.Right - CellRect.Width div 4, CellRect.Bottom);
                   Hex[5] := Point(CellRect.Left + CellRect.Width div 4, CellRect.Bottom);
-                  DrawnMapSegment.DrawPolygonAntialias(Hex, FGridColor, 1, BGRAPixelTransparent);
+                  DrawnMapSegment.DrawPolygonAntialias(Hex, ColorToBGRA(FGridColor, FGridAlpha), 1, BGRAPixelTransparent);
                 end;
             end;
             gtIsometric:
@@ -723,7 +726,7 @@ begin
                   Iso[2] := Point(CellRect.Right, (CellRect.Top + CellRect.Bottom) div 2);
                   Iso[3] := Point((CellRect.Left + CellRect.Right) div 2, CellRect.Bottom);
 
-                  DrawnMapSegment.DrawPolygonAntialias(Iso, FGridColor, 1, BGRAPixelTransparent);
+                  DrawnMapSegment.DrawPolygonAntialias(Iso, ColorToBGRA(FGridColor, FGridAlpha), 1, BGRAPixelTransparent);
                 end;
             end;
           end;
@@ -998,12 +1001,14 @@ begin
   FOldGridOffsetX := FGridOffsetX;
   FOldGridOffsetY := FGridOffsetY;
   FOldGridColor := FGridColor;
+  FOldGridAlpha := FGridAlpha;
   FOldGridType := FGridType;
   fmGridSettings.fseGridOffsetX.Value := FGridOffsetX;    
   fmGridSettings.fseGridOffsetY.Value := FGridOffsetY;
   fmGridSettings.fseGridSizeX.Value   := FGridSizeX;
   fmGridSettings.fseGridSizeY.Value   := FGridSizeY;
   fmGridSettings.pGridColor.Color     := FGridColor;
+  fmGridSettings.tbGridAlpha.Position := FGridAlpha;
   fmGridSettings.cbGridType.ItemIndex := Ord(FGridType);
   fmGridSettings.Show;
   {if fmGridSettings.ShowModal = mrOK then
@@ -1154,6 +1159,7 @@ begin
       saveFile.WriteFloat(SAVESECTIONGRID, 'OffsetX', FGridOffsetX);
       saveFile.WriteFloat(SAVESECTIONGRID, 'OffsetY', FGridOffsetY);
       saveFile.WriteInteger(SAVESECTIONGRID, 'Color', FGridColor);
+      saveFile.WriteInteger(SAVESECTIONGRID, 'Alpha', FGridColor);
 
       // Portrait
       saveFile.WriteString(SAVESECTIONPORTRAIT, 'FileName', fmDisplay.PortraitFileName);
@@ -1226,6 +1232,7 @@ begin
       FGridOffsetX := saveFile.ReadInteger(SAVESECTIONGRID, 'OffsetX', 0);
       FGridOffsetY := saveFile.ReadInteger(SAVESECTIONGRID, 'OffsetY', 0);
       FGridColor := saveFile.ReadInteger(SAVESECTIONGRID, 'Color', clSilver);
+      FGridAlpha := saveFile.ReadInteger(SAVESECTIONGRID, 'Alpha', 255);
        
       // Portrait
       fmDisplay.PortraitFileName := saveFile.ReadString(SAVESECTIONPORTRAIT, 'FileName', '');
@@ -1639,12 +1646,14 @@ begin
   FOldGridOffsetX := FGridOffsetX;
   FOldGridOffsetY := FGridOffsetY;
   FOldGridColor   := FGridColor;
+  FOldGridAlpha   := FGridAlpha;
   FOldGridType    := FGridType;
   fmDisplay.GridOffsetX := FGridOffsetX;
   fmDisplay.GridOffsetY := FGridOffsetY;
   fmDisplay.GridSizeX   := FGridSizeX;
   fmDisplay.GridSizeY   := FGridSizeY;
   fmDisplay.GridColor   := FGridColor;
+  fmDisplay.GridAlpha   := FGridAlpha;
   fmDisplay.GridType    := FGridType;
 end;
 
@@ -1655,6 +1664,7 @@ begin
   FGridOffsetX := FOldGridOffsetX;
   FGridOffsetY := FOldGridOffsetY;
   FGridColor   := FOldGridColor;
+  FGridAlpha   := FOldGridAlpha;
   FGridType    := FOldGridType;
   pbViewPort.Invalidate;
 end;
@@ -1774,6 +1784,7 @@ begin
   FGridSizeX := 100;
   FGridSizeY := 100;
   FGridColor := clSilver;
+  FGridAlpha := 255;
   FShowMap := False;
   FShowGrid := True;
   FGridType := gtRect;
