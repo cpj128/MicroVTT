@@ -410,6 +410,8 @@ begin
     if Assigned(tmpEntry) and not (ForPlayers and tmpEntry.DMOnly) then
       str := str + '<li><a href="' + tmpEntry.EntryName + '">' + tmpEntry.EntryName + '</a></li>';
   end;
+  if str = '' then
+    str := '<li>' + strNoEntries + '</li>';
   str := '<html><head><title>Liste</title><link rel="stylesheet" href="styles.css"></head><body>' + GetSidebar('entryList') +
          '<div class="main"><ul>' + str + '</ul></div></body></html>';
 
