@@ -509,6 +509,7 @@ object fmController: TfmController
             PrintMarginTop = 2
             PrintScale = 1
             OnHotSpotClick = hvNotesDisplayHotSpotClick
+            OnImageRequest = hvNotesDisplayImageRequest
             Align = alClient
             TabOrder = 0
           end

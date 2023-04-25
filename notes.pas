@@ -387,12 +387,35 @@ begin
             GetSidebar(Name) + '<div class="main">' + str + '</div></body></html>';
 
   // Rewrite a few things to make everything work better
-  // Line breaks to <br />-tags
-  str := StringReplace(str, #10, '<br />', [rfReplaceAll]);
+  // Forgive me for using regexp to parse a context-free language...
+
+  // A few bits of markdown formating
+  // This is not strictly correct markdown, since it does not account for escaped
+  // characters or *_mixed emphasis_*, but for simple formatting it should do.
+  // Headers     
+  str := ReplaceRegExpr('#{6}\s(\V*)', str, '<h6>$1</h6>', True);  
+  str := ReplaceRegExpr('#{5}\s(\V*)', str, '<h5>$1</h5>', True);  
+  str := ReplaceRegExpr('#{4}\s(\V*)', str, '<h4>$1</h4>', True);   
+  str := ReplaceRegExpr('#{3}\s(\V*)', str, '<h3>$1</h3>', True);  
+  str := ReplaceRegExpr('#{2}\s(\V*)', str, '<h2>$1</h2>', True);
+  str := ReplaceRegExpr('#{1}\s(\V*)', str, '<h1>$1</h1>', True);
+
+  // Bold / italics
+  str := ReplaceRegExpr('\*\*([^\*]+)\*\*', str, '<strong>$1</strong>', True);
+  str := ReplaceRegExpr('\*([^\*]+)\*', str, '<em>$1</em>', True);
+  str := ReplaceRegExpr('__([^\*]+)__', str, '<strong>$1</strong>', True);
+  str := ReplaceRegExpr('_([^\*]+)_', str, '<em>$1</em>', True);
+
+  // Image
+  str := ReplaceRegExpr('(?:\!)(?:\[(.*)?\])\((.*(\.(jpg|png|gif|tiff|bmp))(?:(\s\"|\'')(\w|\W|\d)+(\"|\''))?)\)',
+                        str, '<img src="$2" alt="$1" \>', True);
 
   // Wikilinks to <a>-tags
   str := ReplaceRegExpr('\[\[([^\]\|]+)\|([^\]\|]+)\]\]', str, '<a href="$1">$2</a>', True);
   str := ReplaceRegExpr('\[\[([^\]]+)\]\]', str, '<a href="$1">$1</a>', True);
+                                      
+  // Line breaks to <br />-tags
+  str := StringReplace(str, #10, '<br />', [rfReplaceAll]);
 
   Result := TStringStream.Create(str);
 end;

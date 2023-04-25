@@ -20,7 +20,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ComCtrls,
   ExtCtrls, Menus, DateTimePicker, IniFiles, BGRABitmap, RPGTypes, HtmlView,
-  Notes, HtmlGlobals;
+  Notes, HtmlGlobals, HTMLUn2;
 
 const
   MAPLIBFILE = 'Maps.txt';
@@ -135,6 +135,8 @@ type
     procedure FormShow(Sender: TObject);
     procedure hvNotesDisplayHotSpotClick(Sender: TObject; const SRC: ThtString;
       var Handled: Boolean);
+    procedure hvNotesDisplayImageRequest(Sender: TObject; const SRC: ThtString;
+      var Stream: TStream);
     procedure lvAnnotationsSelectItem(Sender: TObject; Item: TListItem;
       Selected: Boolean);
     procedure lvInitiativeCompare(Sender: TObject; Item1, Item2: TListItem;
@@ -2098,6 +2100,15 @@ begin
 
   UpdateHistoryButtons;
   LoadHtml(SRC);
+end;
+
+procedure TfmController.hvNotesDisplayImageRequest(Sender: TObject;
+  const SRC: ThtString; var Stream: TStream);
+begin
+  if FileExists(SRC) then
+    Stream := TFileStream.Create(Src, fmOpenRead)
+  else
+    Stream := nil;
 end;
 
 procedure TfmController.lvAnnotationsSelectItem(Sender: TObject;
