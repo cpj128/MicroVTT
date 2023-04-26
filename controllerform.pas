@@ -2106,7 +2106,13 @@ procedure TfmController.hvNotesDisplayImageRequest(Sender: TObject;
   const SRC: ThtString; var Stream: TStream);
 begin
   if FileExists(SRC) then
-    Stream := TFileStream.Create(Src, fmOpenRead)
+  begin
+    try
+      Stream := TFileStream.Create(Src, fmOpenRead);
+    except
+      Stream := nil;
+    end;
+  end
   else
     Stream := nil;
 end;

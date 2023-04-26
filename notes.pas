@@ -5,7 +5,7 @@ unit Notes;
 interface
 
 uses
-  Classes, SysUtils, DOM;
+  Classes, SysUtils, DOM, MarkdownProcessor, MarkdownUtils;
 
 type
 
@@ -16,7 +16,7 @@ type
     FContent: string;
   public
     procedure LoadFromXML(node: TDOMNode);
-    function ToHtml(ForPlayers: Boolean): string;
+    function ToHtml(ForPlayers: Boolean; MarkdownConverter: TMarkdownProcessor = nil): string;
     function SaveToXML(doc: TXMLDocument): TDOMNode;
     property Date: TDateTime read FDate write FDate;
     property DMOnly: Boolean read FDMOnly write FDMOnly;
@@ -35,7 +35,7 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure LoadFromXML(node: TDOMNode);
-    function ToHtml(ForPlayers: Boolean): string;
+    function ToHtml(ForPlayers: Boolean; MarkdownConverter: TMarkdownProcessor = nil): string;
     function SaveToXML(doc: TXMLDocument): TDOMNode;
     function GetAnnotation(idx: Integer): TNoteAnnotation;
     function GetAnnotationCount: Integer;
@@ -52,6 +52,7 @@ type
   private
     FEntries: TList;
     FCategories: TStringList;
+    FMarkdownProcessor: TMarkdownProcessor;
     function GetSidebar(EditKey: string): string;
   public
     constructor Create;
@@ -122,11 +123,14 @@ begin
   FContent := node.FirstChild.NodeValue;
 end;
 
-function TNoteAnnotation.ToHtml(ForPlayers: Boolean): string;
+function TNoteAnnotation.ToHtml(ForPlayers: Boolean; MarkdownConverter: TMarkdownProcessor = nil): string;
 begin
   if ForPlayers and FDMOnly then
     Exit('');
-  Result := '<p>' + FContent + '</p>';
+  Result := FContent;
+  if Assigned(MarkdownConverter) then
+    Result := MarkdownConverter.process(FContent);
+  Result := '<p>' + Result + '</p>';
   if FDate <> 0 then
     Result := '<p class="timestamp">' + FormatDateTime('ddddd', FDate) + '</p>' + Result;
   Result := '<div class="annotation' + IfThen(FDMOnly, ' dmonly', '') + '">' + Result + '</div>';
@@ -236,10 +240,11 @@ begin
   end;
 end;
 
-function TNoteEntry.ToHtml(ForPlayers: Boolean): string;
+function TNoteEntry.ToHtml(ForPlayers: Boolean; MarkdownConverter: TMarkdownProcessor = nil): string;
 var
   i: Integer;
   tmpAnnot: TNoteAnnotation;
+  tmpContent: string;
 begin
   Result := '<p class="header">' + FName + '</p>';
   if FDate <> 0 then
@@ -247,11 +252,16 @@ begin
   if FCategory <> '' then
     Result := Result + '<p class="category"><a href="cat|' + FCategory + '">' + FCategory + '</a></p>';
   if not (ForPlayers and FDMOnly) then
-    Result := Result + '<p class="entrytext">' + FContent + '</p>';
+  begin
+    tmpContent := FContent;
+    if Assigned(MarkdownConverter) then
+      tmpContent := MarkdownConverter.process(FContent);
+    Result := Result + '<p class="entrytext">' + tmpContent + '</p>';
+  end;
   for i := 0 to FAnnotations.Count - 1 do
   begin
     tmpAnnot := TNoteAnnotation(FAnnotations[i]);
-    Result := Result + tmpAnnot.ToHtml(ForPlayers);
+    Result := Result + tmpAnnot.ToHtml(ForPlayers, MarkdownConverter);
   end;
   Result := '<div class="Entry' + IfThen(FDMOnly, ' dmonly', '') + '">' + Result + '</div>';
 end;
@@ -289,6 +299,8 @@ begin
   inherited;
   FEntries := TList.Create;
   FCategories := TStringList.Create;
+  FMarkdownProcessor := TMarkdownProcessor.CreateDialect(mdCommonMark);
+  FMarkdownProcessor.UnSafe := False;
 end;
 
 destructor TEntryList.Destroy;
@@ -296,6 +308,7 @@ begin
   ClearEntries;
   FEntries.Free;
   FCategories.Free;
+  FMarkdownProcessor.Free;
   inherited;
 end;
 
@@ -382,33 +395,9 @@ begin
   tmpEntry := GetEntry(Name);
   if not Assigned(tmpEntry) then
     Exit(TStringStream.Create(''));
-  str := tmpEntry.ToHtml(ForPlayers);
-  str :=  '<html><head><title>Liste</title><link rel="stylesheet" href="styles.css"></head><body>' +
-            GetSidebar(Name) + '<div class="main">' + str + '</div></body></html>';
+  str := tmpEntry.ToHtml(ForPlayers, FMarkdownProcessor);
 
   // Rewrite a few things to make everything work better
-  // Forgive me for using regexp to parse a context-free language...
-
-  // A few bits of markdown formating
-  // This is not strictly correct markdown, since it does not account for escaped
-  // characters or *_mixed emphasis_*, but for simple formatting it should do.
-  // Headers     
-  str := ReplaceRegExpr('#{6}\s(\V*)', str, '<h6>$1</h6>', True);  
-  str := ReplaceRegExpr('#{5}\s(\V*)', str, '<h5>$1</h5>', True);  
-  str := ReplaceRegExpr('#{4}\s(\V*)', str, '<h4>$1</h4>', True);   
-  str := ReplaceRegExpr('#{3}\s(\V*)', str, '<h3>$1</h3>', True);  
-  str := ReplaceRegExpr('#{2}\s(\V*)', str, '<h2>$1</h2>', True);
-  str := ReplaceRegExpr('#{1}\s(\V*)', str, '<h1>$1</h1>', True);
-
-  // Bold / italics
-  str := ReplaceRegExpr('\*\*([^\*]+)\*\*', str, '<strong>$1</strong>', True);
-  str := ReplaceRegExpr('\*([^\*]+)\*', str, '<em>$1</em>', True);
-  str := ReplaceRegExpr('__([^\*]+)__', str, '<strong>$1</strong>', True);
-  str := ReplaceRegExpr('_([^\*]+)_', str, '<em>$1</em>', True);
-
-  // Image
-  str := ReplaceRegExpr('(?:\!)(?:\[(.*)?\])\((.*(\.(jpg|png|gif|tiff|bmp))(?:(\s\"|\'')(\w|\W|\d)+(\"|\''))?)\)',
-                        str, '<img src="$2" alt="$1" \>', True);
 
   // Wikilinks to <a>-tags
   str := ReplaceRegExpr('\[\[([^\]\|]+)\|([^\]\|]+)\]\]', str, '<a href="$1">$2</a>', True);
@@ -416,6 +405,9 @@ begin
                                       
   // Line breaks to <br />-tags
   str := StringReplace(str, #10, '<br />', [rfReplaceAll]);
+  
+  str :=  '<html><head><title>Liste</title><link rel="stylesheet" href="styles.css"></head><body>' +
+            GetSidebar(Name) + '<div class="main">' + str + '</div></body></html>';
 
   Result := TStringStream.Create(str);
 end;

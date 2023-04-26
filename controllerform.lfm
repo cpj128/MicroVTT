@@ -19,9 +19,9 @@ object fmController: TfmController
     Height = 880
     Top = 0
     Width = 1597
-    ActivePage = tsNotes
+    ActivePage = tsController
     Align = alClient
-    TabIndex = 1
+    TabIndex = 0
     TabOrder = 0
     object tsController: TTabSheet
       Caption = 'Map Controller'
