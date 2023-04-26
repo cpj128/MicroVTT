@@ -68,5 +68,6 @@ Maaaaybe. For several reasons - including legal ones - system-specific things ar
 Other than Lazarus, the following packages:
 
 - [BGRABitmap](https://github.com/bgrabitmap/bgrabitmap/releases)
+- [HtmlViewer](https://github.com/BerndGabriel/HtmlViewer)
+- [fpc-markdown](https://github.com/mriscoc/fpc-markdown)
 
-...ok, only that one package for now, but watch this list, it is not getting any shorter.
