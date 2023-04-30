@@ -576,8 +576,12 @@ begin
 
                 TokenBmp := CurToken.Glyph.Resample(Round(CurToken.Width), Round(CurToken.Height), rmSimpleStretch);
                 try
+                  // Rotation for range indicator: Redraw entirely
+                  //if CurToken is TRangeIndicator then
+                  //  TRangeIndicator(CurToken).RedrawGlyph;
+
                   Rotation := TBGRAAffineBitmapTransform.Create(TokenBmp);
-                  if fmController.TokenRotationStyle = rsRotateToken then
+                  if (fmController.TokenRotationStyle = rsRotateToken) and not (CurToken is TRangeIndicator) then
                   begin
                     BoundingRect := CurToken.GetBoundingRect;
                     Rotation.Translate(-TokenBmp.Width / 2, -TokenBmp.Height / 2);
@@ -608,6 +612,7 @@ begin
                                          Round(RotatedBmp.Height - TokenBmp.Height * FMapZoom) div 2,
                                          False);
                       OverlayScaled.Free;
+                      OverlayBmp.Free;
                     end;
 
                     // Add number
@@ -624,7 +629,7 @@ begin
                     end;
 
                     // Add direction arrow
-                    if fmController.TokenRotationStyle = rsShowArrow then
+                    if (fmController.TokenRotationStyle = rsShowArrow) and not (CurToken is TRangeIndicator) then
                     begin
                       ArrowLen := Min(CurToken.Width, CurToken.Height) * 0.4 * FMapZoom;
                       ArrowWid := ArrowLen / 4;

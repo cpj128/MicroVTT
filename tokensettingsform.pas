@@ -19,7 +19,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ComCtrls,
-  Spin, SpinEx, RPGTypes;
+  Spin, ExtCtrls, SpinEx, RPGTypes;
 
 type
 
@@ -34,6 +34,7 @@ type
     bBringToFront: TButton;
     cbVisible: TCheckBox;
     cbOverlay: TComboBox;
+    cdIndicatorColor: TColorDialog;
     eGridSlotsY: TEdit;
     eWidth: TEdit;
     eHeight: TEdit;
@@ -46,7 +47,10 @@ type
     Label5: TLabel;
     Label6: TLabel;
     Label7: TLabel;
+    pnColor: TPanel;
     seNumber: TSpinEditEx;
+    seSectorAngle: TSpinEditEx;
+    seAlpha: TSpinEditEx;
     udGridSlotsY: TUpDown;
     udWidth: TUpDown;
     udHeight: TUpDown;
@@ -59,6 +63,7 @@ type
     procedure bSendToBackClick(Sender: TObject);
     procedure FormDeactivate(Sender: TObject);
     procedure FormShow(Sender: TObject);
+    procedure pnColorClick(Sender: TObject);
   private
 
   public
@@ -99,6 +104,12 @@ begin
     LinkedToken.OverlayIdx := cbOverlay.ItemIndex - 1;
     LinkedToken.Number  := seNumber.Value;
     fmController.SnapTokenToGrid(LinkedToken);
+    if LinkedToken is TRangeIndicator then
+    begin 
+      TRangeIndicator(LinkedToken).Color := pnColor.Color;
+      TRangeIndicator(LinkedToken).SectorAngle := seSectorAngle.Value;
+      TRangeIndicator(LinkedToken).Alpha := seAlpha.Value;
+    end;
 
     LinkedToken := nil;
     fmController.pbViewPort.Invalidate;
@@ -165,10 +176,20 @@ begin
   Label1.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsWidth');
   Label2.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsHeight');
   Label5.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsRotation');
-  Label3.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsSlotsX');
   Label4.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsSlotsY');
-  Label7.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsNumber');
-  bDelete.Caption := GetString(LangStrings.LanguageID, 'ButtonDelete');      
+  if LinkedToken is TRangeIndicator then
+  begin                                                          
+    Label3.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsAlpha');
+    Label6.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsColor');
+    Label7.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsSectorAngle');
+  end
+  else
+  begin
+    Label3.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsSlotsX');
+    Label6.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsOverlay');
+    Label7.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsNumber');
+  end;
+  bDelete.Caption := GetString(LangStrings.LanguageID, 'ButtonDelete');
   bCancel.Caption := GetString(LangStrings.LanguageID, 'ButtonCancel');
   bOk.Caption := GetString(LangStrings.LanguageID, 'ButtonOk');
   bAddToInitiative.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsAddToInit');
@@ -192,6 +213,17 @@ begin
     cbOverlay.ItemIndex := PrevIdx;
   finally
     ContentList.Free;
+  end;
+end;
+
+procedure TfmTokenSettings.pnColorClick(Sender: TObject);
+begin
+  if not (LinkedToken is TRangeIndicator) then
+    Exit;
+  cdIndicatorColor.Color := pnColor.Color;
+  if cdIndicatorColor.Execute then
+  begin
+    pnColor.Color := cdIndicatorColor.Color;
   end;
 end;
 

@@ -18,7 +18,7 @@ unit RPGTypes;
 interface
 
 uses
-  Classes, SysUtils, BGRABitmap;
+  Classes, Graphics, SysUtils, BGRABitmap;
   
  const
   MAXTOKENANIMSTEPS = 20;
@@ -80,6 +80,28 @@ type
       property BaseInitiative: Integer read FBaseInitiative write FBaseInitiative;
   end;
 
+  TRangeIndicator = class(TToken)
+  private
+    FSectorAngle: Double;
+    FColor: TColor;
+    FAlpha: Byte;
+    procedure SetColor(val: TColor);
+    procedure SetAlpha(val: Byte);
+    procedure SetSectorAngle(Val: Double);
+    procedure SetWidth(Val: Integer);
+    procedure SetHeight(Val: Integer);
+  public
+    constructor Create(X, Y, pWidth, pHeight: Integer);
+    destructor Destroy; override;   
+    procedure RedrawGlyph;
+    property Color: TColor read FColor write SetColor;
+    property Alpha: Byte read FAlpha write SetAlpha;
+    property SectorAngle: Double read FSectorAngle write SetSectorAngle; 
+    property Width: Integer read FWidth write SetWidth;
+    property Height: Integer read FHeight write SetHeight;
+
+  end;
+
 
 // Easings
 type TEasingType = (etLinear,
@@ -122,7 +144,8 @@ function Ease(Time, StartVal, ChangeAmt, Duration: Double; eType: TEasingType): 
 implementation
 
 uses
-  Math;
+  Math,
+  BGRABitmapTypes;
 
 
 { TToken }
@@ -327,6 +350,91 @@ end;
 function Map(Val, InValStart, InValEnd, OutValStart, OutValEnd: Double): Double;
 begin
   Result := OutValStart + (OutValEnd - OutValStart) * ((Val - InValStart) / (InValEnd - InValStart));
+end;
+
+{ TRangeIndicator }
+
+constructor TRangeIndicator.Create(X, Y, pWidth, pHeight: Integer);
+begin
+  //inherited Create;
+  FXPos := X;
+  FYPos := Y;
+  FXTargetPos := X;
+  FYTargetPos := Y;
+  FXStartPos := X;
+  FYStartPos := Y;
+  FWidth := pWidth;
+  FHeight := pHeight;
+  FVisible := True;
+  FIsMoving := False;
+  FGridSlotsX := 1;
+  FGridSlotsY := 1;
+  FOverlayIdx := -1;
+  FCurAnimationStep := 0;
+  FPath := '';
+  FColor := clRed;
+  FAlpha := 128;
+  FSectorAngle := 90;
+  //FGlyph := TBGRABitmap.Create(FWidth, FHeight);
+  RedrawGlyph;
+end;
+
+destructor TRangeIndicator.Destroy;
+begin
+  inherited;
+end;
+
+procedure TRangeIndicator.SetColor(val: TColor);
+begin
+  FColor := Val;
+  RedrawGlyph;
+end;
+
+procedure TRangeIndicator.SetAlpha(val: Byte);
+begin
+  FAlpha := val;
+  RedrawGlyph;
+end;
+
+procedure TRangeIndicator.SetSectorAngle(Val: Double);
+begin
+  FSectorAngle := Val;
+  RedrawGlyph;
+end;
+
+procedure TRangeIndicator.SetWidth(Val: Integer);
+begin
+  FWidth := Val;
+  RedrawGlyph;
+end;
+
+procedure TRangeIndicator.SetHeight(Val: Integer);
+begin
+  FHeight := Val;
+  RedrawGlyph;
+end;
+
+procedure TRangeIndicator.RedrawGlyph;
+var
+  i: Integer;
+  CurAngle: Double;
+  aSin, aCos: Double;
+  pnts: array of TPointF;
+begin
+  FGlyph.Free;
+  FGlyph := TBGRABitmap.Create(FWidth, FHeight);
+  SetLength(pnts, Ceil(FSectorAngle) + 1);
+  pnts[0] := PointF(FWidth / 2, FHeight / 2);
+  SinCos(FAngle, aSin, aCos);
+  for i := 1 to Length(pnts) - 1 do
+  begin
+    CurAngle := DegToRad(-FSectorAngle / 2 + i * FSectorAngle / Ceil(FSectorAngle)) - FAngle;
+    pnts[i] := PointF(FWidth * 0.5 * (1+ Sin(CurAngle)),
+                      FHeight * 0.5 * (1 - Cos(CurAngle)));
+  end;
+  FGlyph.EraseRect(0, 0, FWidth, FHeight, 255);
+
+  FGlyph.DrawPolygonAntialias(pnts, ColorToBGRA(FColor, FAlpha), 1, ColorToBGRA(FColor, FAlpha));
 end;
 
 { Easing-Functions }

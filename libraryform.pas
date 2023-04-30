@@ -448,6 +448,17 @@ begin
     tmpEntry := TNoteEntry.Create;
     tmpEntry.EntryName := EntryName;
     tmpEntry.Date := Now;
+    // Add the clicked picture to the page.
+    // For some reason this crashes for overlays. Removed for those for now
+    if tcHeader.TabIndex <> 2 then
+      tmpEntry.Content := #10#13'![' + EntryName + '](' + sgItemData.Cells[2, aRow] + ')';
+    
+    // Add statblock for tokens
+    if tcHeader.TabIndex = 1 then
+    begin
+      tmpEntry.Content := '<div class="statblock">Name: ' + sgItemData.Cells[3, aRow] +
+      '<br />Initiative: ' + sgItemData.Cells[4, aRow] + '</div>' + tmpEntry.Content;
+    end;
     fmController.NotesList.AddEntry(tmpEntry);
 
     fmController.pcMain.ActivePage := fmController.tsNotes;

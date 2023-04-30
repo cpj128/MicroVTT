@@ -242,4 +242,61 @@ object fmTokenSettings: TfmTokenSettings
     OnClick = bSendToBackClick
     TabOrder = 17
   end
+  object seSectorAngle: TSpinEditEx
+    Left = 86
+    Height = 23
+    Top = 119
+    Width = 96
+    MaxLength = 0
+    TabOrder = 18
+    MaxValue = 360
+    NullValue = 0
+    Value = 90
+  end
+  object pnColor: TPanel
+    Left = 85
+    Height = 23
+    Top = 147
+    Width = 97
+    TabOrder = 19
+    OnClick = pnColorClick
+  end
+  object seAlpha: TSpinEditEx
+    Left = 85
+    Height = 23
+    Top = 175
+    Width = 97
+    MaxLength = 0
+    TabOrder = 20
+    MaxValue = 255
+    NullValue = 0
+    Value = 0
+  end
+  object cdIndicatorColor: TColorDialog
+    Color = clBlack
+    CustomColors.Strings = (
+      'ColorA=000000'
+      'ColorB=000080'
+      'ColorC=008000'
+      'ColorD=008080'
+      'ColorE=800000'
+      'ColorF=800080'
+      'ColorG=808000'
+      'ColorH=808080'
+      'ColorI=C0C0C0'
+      'ColorJ=0000FF'
+      'ColorK=00FF00'
+      'ColorL=00FFFF'
+      'ColorM=FF0000'
+      'ColorN=FF00FF'
+      'ColorO=FFFF00'
+      'ColorP=FFFFFF'
+      'ColorQ=C0DCC0'
+      'ColorR=F0CAA6'
+      'ColorS=F0FBFF'
+      'ColorT=A4A0A0'
+    )
+    Left = 112
+    Top = 120
+  end
 end

@@ -299,6 +299,7 @@ type
       DefaultGridSlotsX, DefaultGridSlotsY: Integer;
       DefaultAngle: Single;
       BaseInitiative: Integer;
+      IsRange: Boolean;
   end;
 
   TPicLoaderThread = class(TThread)
@@ -462,19 +463,36 @@ var
 begin
   if (Source is TTreeView) and Assigned(TTreeView(Source).Selected) and Assigned(TTreeView(Source).Selected.Data) then
   begin
-    tmpToken := TToken.Create(TTokenNodeData(TTreeView(Source).Selected.Data).FullPath,
-                              ViewPortToMapX(X),
-                              ViewPortToMapY(Y),
-                              TTokenNodeData(TTreeView(Source).Selected.Data).DefaultWidth,
-                              TTokenNodeData(TTreeView(Source).Selected.Data).DefaultHeight);
-    tmpToken.GridSlotsX := TTokenNodeData(TTreeView(Source).Selected.Data).DefaultGridSlotsX;
-    tmpToken.GridSlotsY := TTokenNodeData(TTreeView(Source).Selected.Data).DefaultGridSlotsY;
-    tmpToken.Angle := TTokenNodeData(TTreeView(Source).Selected.Data).DefaultAngle;
-    tmpToken.Name := TTokenNodeData(TTreeView(Source).Selected.Data).Name;
-    tmpToken.BaseInitiative := TTokenNodeData(TTreeView(Source).Selected.Data).BaseInitiative;
-    tmpToken.Visible := FTokensStartInvisible;
-    if FSnapTokensToGrid then
-      tmpToken.SnapToGrid(FGridSizeX, FGridSizeY, FGridOffsetX, FGridOffsetY, FGridType);
+    if TTokenNodeData(TTreeView(Source).Selected.Data).IsRange then
+    begin
+      tmpToken := TRangeIndicator.Create(ViewPortToMapX(X),
+                                         ViewPortToMapY(Y),
+                                         500,
+                                         500);
+      TRangeIndicator(tmpToken).SectorAngle := 90;
+      TRangeIndicator(tmpToken).Alpha := 32;
+      TRangeIndicator(tmpToken).Color := clRed;
+      tmpToken.GridSlotsX := 1;
+      tmpToken.GridSlotsY := 1;
+      tmpToken.Angle := 0;
+      tmpToken.Visible := FTokensStartInvisible;
+    end
+    else
+    begin
+      tmpToken := TToken.Create(TTokenNodeData(TTreeView(Source).Selected.Data).FullPath,
+                                ViewPortToMapX(X),
+                                ViewPortToMapY(Y),
+                                TTokenNodeData(TTreeView(Source).Selected.Data).DefaultWidth,
+                                TTokenNodeData(TTreeView(Source).Selected.Data).DefaultHeight);
+      tmpToken.GridSlotsX := TTokenNodeData(TTreeView(Source).Selected.Data).DefaultGridSlotsX;
+      tmpToken.GridSlotsY := TTokenNodeData(TTreeView(Source).Selected.Data).DefaultGridSlotsY;
+      tmpToken.Angle := TTokenNodeData(TTreeView(Source).Selected.Data).DefaultAngle;
+      tmpToken.Name := TTokenNodeData(TTreeView(Source).Selected.Data).Name;
+      tmpToken.BaseInitiative := TTokenNodeData(TTreeView(Source).Selected.Data).BaseInitiative;
+      tmpToken.Visible := FTokensStartInvisible;
+      if FSnapTokensToGrid then
+        tmpToken.SnapToGrid(FGridSizeX, FGridSizeY, FGridOffsetX, FGridOffsetY, FGridType);
+    end;
     FTokenlist.Add(tmpToken);
     pbViewPort.Invalidate;
     fmDisplay.Invalidate;
@@ -627,6 +645,36 @@ begin
       fmTokenSettings.udGridSlotsY.Position := ClickedToken.GridSlotsY;
       fmTokenSettings.seNumber.Value := ClickedToken.Number;
       fmTokenSettings.cbOverlay.ItemIndex := ClickedToken.OverlayIdx + 1;
+
+      if ClickedToken is TRangeIndicator then
+      begin
+        fmTokenSettings.seNumber.Hide;
+        fmTokenSettings.cbOverlay.Hide;
+        fmTokenSettings.eGridSlotsX.Hide;
+        fmTokenSettings.Label4.Hide;
+        fmTokenSettings.eGridSlotsY.Hide;
+
+        fmTokenSettings.seSectorAngle.Show;
+        fmTokenSettings.seSectorAngle.Value := Round(TRangeIndicator(ClickedToken).SectorAngle);
+        fmTokenSettings.pnColor.Show;
+        fmTokenSettings.pnColor.Color := TRangeIndicator(ClickedToken).Color;
+        fmTokenSettings.seAlpha.Show;
+        fmTokenSettings.seAlpha.Value := TRangeIndicator(ClickedToken).Alpha;
+      end
+      else
+      begin
+        fmTokenSettings.seNumber.Show;
+        fmTokenSettings.cbOverlay.Show;
+        fmTokenSettings.eGridSlotsX.Show;
+        fmTokenSettings.Label4.Show;
+        fmTokenSettings.eGridSlotsY.Show;
+
+        fmTokenSettings.seSectorAngle.Hide;
+        fmTokenSettings.pnColor.Hide;
+        fmTokenSettings.seAlpha.Hide;
+      end;
+
+
       fmTokenSettings.Left := Left + pbViewPort.Left + X;
       fmTokenSettings.Top  := Top  + pbViewPort.Top  + Y;
       fmTokenSettings.LinkedToken := ClickedToken;
@@ -776,8 +824,13 @@ begin
             begin
               TokenBmp.DrawLineAntialias(TokenBmp.Width, 0, 0, TokenBmp.Height, clRed, 2);
             end;
+
+            // Rotation for range indicator: Redraw entirely
+            if CurToken is TRangeIndicator then
+              TRangeIndicator(CurToken).RedrawGlyph;
+
             Rotation := TBGRAAffineBitmapTransform.Create(TokenBmp);
-            if FTokenRotationStyle = rsRotateToken then
+            if (FTokenRotationStyle = rsRotateToken) and not (CurToken is TRangeIndicator) then
             begin           
               BoundingRect := CurToken.GetBoundingRect;
               Rotation.Translate(-TokenBmp.Width / 2, -TokenBmp.Height / 2);
@@ -817,7 +870,7 @@ begin
               end;
 
               // Add direction arrow
-              if FTokenRotationStyle = rsShowArrow then
+              if (FTokenRotationStyle = rsShowArrow) and not (CurToken is TRangeIndicator) then
               begin
                 ArrowLen := Min(CurToken.Width, CurToken.Height) * 0.4 * FDisplayScale * FZoomFactor;
                 ArrowWid := ArrowLen / 4;
@@ -879,7 +932,10 @@ end;
 procedure TfmController.pPortraitDragDrop(Sender, Source: TObject; X, Y: Integer
   );
 begin
-  if (Source is TTreeView) and Assigned(TTreeView(Source).Selected) and Assigned(TTreeView(Source).Selected.Data) then
+  if (Source is TTreeView) and
+     Assigned(TTreeView(Source).Selected) and
+     Assigned(TTreeView(Source).Selected.Data) and
+     not (TTokenNodeData(TTreeView(Source).Selected.Data).IsRange) then
     fmDisplay.PortraitFileName := TTokenNodeData(TTreeView(Source).Selected.Data).FullPath;
 end;
 
@@ -1417,6 +1473,9 @@ begin
 end;
 
 procedure TfmController.UpdateTokenList;
+var
+  NodeData: TTokenNodeData;
+
   procedure ParseDir(Dir: string; ParentNode: TTreeNode);
   var
     FileList, DirList, ContentList: TStringList;
@@ -1424,7 +1483,6 @@ procedure TfmController.UpdateTokenList;
     i: Integer;
     tmpNode: TTreeNode;
     title: string;
-    NodeData: TTokenNodeData;
   begin
     if DirectoryExists(Dir) then
     begin
@@ -1435,6 +1493,7 @@ procedure TfmController.UpdateTokenList;
       begin
         title := ExtractFilename(FileList[i]); 
         NodeData := TTokenNodeData.Create;
+        NodeData.IsRange := False;
         if FTokenLib.IndexOfName(FileList[i]) >= 0 then
         begin
           ContentList := TStringList.Create;
@@ -1492,6 +1551,12 @@ begin
   tvTokens.BeginUpdate;
   tvTokens.Items.Clear;
   ParseDir(FTokenDir, nil);
+  with tvTokens.Items.AddChild(nil, 'Range indicator') do
+  begin
+    NodeData := TTokenNodeData.Create;
+    NodeData.IsRange := True;
+    Data := NodeData;
+  end;
   tvTokens.EndUpdate;
 end;
 
@@ -1519,13 +1584,13 @@ begin
         begin
           vWidth := StrToIntDef(ContentList[1], 32);
           vHeight := StrToIntDef(ContentList[2], 32);
-          FullPic := TBGRABitmap.Create(FilePath, True);
+          {FullPic := TBGRABitmap.Create(FilePath, True);
           try
             ScaledPic := FullPic.Resample(vWidth, vHeight);
             FOverlayLib.Objects[i] := ScaledPic;
           finally
             FullPic.Free;
-          end;
+          end;}
         end;
       end;
     end;
@@ -1551,7 +1616,11 @@ function TfmController.GetOverlay(idx: Integer): TBGRABitmap;
 begin
   Result := nil;
   if (idx >= 0) and (idx < FOverlayLib.Count) then
-    Result := TBGRABitmap(FOverlayLib.Objects[idx]);
+  begin
+    if FileExists(FOverlayLib.Names[idx]) then
+      Result := TBGRABitmap.Create(FOverlayLib.Names[idx]);
+  end;
+  //  Result := TBGRABitmap(FOverlayLib.Objects[idx]);
 end;
 
 procedure TfmController.RemoveToken(token: TToken);
