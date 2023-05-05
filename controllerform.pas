@@ -240,6 +240,7 @@ type
     function ViewPortToMapX(ViewPortX: Integer): Integer;
     function ViewPortToMapY(ViewPortY: Integer): Integer;
     function GetTokenAtPos(X, Y: Integer): TToken;
+    function GetTokenExRangeAtPos(X, Y: Integer): TToken;
     procedure SetCurInitiativeIndex(val: Integer);
     procedure LoadMap(FileName: string);
     procedure SetCombatMode(val: Boolean);
@@ -603,6 +604,8 @@ procedure TfmController.pbViewportMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
   ClickedToken: TToken;
+  AttachToken: TToken;
+  AttachedIdx: Integer;
   //Modal: TModalResult;
 begin
   if Button = mbLeft then
@@ -622,6 +625,17 @@ begin
       end
       else
       begin
+        if (FCurDraggedToken is TRangeIndicator) and (ssCtrl in Shift) then
+        begin
+          AttachToken := GetTokenExRangeAtPos(X, Y);
+          if Assigned(AttachToken) then
+          begin
+            TRangeIndicator(FCurDraggedToken).AttachTo(AttachToken);
+            // In Draw-Liste umsortieren
+            AttachedIdx := FTokenList.IndexOf(AttachToken);
+            FTokenList.Move(FTokenList.IndexOf(FCurDraggedToken), AttachedIdx);
+          end;
+        end;
         if FSnapTokensToGrid then
           FCurDraggedToken.SnapToGrid(FGridSizeX, FGridSizeY, FGridOffsetX, FGridOffsetY, FGridType);
         FCurDraggedToken.StartAnimation;
@@ -660,6 +674,8 @@ begin
         fmTokenSettings.pnColor.Color := TRangeIndicator(ClickedToken).Color;
         fmTokenSettings.seAlpha.Show;
         fmTokenSettings.seAlpha.Value := TRangeIndicator(ClickedToken).Alpha;
+        fmTokenSettings.bDetach.Show;
+        fmTokenSettings.bDetach.Enabled := TRangeIndicator(ClickedToken).IsAttached;
       end
       else
       begin
@@ -672,6 +688,7 @@ begin
         fmTokenSettings.seSectorAngle.Hide;
         fmTokenSettings.pnColor.Hide;
         fmTokenSettings.seAlpha.Hide;
+        fmTokenSettings.bDetach.Hide;
       end;
 
 
@@ -1056,6 +1073,34 @@ begin
   for i := FTokenList.Count - 1 downto 0 do
   begin
     CurToken := TToken(FTokenList.Items[i]);
+    TokenRect := Bounds(CurToken.XEndPos - CurToken.Width div 2,
+                        CurToken.YEndPos - CurToken.Height div 2,
+                        CurToken.Width,
+                        CurToken.Height);
+    if TokenRect.Contains(SearchPnt) then
+    begin
+      Result := CurToken;
+      Break;
+    end;
+  end;
+end;
+
+function TfmController.GetTokenExRangeAtPos(X, Y: Integer): TToken;
+var
+  i: Integer;
+  SearchPnt: TPoint;
+  CurToken: TToken;
+  TokenRect: TRect;
+begin
+  Result := nil;
+  SearchPnt := Point(ViewPortToMapX(X), ViewPortToMapY(Y));
+  // We search the list backwards, because the tokens are drawn first to last,
+  // meaning the later ones are the highest in z-order
+  for i := FTokenList.Count - 1 downto 0 do
+  begin
+    CurToken := TToken(FTokenList.Items[i]);
+    if CurToken is TRangeIndicator then
+      Continue;
     TokenRect := Bounds(CurToken.XEndPos - CurToken.Width div 2,
                         CurToken.YEndPos - CurToken.Height div 2,
                         CurToken.Width,

@@ -48,10 +48,14 @@ type
       FNumber: Integer;
       FCurAnimationStep: Integer;
       FIsMoving: Boolean;
+      FAttached: TList;
       procedure SetXPos(val: Integer);
       procedure SetYPos(val: integer);
-      function GetXPos: Integer;
-      function GetYPos: Integer;
+      function GetXPos: Integer; virtual;
+      function GetYPos: Integer; virtual;
+      function GetXEndPos: Integer; virtual;
+      function GetYEndPos: Integer; virtual;
+      function GetAngle: Double; virtual;
       procedure SetAngle(val: Double);
     public
       constructor Create(Path: string; X, Y, pWidth, pHeight: Integer);
@@ -61,16 +65,20 @@ type
       procedure StopAnimation;
       procedure DoAnimationStep;
       function GetBoundingRect: TRect;
+      function GetAttached(idx: Integer): TToken;
+      function AttachedCount: Integer;
+      procedure RemoveAttached(token: TToken);
+      procedure UpdateAttached;
       property XPos: Integer read GetXPos write SetXPos;
       property YPos: Integer read GetYPos write SetYPos;
-      property XEndPos: Integer read FXTargetPos;     
-      property YEndPos: Integer read FYTargetPos;
+      property XEndPos: Integer read GetXEndPos;
+      property YEndPos: Integer read GetYEndPos;
       property Width: Integer read FWidth write FWidth;
       property Height: Integer read FHeight write FHeight;
       property Visible: Boolean read FVisible write FVisible;
       property GridSlotsX: Integer read FGridSlotsX write FGridSlotsX;
       property GridSlotsY: Integer read FGridSlotsY write FGridSlotsY;
-      property Angle: Double read FAngle write SetAngle;
+      property Angle: Double read GetAngle write SetAngle;
       property OverlayIdx: Integer read FOverlayIdx write FOverlayIdx;
       property Number: Integer read FNumber write FNumber;
       property Glyph: TBGRABitmap read FGlyph;
@@ -85,15 +93,24 @@ type
     FSectorAngle: Double;
     FColor: TColor;
     FAlpha: Byte;
+    FAttachedTo: TToken;
     procedure SetColor(val: TColor);
     procedure SetAlpha(val: Byte);
     procedure SetSectorAngle(Val: Double);
     procedure SetWidth(Val: Integer);
     procedure SetHeight(Val: Integer);
+    function GetXPos: Integer; override;
+    function GetYPos: Integer; override;
+    function GetXEndPos: Integer; override;
+    function GetYEndPos: Integer; override;
+    function GetAngle: Double; override;
   public
     constructor Create(X, Y, pWidth, pHeight: Integer);
     destructor Destroy; override;   
     procedure RedrawGlyph;
+    procedure AttachTo(token: TToken);
+    procedure Detach;
+    function IsAttached: Boolean;
     property Color: TColor read FColor write SetColor;
     property Alpha: Byte read FAlpha write SetAlpha;
     property SectorAngle: Double read FSectorAngle write SetSectorAngle; 
@@ -169,11 +186,13 @@ begin
   FCurAnimationStep := 0;
   FPath := Path;
   FGlyph := TBGRABitmap.Create(Path);
+  FAttached := TList.Create;
 end;
 
 destructor TToken.Destroy;
 begin
   FGlyph.Free;
+  FAttached.Free;
   inherited;
 end;
 
@@ -233,6 +252,7 @@ begin
     FXStartPos := val;
     FXTargetPos := val;
   end;
+  UpdateAttached;
 end;
 
 procedure TToken.SetYPos(val: integer);
@@ -250,6 +270,7 @@ begin
     FYStartPos := val;
     FYTargetPos := val;
   end;
+  UpdateAttached;
 end;
 
 function TToken.GetXPos: Integer;
@@ -267,14 +288,56 @@ if FIsMoving then
 else
   Result := FYStartPos;
 end;
+         
+function TToken.GetXEndPos: Integer;
+begin
+  Result := FXTargetPos;
+end;
+
+function TToken.GetYEndPos: Integer;
+begin
+  Result := FYTargetPos;
+end;
+
+function TToken.GetAngle: Double;
+begin
+  Result := FAngle;
+end;
 
 procedure TToken.SetAngle(val: Double);
 begin
   FAngle := val;
+  UpdateAttached;
   {while FAngle < -PI do
     FAngle := FAngle + PI;
   while FAngle > PI do
     FAngle := FAngle - PI;}
+end;
+
+procedure TToken.UpdateAttached;
+var i: Integer;
+begin
+  for i := 0 to AttachedCount - 1 do
+    if GetAttached(i) is TRangeIndicator then
+      TRangeIndicator(GetAttached(i)).RedrawGlyph;
+end;
+
+function TToken.GetAttached(idx: Integer): TToken;
+begin
+  Result := nil;
+  if (idx >= 0) and (idx < FAttached.Count) then
+    Result := TToken(FAttached[idx]);
+end;
+
+function TToken.AttachedCount: Integer;
+begin
+  Result := FAttached.Count;
+end;
+
+procedure TToken.RemoveAttached(token: TToken);
+begin
+  if FAttached.IndexOf(token) >= 0 then
+    FAttached.Remove(token);
 end;
 
 procedure TToken.StartAnimation;
@@ -372,11 +435,13 @@ begin
   FOverlayIdx := -1;
   FCurAnimationStep := 0;
   FPath := '';
+  FAttachedTo := nil;
   FColor := clRed;
   FAlpha := 128;
   FSectorAngle := 90;
   //FGlyph := TBGRABitmap.Create(FWidth, FHeight);
   RedrawGlyph;
+  FAttached := TList.Create;
 end;
 
 destructor TRangeIndicator.Destroy;
@@ -414,6 +479,42 @@ begin
   RedrawGlyph;
 end;
 
+
+function TRangeIndicator.GetXPos: Integer;
+begin
+  Result := inherited;
+  if Assigned(FAttachedTo) then
+    Result := FAttachedTo.XPos;
+end;
+
+function TRangeIndicator.GetYPos: Integer;
+begin
+  Result := inherited;
+  if Assigned(FAttachedTo) then
+    Result := FAttachedTo.YPos;
+end;
+
+function TRangeIndicator.GetXEndPos: Integer;
+begin
+  Result := FXTargetPos;
+  if Assigned(FAttachedTo) then
+    Result := FAttachedTo.XEndPos;
+end;
+
+function TRangeIndicator.GetYEndPos: Integer;
+begin
+  Result := FYTargetPos;
+  if Assigned(FAttachedTo) then
+    Result := FAttachedTo.YEndPos;
+end;
+
+function TRangeIndicator.GetAngle: Double;
+begin
+  Result := FAngle;
+  if Assigned(FAttachedTo) then
+    Result := FAttachedTo.Angle;
+end;
+
 procedure TRangeIndicator.RedrawGlyph;
 var
   i: Integer;
@@ -425,16 +526,32 @@ begin
   FGlyph := TBGRABitmap.Create(FWidth, FHeight);
   SetLength(pnts, Ceil(FSectorAngle) + 1);
   pnts[0] := PointF(FWidth / 2, FHeight / 2);
-  SinCos(FAngle, aSin, aCos);
+  SinCos(Angle, aSin, aCos);
   for i := 1 to Length(pnts) - 1 do
   begin
-    CurAngle := DegToRad(-FSectorAngle / 2 + i * FSectorAngle / Ceil(FSectorAngle)) - FAngle;
+    CurAngle := DegToRad(-FSectorAngle / 2 + i * FSectorAngle / Ceil(FSectorAngle)) - Angle;
     pnts[i] := PointF(FWidth * 0.5 * (1+ Sin(CurAngle)),
                       FHeight * 0.5 * (1 - Cos(CurAngle)));
   end;
   FGlyph.EraseRect(0, 0, FWidth, FHeight, 255);
 
   FGlyph.DrawPolygonAntialias(pnts, ColorToBGRA(FColor, FAlpha), 1, ColorToBGRA(FColor, FAlpha));
+end;
+
+procedure TRangeIndicator.AttachTo(token: TToken);
+begin
+  FAttachedTo := token;
+end;
+
+procedure TRangeIndicator.Detach;
+begin
+  FAttachedTo.RemoveAttached(self);
+  FAttachedTo := nil;
+end;
+
+function TRangeIndicator.IsAttached: Boolean;
+begin
+  Result := Assigned(FAttachedTo);
 end;
 
 { Easing-Functions }

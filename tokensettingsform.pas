@@ -32,6 +32,7 @@ type
     bDelete: TButton;
     bCancel: TButton;
     bBringToFront: TButton;
+    bDetach: TButton;
     cbVisible: TCheckBox;
     cbOverlay: TComboBox;
     cdIndicatorColor: TColorDialog;
@@ -59,6 +60,7 @@ type
     procedure bBringToFrontClick(Sender: TObject);
     procedure bCancelClick(Sender: TObject);
     procedure bDeleteClick(Sender: TObject);
+    procedure bDetachClick(Sender: TObject);
     procedure bOkClick(Sender: TObject);
     procedure bSendToBackClick(Sender: TObject);
     procedure FormDeactivate(Sender: TObject);
@@ -110,7 +112,7 @@ begin
       TRangeIndicator(LinkedToken).SectorAngle := seSectorAngle.Value;
       TRangeIndicator(LinkedToken).Alpha := seAlpha.Value;
     end;
-
+    LinkedToken.UpdateAttached;
     LinkedToken := nil;
     fmController.pbViewPort.Invalidate;
     fmDisplay.Invalidate;
@@ -166,6 +168,13 @@ begin
   Close;
 end;
 
+procedure TfmTokenSettings.bDetachClick(Sender: TObject);
+begin
+  if Assigned(LinkedToken) and (LinkedToken is TRangeIndicator) then
+    TRangeIndicator(LinkedToken).Detach;
+  bDetach.Enabled := False;
+end;
+
 procedure TfmTokenSettings.FormShow(Sender: TObject);
 var
   i, PrevIdx: Integer;
@@ -195,6 +204,7 @@ begin
   bAddToInitiative.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsAddToInit');
   bBringToFront.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsBringToFront');
   bSendToBack.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsSendToBack');
+  bDetach.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsDetach');
 
   PrevIdx := cbOverlay.ItemIndex;
   cbOverlay.Items.Clear;

@@ -272,6 +272,15 @@ object fmTokenSettings: TfmTokenSettings
     NullValue = 0
     Value = 0
   end
+  object bDetach: TButton
+    Left = 184
+    Height = 25
+    Top = 175
+    Width = 115
+    Caption = 'Detach'
+    OnClick = bDetachClick
+    TabOrder = 21
+  end
   object cdIndicatorColor: TColorDialog
     Color = clBlack
     CustomColors.Strings = (
