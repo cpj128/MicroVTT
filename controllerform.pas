@@ -1289,7 +1289,7 @@ begin
       saveFile.WriteFloat(SAVESECTIONGRID, 'OffsetX', FGridOffsetX);
       saveFile.WriteFloat(SAVESECTIONGRID, 'OffsetY', FGridOffsetY);
       saveFile.WriteInteger(SAVESECTIONGRID, 'Color', FGridColor);
-      saveFile.WriteInteger(SAVESECTIONGRID, 'Alpha', FGridColor);
+      saveFile.WriteInteger(SAVESECTIONGRID, 'Alpha', FGridAlpha);
 
       // Portrait
       saveFile.WriteString(SAVESECTIONPORTRAIT, 'FileName', fmDisplay.PortraitFileName);
@@ -1310,7 +1310,20 @@ begin
       for i := 0 to FTokenList.Count - 1 do
       begin
         CurToken := TToken(FTokenList[i]);
-        saveFile.WriteString(SAVESECTIONTOKENS, 'Path' + IntToStr(i), CurToken.Path);
+
+        if CurToken is TRangeIndicator then
+        begin                       
+          saveFile.WriteString(SAVESECTIONTOKENS, 'Path' + IntToStr(i), '::Range');
+          SaveFile.WriteInteger(SAVESECTIONTOKENS, 'Alpha' + IntToStr(i), TRangeIndicator(CurToken).Alpha);
+          SaveFile.WriteInteger(SAVESECTIONTOKENS, 'Color' + IntToStr(i), TRangeIndicator(CurToken).Color);
+          SaveFile.WriteFloat(SAVESECTIONTOKENS, 'Sector' + IntToStr(i), TRangeIndicator(CurToken).SectorAngle);
+          // Attachment still missing
+        end
+        else
+        begin
+          saveFile.WriteString(SAVESECTIONTOKENS, 'Path' + IntToStr(i), CurToken.Path);
+        end;
+
         saveFile.WriteString(SAVESECTIONTOKENS, 'Name' + IntToStr(i), CurToken.Name);
         saveFile.WriteInteger(SAVESECTIONTOKENS, 'No' + IntToStr(i), CurToken.Number);
         saveFile.WriteInteger(SAVESECTIONTOKENS, 'XPos' + IntToStr(i), CurToken.XEndPos);
@@ -1401,14 +1414,31 @@ begin
       i := 0;
       while saveFile.ValueExists(SAVESECTIONTOKENS, 'XPos' + IntToStr(i)) do
       begin
+        CurToken := nil;
         path := saveFile.ReadString(SAVESECTIONTOKENS, 'Path' + IntToStr(i), '-');
-        if FileExists(path) then
+
+        if SameText(path, '::Range') then
+        begin
+          CurToken := TRangeIndicator.Create(saveFile.ReadInteger(SAVESECTIONTOKENS, 'XPos' + IntToStr(i), 0),
+                                             saveFile.ReadInteger(SAVESECTIONTOKENS, 'YPos' + IntToStr(i), 0),
+                                             saveFile.ReadInteger(SAVESECTIONTOKENS, 'Width' + IntToStr(i), 100),
+                                             saveFile.ReadInteger(SAVESECTIONTOKENS, 'Height' + IntToStr(i), 100));
+          TRangeIndicator(CurToken).Alpha := saveFile.ReadInteger(SAVESECTIONTOKENS, 'Alpha' + IntToStr(i), 32);
+          TRangeIndicator(CurToken).Color := saveFile.ReadInteger(SAVESECTIONTOKENS, 'Color' + IntToStr(i), clRed);
+          TRangeIndicator(CurToken).SectorAngle := saveFile.ReadFloat(SAVESECTIONTOKENS, 'Sector' + IntToStr(i), 90);
+        end
+        else if FileExists(path) then
         begin
           CurToken := TToken.Create(path,
                                     saveFile.ReadInteger(SAVESECTIONTOKENS, 'XPos' + IntToStr(i), 0),
                                     saveFile.ReadInteger(SAVESECTIONTOKENS, 'YPos' + IntToStr(i), 0),
                                     saveFile.ReadInteger(SAVESECTIONTOKENS, 'Width' + IntToStr(i), 100),
                                     saveFile.ReadInteger(SAVESECTIONTOKENS, 'Height' + IntToStr(i), 100));
+        end;
+
+        if Assigned(CurToken) then
+        begin
+
           CurToken.Angle := saveFile.ReadFloat(SAVESECTIONTOKENS, 'Angle' + IntToStr(i), 0);
           CurToken.OverlayIdx := saveFile.ReadInteger(SAVESECTIONTOKENS, 'Overlay' + IntToStr(i), -1);
           CurToken.Visible := saveFile.ReadBool(SAVESECTIONTOKENS, 'Visible' + IntToStr(i), FTokensStartInvisible);
