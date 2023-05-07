@@ -605,7 +605,7 @@ procedure TfmController.pbViewportMouseUp(Sender: TObject;
 var
   ClickedToken: TToken;
   AttachToken: TToken;
-  AttachedIdx: Integer;
+  AttachedIdx, CurIdx: Integer;
   //Modal: TModalResult;
 begin
   if Button = mbLeft then
@@ -633,7 +633,9 @@ begin
             TRangeIndicator(FCurDraggedToken).AttachTo(AttachToken);
             // In Draw-Liste umsortieren
             AttachedIdx := FTokenList.IndexOf(AttachToken);
-            FTokenList.Move(FTokenList.IndexOf(FCurDraggedToken), AttachedIdx);
+            CurIdx := FTokenList.IndexOf(FCurDraggedToken);
+            if AttachedIdx < CurIdx then
+              FTokenList.Move(CurIdx, AttachedIdx);
           end;
         end;
         if FSnapTokensToGrid then
@@ -676,6 +678,8 @@ begin
         fmTokenSettings.seAlpha.Value := TRangeIndicator(ClickedToken).Alpha;
         fmTokenSettings.bDetach.Show;
         fmTokenSettings.bDetach.Enabled := TRangeIndicator(ClickedToken).IsAttached;
+        fmTokenSettings.bBringToFront.Enabled := not TRangeIndicator(ClickedToken).IsAttached;
+        fmTokenSettings.bSendToBack.Enabled := fmTokenSettings.bBringToFront.Enabled;
       end
       else
       begin
@@ -689,6 +693,8 @@ begin
         fmTokenSettings.pnColor.Hide;
         fmTokenSettings.seAlpha.Hide;
         fmTokenSettings.bDetach.Hide;
+        fmTokenSettings.bBringToFront.Enabled := True;
+        fmTokenSettings.bSendToBack.Enabled := True;
       end;
 
 
