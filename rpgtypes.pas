@@ -524,14 +524,14 @@ var
 begin
   FGlyph.Free;
   FGlyph := TBGRABitmap.Create(FWidth, FHeight);
-  SetLength(pnts, Ceil(FSectorAngle) + 1);
+  SetLength(pnts, Ceil(FSectorAngle) + 2);
   pnts[0] := PointF(FWidth / 2, FHeight / 2);
   SinCos(Angle, aSin, aCos);
-  for i := 1 to Length(pnts) - 1 do
+  for i := 0 to Length(pnts) - 2 do
   begin
     CurAngle := DegToRad(-FSectorAngle / 2 + i * FSectorAngle / Ceil(FSectorAngle)) - Angle;
-    pnts[i] := PointF(FWidth * 0.5 * (1+ Sin(CurAngle)),
-                      FHeight * 0.5 * (1 - Cos(CurAngle)));
+    pnts[i + 1] := PointF(FWidth * 0.5 * (1+ Sin(CurAngle)),
+                          FHeight * 0.5 * (1 - Cos(CurAngle)));
   end;
   FGlyph.EraseRect(0, 0, FWidth, FHeight, 255);
 
