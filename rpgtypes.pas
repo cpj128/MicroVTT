@@ -545,6 +545,11 @@ end;
 
 procedure TRangeIndicator.Detach;
 begin
+  XPos := FAttachedTo.XPos;
+  YPos := FAttachedTo.YPos;
+  FXTargetPos := FAttachedTo.XEndPos;
+  FYTargetPos := FAttachedTo.YEndPos;
+  Angle := FAttachedTo.Angle;
   FAttachedTo.RemoveAttached(self);
   FAttachedTo := nil;
 end;
