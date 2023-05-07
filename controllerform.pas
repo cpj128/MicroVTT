@@ -631,11 +631,10 @@ begin
           if Assigned(AttachToken) then
           begin
             TRangeIndicator(FCurDraggedToken).AttachTo(AttachToken);
-            // In Draw-Liste umsortieren
+            // sort directly before attached token in list
             AttachedIdx := FTokenList.IndexOf(AttachToken);
             CurIdx := FTokenList.IndexOf(FCurDraggedToken);
-            if AttachedIdx < CurIdx then
-              FTokenList.Move(CurIdx, AttachedIdx);
+            FTokenList.Move(CurIdx, Max(0, AttachedIdx - 1));
           end;
         end;
         if FSnapTokensToGrid then
@@ -1323,6 +1322,8 @@ begin
           SaveFile.WriteInteger(SAVESECTIONTOKENS, 'Alpha' + IntToStr(i), TRangeIndicator(CurToken).Alpha);
           SaveFile.WriteInteger(SAVESECTIONTOKENS, 'Color' + IntToStr(i), TRangeIndicator(CurToken).Color);
           SaveFile.WriteFloat(SAVESECTIONTOKENS, 'Sector' + IntToStr(i), TRangeIndicator(CurToken).SectorAngle);
+          if TRangeIndicator(CurToken).IsAttached then
+            SaveFile.WriteString(SAVESECTIONTOKENS, 'Attached' + IntToStr(i), '::Next');
           // Attachment still missing
         end
         else
@@ -1358,6 +1359,7 @@ var
   tmpItem: TListItem;
   CurToken: TToken;
   path: string;
+  attachList: TList;
 begin
   if odLoadSession.Execute then
   begin
@@ -1417,6 +1419,8 @@ begin
 
       FShowTokens := saveFile.ReadBool(SAVESECTIONTOKENS, 'TokenVisible', True);
 
+      attachList := TList.Create;
+
       i := 0;
       while saveFile.ValueExists(SAVESECTIONTOKENS, 'XPos' + IntToStr(i)) do
       begin
@@ -1432,6 +1436,8 @@ begin
           TRangeIndicator(CurToken).Alpha := saveFile.ReadInteger(SAVESECTIONTOKENS, 'Alpha' + IntToStr(i), 32);
           TRangeIndicator(CurToken).Color := saveFile.ReadInteger(SAVESECTIONTOKENS, 'Color' + IntToStr(i), clRed);
           TRangeIndicator(CurToken).SectorAngle := saveFile.ReadFloat(SAVESECTIONTOKENS, 'Sector' + IntToStr(i), 90);
+          if saveFile.ValueExists(SAVESECTIONTOKENS, 'Attached' + IntToStr(i)) then
+            attachList.Add(CurToken);
         end
         else if FileExists(path) then
         begin
@@ -1440,6 +1446,11 @@ begin
                                     saveFile.ReadInteger(SAVESECTIONTOKENS, 'YPos' + IntToStr(i), 0),
                                     saveFile.ReadInteger(SAVESECTIONTOKENS, 'Width' + IntToStr(i), 100),
                                     saveFile.ReadInteger(SAVESECTIONTOKENS, 'Height' + IntToStr(i), 100));
+          while attachList.Count > 0 do
+          begin
+            TRangeIndicator(attachList[0]).AttachTo(CurToken);
+            attachList.Delete(0);
+          end;
         end;
 
         if Assigned(CurToken) then
@@ -1457,6 +1468,7 @@ begin
         end;
         Inc(i);
       end;
+      attachList.Free;
 
       pbViewPort.Invalidate;
       fmDisplay.Invalidate;
