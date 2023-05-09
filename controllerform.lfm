@@ -8,6 +8,7 @@ object fmController: TfmController
   ClientWidth = 1597
   KeyPreview = True
   Menu = MainMenu1
+  OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnKeyUp = FormKeyUp

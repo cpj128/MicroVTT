@@ -20,7 +20,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ComCtrls,
   ExtCtrls, Menus, DateTimePicker, IniFiles, BGRABitmap, RPGTypes, HtmlView,
-  Notes, HtmlGlobals, HTMLUn2;
+  Notes, HtmlGlobals, HTMLUn2, LCLType;
 
 const
   MAPLIBFILE = 'Maps.txt';
@@ -128,6 +128,7 @@ type
     procedure bRefreshMapsClick(Sender: TObject);
     procedure bResetZoomClick(Sender: TObject);
     procedure eEntryNameKeyPress(Sender: TObject; var Key: char);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -231,6 +232,7 @@ type
     FEditedEntry: TNoteEntry;
     FHistoryList: TStringList;
     FHistoryIdx: Integer;
+    FNotesSaved: Boolean;
 
     procedure UpdateMapList;
     procedure UpdateTokenList;
@@ -1963,7 +1965,8 @@ begin
   // Settings for the note module
   pcNotesMain.ActivePage := tsDisplay;
   pcNotesMain.ShowTabs := False;
-  FNotesList := TEntryList.Create;   
+  FNotesList := TEntryList.Create;
+  FNotesSaved := True;
   FHistoryList := TStringList.Create;
   FHistoryIdx := 0;
   LoadHTML('Main');
@@ -2106,6 +2109,7 @@ end;
 // I wanted to do this in a separate frame, but apparently those are broken in
 // Freepascal, too. This does not bode well for the planned plugin interface.
 
+// Handle back / forward-mouse buttons
 {procedure TfmController.WMAppCommand(var Msg: TMessage);
 begin
   case GET_APPCOMMAND_LPARAM(Msg.LParam) of
@@ -2124,6 +2128,7 @@ end; }
 procedure TfmController.bOkCategoryClick(Sender: TObject);
 begin
   FNotesList.Categories.AddStrings(lbCategories.Items, True);
+  FNotesSaved := False;
   pcNotesMain.ActivePage := tsDisplay;
 end;
 
@@ -2140,7 +2145,8 @@ begin
       tmpEntry := TNoteEntry.Create;
       tmpEntry.EntryName := lbEntryList.Items[i];
       tmpEntry.Date := Now;
-      FNotesList.AddEntry(tmpEntry);
+      FNotesList.AddEntry(tmpEntry); 
+      FNotesSaved := False;
     end;
   end;
   // Check for deleted entries
@@ -2151,6 +2157,7 @@ begin
     begin
       FNotesList.DeleteEntry(tmpEntry.EntryName);
       tmpEntry.Free;
+      FNotesSaved := False;
     end;
   end;
   LoadHTML('Main');
@@ -2165,7 +2172,10 @@ end;
 procedure TfmController.bAddCategoryClick(Sender: TObject);
 begin
   if (eNewCategory.Text <> '') and (lbCategories.Items.IndexOf(eNewCategory.Text) < 0) then
+  begin
     lbCategories.Items.Add(eNewCategory.Text);
+    FNotesSaved := False;
+  end;
 end;
 
 procedure TfmController.bAddAnnotationClick(Sender: TObject);
@@ -2177,6 +2187,7 @@ begin
   tmpItem.SubItems.Add(BoolToStr(False));
   dtpAnnotationTimestamp.Datetime := Now;
   mAnnotationContent.Text := '';
+  FNotesSaved := False;
 end;
 
 procedure TfmController.bAddEntryClick(Sender: TObject);
@@ -2186,25 +2197,35 @@ begin
   begin
     eNewEntry.Text := ReplaceStr(eNewEntry.Text, '|', '');
     lbEntryList.Items.Add(eNewEntry.Text);
+    FNotesSaved := False;
   end;
 end;
 
 procedure TfmController.bDeleteAnnotationClick(Sender: TObject);
 begin
   if Assigned(lvAnnotations.Selected) then
+  begin
     lvAnnotations.Items.Delete(lvAnnotations.ItemIndex);
+    FNotesSaved := False;
+  end;
 end;
 
 procedure TfmController.bDeleteCategoryClick(Sender: TObject);
 begin
   if (lbCategories.ItemIndex >= 0) and (lbCategories.ItemIndex < lbCategories.Items.Count) then
+  begin
     lbCategories.Items.Delete(lbCategories.ItemIndex);
+    FNotesSaved := False;
+  end;
 end;
 
 procedure TfmController.bDeleteEntryClick(Sender: TObject);
 begin
   if lbEntryList.ItemIndex >= 0 then
+  begin
     lbEntryList.Items.Delete(lbEntryList.ItemIndex);
+    FNotesSaved := False;
+  end;
 end;
 
 procedure TfmController.bEditAnnotationClick(Sender: TObject);
@@ -2216,6 +2237,7 @@ begin
     tmpItem.Caption := DateTimeToStr(dtpAnnotationTimestamp.DateTime);
     tmpItem.SubItems[0] := mAnnotationContent.Text;
     tmpItem.SubItems[1] := BoolToStr(cbAnnotationDMOnly.Checked);
+    FNotesSaved := False;
   end;
 end;
 
@@ -2247,6 +2269,7 @@ begin
     LoadHTML(FEditedEntry.EntryName);
   end;
   FEditedEntry := nil;
+  FNotesSaved := False;
   pcNotesMain.ActivePage := tsDisplay;
 end;
  
@@ -2402,22 +2425,53 @@ begin
 end;
 
 procedure TfmController.tbLoadNotesClick(Sender: TObject);
+var
+  DlgResult: TModalResult;
+  DoLoad: Boolean;
 begin
-  if odLoadSession.Execute then
+  DoLoad := FNotesSaved;
+  if not FNotesSaved then
+  begin
+    {DlgResult := Application.MessageBox(PChar(GetString(LangStrings.LanguageID, 'NotesUnsavedAlert')),
+                                        PChar('MicroVTT'),
+                                        MB_YESNOCANCEL);}
+    DlgResult := MessageDlg(GetString(LangStrings.LanguageID, 'NotesUnsavedAlert'),
+                            mtConfirmation,
+                            [mbYes, mbNo, mbCancel],
+                            0);
+    if DlgResult <> mrCancel then
+      DoLoad := True;
+    if DlgResult = mrYes then
+    begin
+      if sdSaveSession.Execute then
+      begin
+        FNotesList.SaveToFile(sdSaveSession.FileName);
+        FNotesSaved := True;
+      end
+      else
+        DoLoad := False;
+    end;
+
+  end;
+  if DoLoad and odLoadSession.Execute then
   begin
     FNotesList.LoadFromFile(odLoadSession.FileName);    
     FHistoryIdx := 0;
     LoadHTML('Main');
     FHistoryList.Clear;
     FHistoryList.Add('Main');
-    UpdateHistoryButtons;
+    UpdateHistoryButtons; 
+    FNotesSaved := True;
   end;
 end;
 
 procedure TfmController.tbSaveNotesClick(Sender: TObject);
 begin
   if sdSaveSession.Execute then
+  begin
     FNotesList.SaveToFile(sdSaveSession.FileName);
+    FNotesSaved := True;
+  end;
 end;
 
 procedure TfmController.tbHistoryBackClick(Sender: TObject);
@@ -2440,6 +2494,32 @@ procedure TfmController.eEntryNameKeyPress(Sender: TObject; var Key: char);
 begin
   if Key = '|' then
     Key := #0;
+end;
+
+procedure TfmController.FormCloseQuery(Sender: TObject; var CanClose: Boolean); 
+var
+  DlgResult: TModalResult;
+begin
+  CanClose := FNotesSaved;
+  if not FNotesSaved then
+  begin
+    DlgResult := MessageDlg(GetString(LangStrings.LanguageID, 'NotesUnsavedAlert'),
+                            mtConfirmation,
+                            [mbYes, mbNo, mbCancel],
+                            0);
+    if DlgResult <> mrCancel then
+      CanClose := True;
+    if DlgResult = mrYes then
+    begin
+      if sdSaveSession.Execute then
+      begin
+        FNotesList.SaveToFile(sdSaveSession.FileName);
+        FNotesSaved := True;
+      end
+      else
+        CanClose := False;
+    end;
+  end;
 end;
 
 
