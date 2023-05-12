@@ -48,7 +48,7 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure LoadFromXML(node: TDOMNode);
-    function ToHtml(ForPlayers: Boolean; MarkdownConverter: TMarkdownProcessor = nil): string;
+    function ToHtml(ForPlayers, ForExport: Boolean; MarkdownConverter: TMarkdownProcessor = nil): string;
     function SaveToXML(doc: TXMLDocument): TDOMNode;
     function GetAnnotation(idx: Integer): TNoteAnnotation;
     function GetAnnotationCount: Integer;
@@ -66,16 +66,17 @@ type
     FEntries: TList;
     FCategories: TStringList;
     FMarkdownProcessor: TMarkdownProcessor;
-    function GetSidebar(EditKey: string): string;
+    function GetSidebar(EditKey: string; ForExport: Boolean = False): string;
+    function MakeFilenameSave(entryName: string): string;
   public
     constructor Create;
     destructor Destroy; override;
     procedure LoadFromFile(filename: string);
     procedure SaveToFile(filename: string);
-    function EntryToHTML(Name: string; ForPlayers: Boolean): TStream;
-    function EntryListToHTML(ForPlayers: Boolean): TStream;
-    function EntriesByCategoryToHTML(Category: string; ForPlayers: Boolean): TStream;
-    function CategoryListToHTML: TStream;
+    function EntryToHTML(Name: string; ForPlayers: Boolean; ForExport: Boolean = False): TStream;
+    function EntryListToHTML(ForPlayers: Boolean; ForExport: Boolean = False): TStream;
+    function EntriesByCategoryToHTML(Category: string; ForPlayers: Boolean; ForExport: Boolean = False): TStream;
+    function CategoryListToHTML(ForExport: Boolean = False): TStream;
     function NotFoundToHTML: TStream;
     function GetEntryName(idx: Integer): string;
     function GetEntry(idx: Integer): TNoteEntry; overload;
@@ -85,6 +86,7 @@ type
     procedure ClearEntries;
     procedure AddEntry(entry: TNoteEntry);
     procedure DeleteEntry(name: string);
+    procedure ExportAll(ToPath: string; ForPlayers: Boolean);
     property Categories: TStringList read FCategories;
   end;
 
@@ -94,6 +96,7 @@ implementation
 
 uses
   LangStrings,
+  FileUtil,
   RegExpr,
   StrUtils,
   XMLRead,
@@ -253,7 +256,7 @@ begin
   end;
 end;
 
-function TNoteEntry.ToHtml(ForPlayers: Boolean; MarkdownConverter: TMarkdownProcessor = nil): string;
+function TNoteEntry.ToHtml(ForPlayers, ForExport: Boolean; MarkdownConverter: TMarkdownProcessor = nil): string;
 var
   i: Integer;
   tmpAnnot: TNoteAnnotation;
@@ -263,7 +266,12 @@ begin
   if FDate <> 0 then
     Result := Result + '<p class="timestamp">' + FormatDateTime('ddddd', FDate) + '</p>';
   if FCategory <> '' then
-    Result := Result + '<p class="category"><a href="cat|' + FCategory + '">' + FCategory + '</a></p>';
+  begin
+    if not ForExport then
+      Result := Result + '<p class="category"><a href="cat|' + FCategory + '">' + FCategory + '</a></p>'
+    else
+      Result := Result + '<p class="category"><a href="category_' + FCategory + '.html">' + FCategory + '</a></p>';
+  end;
   if not (ForPlayers and FDMOnly) then
   begin
     tmpContent := FContent;
@@ -325,13 +333,22 @@ begin
   inherited;
 end;
 
-function TEntryList.GetSidebar(EditKey: string): string;
+function TEntryList.GetSidebar(EditKey: string; ForExport: Boolean): string;
 begin
-  Result := '<a href="main">' + strSidebarList + '</a><br />';
-  Result := Result + '<a href="categories">' + strSidebarCategories + '</a><br />';
-  if EditKey <> '' then
-    Result := Result + '<a href="edit|' + EditKey + '">' + strSidebarEdit + '</a><br />';
-  Result := '<div class="sidenav">' + Result + '</div>';
+  if not ForExport then
+  begin
+    Result := '<a href="main">' + strSidebarList + '</a><br />';
+    Result := Result + '<a href="categories">' + strSidebarCategories + '</a><br />';
+    if EditKey <> '' then
+      Result := Result + '<a href="edit|' + EditKey + '">' + strSidebarEdit + '</a><br />';
+    Result := '<div class="sidenav">' + Result + '</div>';
+  end
+  else
+  begin
+    Result := '<a href="main.html">' + strSidebarList + '</a><br />';
+    Result := Result + '<a href="categories.html">' + strSidebarCategories + '</a><br />';
+    Result := '<div class="sidenav">' + Result + '</div>';
+  end;
 end;
 
 procedure TEntryList.LoadFromFile(filename: string);
@@ -400,32 +417,68 @@ begin
   end;
 end;
 
-function TEntryList.EntryToHTML(Name: string; ForPlayers: Boolean): TStream;
+function TEntryList.EntryToHTML(Name: string; ForPlayers: Boolean; ForExport: Boolean = False): TStream;
 var
   str: string;
   tmpEntry: TNoteEntry;
+  LinkHelper: TRegExpr;
+  LinkTarget, LinkName: string;
 begin
   tmpEntry := GetEntry(Name);
   if not Assigned(tmpEntry) then
     Exit(TStringStream.Create(''));
-  str := tmpEntry.ToHtml(ForPlayers, FMarkdownProcessor);
+  str := tmpEntry.ToHtml(ForPlayers, ForExport, FMarkdownProcessor);
 
   // Rewrite a few things to make everything work better
 
   // Wikilinks to <a>-tags
-  str := ReplaceRegExpr('\[\[([^\]\|]+)\|([^\]\|]+)\]\]', str, '<a href="$1">$2</a>', True);
-  str := ReplaceRegExpr('\[\[([^\]]+)\]\]', str, '<a href="$1">$1</a>', True);
-                                      
+  if ForExport then
+  begin
+    // if we want the links to point to the actual html-files, things get a bit more complicated...
+    LinkHelper := TRegExpr.Create;
+    LinkHelper.Expression := '\[\[([^\]\|]+)\|([^\]\|]+)\]\]';
+    if LinkHelper.Exec(str) then
+    begin
+      repeat
+        LinkTarget := MakeFilenameSave(LinkHelper.Match[1]) + '.html';
+        LinkName := LinkHelper.Match[2];
+        str := ReplaceRegExpr('\[\[([^\]\|]+)\|([^\]\|]+)\]\]', str, '<a href="$1">$2</a>', False);
+        str := AnsiReplaceStr(str, '$1', LinkTarget);
+        str := AnsiReplaceStr(str, '$2', LinkName);
+
+      until not LinkHelper.ExecNext;
+    end;
+
+    LinkHelper.Expression := '\[\[([^\]]+)\]\]';
+    if LinkHelper.Exec(str) then
+    begin
+      repeat
+        LinkTarget := MakeFilenameSave(LinkHelper.Match[1]) + '.html';
+        LinkName := LinkHelper.Match[1];
+        str := ReplaceRegExpr('\[\[([^\]]+)\]\]', str, '<a href="$1">$2</a>', False);
+        str := AnsiReplaceStr(str, '$1', LinkTarget);
+        str := AnsiReplaceStr(str, '$2', LinkName);
+      until not LinkHelper.ExecNext;
+    end;
+
+    LinkHelper.Free;
+  end
+  else
+  begin
+    str := ReplaceRegExpr('\[\[([^\]\|]+)\|([^\]\|]+)\]\]', str, '<a href="$1">$2</a>', True);
+    str := ReplaceRegExpr('\[\[([^\]]+)\]\]', str, '<a href="$1">$1</a>', True);
+  end;
+
   // Line breaks to <br />-tags
   str := StringReplace(str, #10, '<br />', [rfReplaceAll]);
   
   str :=  '<html><head><title>Liste</title><link rel="stylesheet" href="styles.css"></head><body>' +
-            GetSidebar(Name) + '<div class="main">' + str + '</div></body></html>';
+            GetSidebar(Name, ForExport) + '<div class="main">' + str + '</div></body></html>';
 
   Result := TStringStream.Create(str);
 end;
 
-function TEntryList.EntryListToHTML(ForPlayers: Boolean): TStream;
+function TEntryList.EntryListToHTML(ForPlayers: Boolean; ForExport: Boolean = False): TStream;
 var
   i: Integer;
   tmpEntry: TNoteEntry;
@@ -436,18 +489,23 @@ begin
   begin
     tmpEntry := GetEntry(i);
     if Assigned(tmpEntry) and not (ForPlayers and tmpEntry.DMOnly) then
-      str := str + '<li><a href="' + tmpEntry.EntryName + '">' + tmpEntry.EntryName + '</a></li>';
+    begin
+      if not ForExport then
+        str := str + '<li><a href="' + tmpEntry.EntryName + '">' + tmpEntry.EntryName + '</a></li>'
+      else
+        str := str + '<li><a href="' + MakeFilenameSave(tmpEntry.EntryName) + '.html">' + tmpEntry.EntryName + '</a></li>';
+    end;
   end;
   if str = '' then
     str := '<li>' + strNoEntries + '</li>';
-  str := '<html><head><title>Liste</title><link rel="stylesheet" href="styles.css"></head><body>' + GetSidebar('entryList') +
+  str := '<html><head><title>Liste</title><link rel="stylesheet" href="styles.css"></head><body>' + GetSidebar('entryList', ForExport) +
          '<div class="main"><ul>' + str + '</ul></div></body></html>';
 
 
   Result := TStringStream.Create(str);
 end;
 
-function TEntryList.EntriesByCategoryToHTML(Category: string; ForPlayers: Boolean): TStream;
+function TEntryList.EntriesByCategoryToHTML(Category: string; ForPlayers: Boolean; ForExport: Boolean = False): TStream;
 var
   i: Integer;
   str: string;
@@ -460,28 +518,38 @@ begin
     if Assigned(tmpEntry) and
        not (ForPlayers and tmpEntry.DMOnly) and
        (SameText(tmpEntry.Category, Category) or (SameText(Category, 'none') and SameText(tmpEntry.Category, ''))) then
-      str := str + '<li><a href="' + tmpEntry.EntryName + '">' + tmpEntry.EntryName + '</a></li>';
+    begin
+      if not ForExport then
+        str := str + '<li><a href="' + tmpEntry.EntryName + '">' + tmpEntry.EntryName + '</a></li>'
+      else
+        str := str + '<li><a href="' + MakeFilenameSave(tmpEntry.EntryName) + '.html">' + tmpEntry.EntryName + '</a></li>';
+    end;
 
   end;
   if str = '' then
     str := '<li>' + strNoEntries + '</li>';
 
-  str := '<html><head><title>Kategorien</title><link rel="stylesheet" href="styles.css"></head><body>' + GetSidebar('') +
+  str := '<html><head><title>Kategorien</title><link rel="stylesheet" href="styles.css"></head><body>' + GetSidebar('', ForExport) +
          '<div class="main"><ul>' + str + '</ul></div></body></html>';
 
   Result := TStringStream.Create(str);
 end;
 
-function TEntryList.CategoryListToHTML: TStream;
+function TEntryList.CategoryListToHTML(ForExport: Boolean = False): TStream;
 var
   i: Integer;
   str: string;
 begin
-  str := '<li><a href="cat|none">' + strNone + '</a></li>';
-
+  if not ForExport then
+    str := '<li><a href="cat|none">' + strNone + '</a></li>'
+  else
+    str := '<li><a href="category_none.html">' + strNone + '</a></li>';
   for i := 0 to FCategories.Count - 1 do
-    str := str + '<li><a href="cat|' + FCategories[i] + '">' + FCategories[i] + '</a></li>';
-  str := '<html><head><title>Kategorien</title><link rel="stylesheet" href="styles.css"></head><body>' + GetSidebar('categories') +
+    if not ForExport then
+      str := str + '<li><a href="cat|' + FCategories[i] + '">' + FCategories[i] + '</a></li>'
+    else
+      str := str + '<li><a href="Category_' + FCategories[i] + '.html">' + FCategories[i] + '</a></li>';
+  str := '<html><head><title>Kategorien</title><link rel="stylesheet" href="styles.css"></head><body>' + GetSidebar('categories', ForExport) +
          '<div class="main"><ul>' + str + '</ul></div></body></html>';
 
   Result := TStringStream.Create(str);
@@ -556,6 +624,64 @@ begin
     FEntries.Remove(tmpEntry);
 end;
 
+function TEntryList.MakeFilenameSave(entryName: string): string;
+const REMOVECHARS = '#%&{}\/<>*?$!''":@+`|= .';
+var i: Integer;
+begin
+  Result := entryName;
+  for i := 1 to Length(REMOVECHARS) do
+    Result := AnsiReplaceText(Result, REMOVECHARS[i], '-');
+end;
+
+procedure TEntryList.ExportAll(ToPath: string; ForPlayers: Boolean);
+var
+  saveList: TStringList;
+  tmpStream: TStream;
+  path: string;
+  i: Integer;
+begin
+  saveList := TStringList.Create;
+  path := IncludeTrailingPathDelimiter(ToPath);
+  try
+    tmpStream := EntryListToHTML(ForPlayers, True);
+    saveList.LoadFromStream(tmpStream);
+    saveList.SaveToFile(path + 'Main.html');
+    tmpStream.Free;
+
+    saveList.Clear;
+    tmpStream := CategoryListToHTML(True);
+    saveList.LoadFromStream(tmpStream);
+    saveList.SaveToFile(path + 'Categories.html');
+    tmpStream.Free;
+
+    saveList.Clear;
+    tmpStream := EntriesByCategoryToHTML('none', ForPlayers, True);
+    saveList.LoadFromStream(tmpStream);
+    saveList.SaveToFile(path + 'Category_none.html');
+    tmpStream.Free;
+
+    for i := 0 to FCategories.Count - 1 do
+    begin
+      saveList.Clear;
+      tmpStream := EntriesByCategoryToHTML(FCategories[i], ForPlayers, True);
+      saveList.LoadFromStream(tmpStream);
+      saveList.SaveToFile(path + 'Category_' + MakeFilenameSave(FCategories[i]) + '.html');
+      tmpStream.Free;
+    end;
+
+    for i := 0 to EntryCount - 1 do
+    begin
+      saveList.Clear;
+      tmpStream := EntryToHTML(GetEntryName(i), ForPlayers, True);
+      saveList.LoadFromStream(tmpStream);
+      saveList.SaveToFile(path + MakeFilenameSave(GetEntryName(i)) + '.html');
+      tmpStream.Free;
+    end;
+    CopyFile('styles.css', path + 'styles.css', True);
+  finally
+    saveList.Free;
+  end;
+end;
 
 end.
 

@@ -77,10 +77,14 @@ type
     pbViewport: TPaintBox;
     pPortrait: TPanel;
     sdSaveSession: TSaveDialog;
+    sddExportDir: TSelectDirectoryDialog;
     tbLoadNotes: TToolButton;
     tbSaveNotes: TToolButton;
     tbHistoryBack: TToolButton;
     tbHistoryForward: TToolButton;
+    ToolButton4: TToolButton;
+    tbExportForDM: TToolButton;
+    tbExportForPlayers: TToolButton;
     tsCategoryEditor: TTabSheet;
     tsEntryListEditor: TTabSheet;
     tsEntryEditor: TTabSheet;
@@ -165,6 +169,7 @@ type
     procedure tbClearTokensClick(Sender: TObject);
     procedure tbCombatModeClick(Sender: TObject);
     procedure tbExitClick(Sender: TObject);
+    procedure tbExportForDMClick(Sender: TObject);
     procedure tbGridSettingsClick(Sender: TObject);
     procedure tbHideMarkerClick(Sender: TObject);
     procedure tbHidePortraitClick(Sender: TObject);
@@ -390,6 +395,8 @@ begin
   tbSaveNotes.Hint := GetString(LangStrings.LanguageID, 'NotesSaveDBHint');
   tbHistoryBack.Hint := GetString(LangStrings.LanguageID, 'NotesHistoryBackHint');
   tbHistoryForward.Hint := GetString(LangStrings.LanguageID, 'NotesHistoryForwardHint');
+  tbExportForDM.Hint := GetString(LangStrings.LanguageID, 'NotesExportAllHint');        
+  tbExportForPlayers.Hint := GetString(LangStrings.LanguageID, 'NotesExportPlayersHint');
   bOkCategory.Caption := GetString(LangStrings.LanguageID, 'ButtonOk');
   bCancelCategory.Caption := GetString(LangStrings.LanguageID, 'ButtonCancel');
   bAddCategory.Caption := GetString(LangStrings.LanguageID, 'ButtonAdd');
@@ -2191,7 +2198,6 @@ begin
 end;
 
 procedure TfmController.bAddEntryClick(Sender: TObject);
-var i: Integer;
 begin
   if (eNewEntry.Text <> '') and (lbEntryList.Items.IndexOf(eNewEntry.Text) < 0) then
   begin
@@ -2488,6 +2494,25 @@ begin
   LoadHTML(FHistoryList[FHistoryIdx]); 
   pcNotesMain.ActivePage := tsDisplay;
   UpdateHistoryButtons;
+end;
+ 
+procedure TfmController.tbExportForDMClick(Sender: TObject);
+var
+  files: TStringList;
+  DoExport: Boolean;
+begin
+  if sddExportDir.Execute then
+  begin
+    DoExport := True;
+    files := FindAllFiles(IncludeTrailingPathDelimiter(sddExportDir.FileName), '*.html;*.css');
+    if files.Count > 0 then
+      DoExport := MessageDlg(GetString(LangStrings.LanguageID, 'NotesExportOverwrite'),
+                             mtConfirmation,
+                             [mbOk, mbCancel], 0) = mrOk;
+    files.Free;
+    if DoExport then
+      FNotesList.ExportAll(sddExportDir.FileName, TComponent(Sender).Tag = 1);
+  end;
 end;
 
 procedure TfmController.eEntryNameKeyPress(Sender: TObject; var Key: char);
