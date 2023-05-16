@@ -307,7 +307,7 @@ type
       DefaultGridSlotsX, DefaultGridSlotsY: Integer;
       DefaultAngle: Single;
       BaseInitiative: Integer;
-      IsRange: Boolean;
+      TokenType: TTokenType;
   end;
 
   TPicLoaderThread = class(TThread)
@@ -473,7 +473,7 @@ var
 begin
   if (Source is TTreeView) and Assigned(TTreeView(Source).Selected) and Assigned(TTreeView(Source).Selected.Data) then
   begin
-    if TTokenNodeData(TTreeView(Source).Selected.Data).IsRange then
+    if TTokenNodeData(TTreeView(Source).Selected.Data).TokenType = ttRange then
     begin
       tmpToken := TRangeIndicator.Create(ViewPortToMapX(X),
                                          ViewPortToMapY(Y),
@@ -482,6 +482,18 @@ begin
       TRangeIndicator(tmpToken).SectorAngle := 90;
       TRangeIndicator(tmpToken).Alpha := 32;
       TRangeIndicator(tmpToken).Color := clRed;
+      tmpToken.GridSlotsX := 1;
+      tmpToken.GridSlotsY := 1;
+      tmpToken.Angle := 0;
+      tmpToken.Visible := FTokensStartInvisible;
+    end
+    else if TTokenNodeData(TTreeView(Source).Selected.Data).TokenType = ttText then
+    begin
+      tmpToken := TTextToken.Create(ViewPortToMapX(X),
+                                    ViewPortToMapY(Y),
+                                    200,
+                                    100,
+                                    'Demo Text. A bit longer. Replace this later...');
       tmpToken.GridSlotsX := 1;
       tmpToken.GridSlotsY := 1;
       tmpToken.Angle := 0;
@@ -966,7 +978,7 @@ begin
   if (Source is TTreeView) and
      Assigned(TTreeView(Source).Selected) and
      Assigned(TTreeView(Source).Selected.Data) and
-     not (TTokenNodeData(TTreeView(Source).Selected.Data).IsRange) then
+     (TTokenNodeData(TTreeView(Source).Selected.Data).TokenType = ttDefault) then
     fmDisplay.PortraitFileName := TTokenNodeData(TTreeView(Source).Selected.Data).FullPath;
 end;
 
@@ -1595,7 +1607,7 @@ var
       begin
         title := ExtractFilename(FileList[i]); 
         NodeData := TTokenNodeData.Create;
-        NodeData.IsRange := False;
+        NodeData.TokenType := ttDefault;
         if FTokenLib.IndexOfName(FileList[i]) >= 0 then
         begin
           ContentList := TStringList.Create;
@@ -1653,10 +1665,16 @@ begin
   tvTokens.BeginUpdate;
   tvTokens.Items.Clear;
   ParseDir(FTokenDir, nil);
-  with tvTokens.Items.AddChild(nil, 'Range indicator') do
+  with tvTokens.Items.AddChild(nil, GetString(LangStrings.LanguageID, 'ControllerTokenRangeIndicator')) do
   begin
     NodeData := TTokenNodeData.Create;
-    NodeData.IsRange := True;
+    NodeData.TokenType := ttRange;
+    Data := NodeData;
+  end;                           
+  with tvTokens.Items.AddChild(nil, GetString(LangStrings.LanguageID, 'ControllerTokenText')) do
+  begin
+    NodeData := TTokenNodeData.Create;
+    NodeData.TokenType := ttText;
     Data := NodeData;
   end;
   tvTokens.EndUpdate;

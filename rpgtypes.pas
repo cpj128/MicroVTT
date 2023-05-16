@@ -31,6 +31,8 @@ type
 
   TTokenRotationStyle = (rsRotateToken, rsShowArrow);
 
+  TTokenType = (ttDefault, ttRange, ttText);
+
   TToken = class
     private
       FGlyph: TBGRABitmap;
@@ -50,7 +52,9 @@ type
       FIsMoving: Boolean;
       FAttached: TList;
       procedure SetXPos(val: Integer);
-      procedure SetYPos(val: integer);
+      procedure SetYPos(val: integer); 
+      procedure SetWidth(Val: Integer); virtual;
+      procedure SetHeight(Val: Integer); virtual;
       function GetXPos: Integer; virtual;
       function GetYPos: Integer; virtual;
       function GetXEndPos: Integer; virtual;
@@ -73,8 +77,8 @@ type
       property YPos: Integer read GetYPos write SetYPos;
       property XEndPos: Integer read GetXEndPos;
       property YEndPos: Integer read GetYEndPos;
-      property Width: Integer read FWidth write FWidth;
-      property Height: Integer read FHeight write FHeight;
+      property Width: Integer read FWidth write SetWidth;
+      property Height: Integer read FHeight write SetHeight;
       property Visible: Boolean read FVisible write FVisible;
       property GridSlotsX: Integer read FGridSlotsX write FGridSlotsX;
       property GridSlotsY: Integer read FGridSlotsY write FGridSlotsY;
@@ -97,8 +101,8 @@ type
     procedure SetColor(val: TColor);
     procedure SetAlpha(val: Byte);
     procedure SetSectorAngle(Val: Double);
-    procedure SetWidth(Val: Integer);
-    procedure SetHeight(Val: Integer);
+    procedure SetWidth(Val: Integer); override;
+    procedure SetHeight(Val: Integer); override;
     function GetXPos: Integer; override;
     function GetYPos: Integer; override;
     function GetXEndPos: Integer; override;
@@ -113,10 +117,21 @@ type
     function IsAttached: Boolean;
     property Color: TColor read FColor write SetColor;
     property Alpha: Byte read FAlpha write SetAlpha;
-    property SectorAngle: Double read FSectorAngle write SetSectorAngle; 
-    property Width: Integer read FWidth write SetWidth;
-    property Height: Integer read FHeight write SetHeight;
+    property SectorAngle: Double read FSectorAngle write SetSectorAngle;
 
+  end;
+
+  TTextToken = class(TToken)
+  private
+    FText: string;
+    procedure SetWidth(Val: Integer); override;
+    procedure SetHeight(Val: Integer); override;
+    procedure SetText(val: string);
+  public
+    constructor Create(X, Y, pWidth, pHeight: Integer; text: string);
+    destructor Destroy; override;
+    procedure RedrawGlyph;
+    property Text: string read FText write SetText;
   end;
 
 
@@ -271,6 +286,16 @@ begin
     FYTargetPos := val;
   end;
   UpdateAttached;
+end;
+
+procedure TToken.SetWidth(Val: Integer);
+begin
+  FWidth := Val;
+end;
+
+procedure TToken.SetHeight(Val: Integer);
+begin
+  FHeight := Val;
 end;
 
 function TToken.GetXPos: Integer;
@@ -558,6 +583,64 @@ function TRangeIndicator.IsAttached: Boolean;
 begin
   Result := Assigned(FAttachedTo);
 end;
+
+{ TTextToken }
+
+constructor TTextToken.Create(X, Y, pWidth, pHeight: Integer; text: string);
+begin
+  FXPos := X;
+  FYPos := Y;
+  FXTargetPos := X;
+  FYTargetPos := Y;
+  FXStartPos := X;
+  FYStartPos := Y;
+  FWidth := pWidth;
+  FHeight := pHeight;
+  FVisible := True;
+  FIsMoving := False;
+  FGridSlotsX := 1;
+  FGridSlotsY := 1;
+  FOverlayIdx := -1;
+  FCurAnimationStep := 0;
+  FPath := '';
+  FText := text;
+  RedrawGlyph;
+  FAttached := TList.Create;
+end;
+
+destructor TTextToken.Destroy;
+begin
+  inherited;
+end;
+
+procedure TTextToken.SetWidth(val: Integer);
+begin
+  FWidth := Val;
+  RedrawGlyph;
+end;
+
+procedure TTextToken.SetHeight(Val: Integer);
+begin
+  FHeight := Val;
+  RedrawGlyph;
+end;
+
+procedure TTextToken.SetText(val: string);
+begin
+  FText := Val;
+  RedrawGlyph;
+end;
+
+procedure TTextToken.RedrawGlyph;
+begin
+  FGlyph.Free;
+  FGlyph := TBGRABitmap.Create(FWidth, FHeight);
+  // Todo: Make prettier...
+  FGlyph.FillRect(0, 0, FWidth, FHeight, clWhite);
+  FGlyph.TextRect(Rect(3, 3, FWidth - 3, FHeight - 3), FText, taCenter, tlCenter, clBlack);
+  FGlyph.Rectangle(Rect(1, 1, FWidth - 1, FHeight - 1), clBlack, dmSet);
+end;
+
 
 { Easing-Functions }
 
