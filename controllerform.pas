@@ -873,7 +873,8 @@ begin
               TRangeIndicator(CurToken).RedrawGlyph;
 
             Rotation := TBGRAAffineBitmapTransform.Create(TokenBmp);
-            if (FTokenRotationStyle = rsRotateToken) and not (CurToken is TRangeIndicator) then
+            if ((FTokenRotationStyle = rsRotateToken) and not (CurToken is TRangeIndicator)) or
+               (CurToken is TTextToken) then
             begin           
               BoundingRect := CurToken.GetBoundingRect;
               Rotation.Translate(-TokenBmp.Width / 2, -TokenBmp.Height / 2);
@@ -913,7 +914,7 @@ begin
               end;
 
               // Add direction arrow
-              if (FTokenRotationStyle = rsShowArrow) and not (CurToken is TRangeIndicator) then
+              if (FTokenRotationStyle = rsShowArrow) and not ((CurToken is TRangeIndicator) or (CurToken is TTextToken)) then
               begin
                 ArrowLen := Min(CurToken.Width, CurToken.Height) * 0.4 * FDisplayScale * FZoomFactor;
                 ArrowWid := ArrowLen / 4;
@@ -1337,6 +1338,7 @@ begin
       begin
         CurToken := TToken(FTokenList[i]);
 
+        // Should this be moved to the tokens themselves?
         if CurToken is TRangeIndicator then
         begin                       
           saveFile.WriteString(SAVESECTIONTOKENS, 'Path' + IntToStr(i), '::Range');
@@ -1345,7 +1347,11 @@ begin
           SaveFile.WriteFloat(SAVESECTIONTOKENS, 'Sector' + IntToStr(i), TRangeIndicator(CurToken).SectorAngle);
           if TRangeIndicator(CurToken).IsAttached then
             SaveFile.WriteString(SAVESECTIONTOKENS, 'Attached' + IntToStr(i), '::Next');
-          // Attachment still missing
+        end
+        else if CurToken is TTextToken then
+        begin                                                                                      
+          saveFile.WriteString(SAVESECTIONTOKENS, 'Path' + IntToStr(i), '::Text');
+          saveFile.WriteString(SAVESECTIONTOKENS, 'Text' + IntToStr(i), TTextToken(CurToken).Text);
         end
         else
         begin
@@ -1459,6 +1465,14 @@ begin
           TRangeIndicator(CurToken).SectorAngle := saveFile.ReadFloat(SAVESECTIONTOKENS, 'Sector' + IntToStr(i), 90);
           if saveFile.ValueExists(SAVESECTIONTOKENS, 'Attached' + IntToStr(i)) then
             attachList.Add(CurToken);
+        end
+        else if SameText(path, '::Text') then
+        begin
+          CurToken := TTextToken.Create(saveFile.ReadInteger(SAVESECTIONTOKENS, 'XPos' + IntToStr(i), 0),
+                                             saveFile.ReadInteger(SAVESECTIONTOKENS, 'YPos' + IntToStr(i), 0),
+                                             saveFile.ReadInteger(SAVESECTIONTOKENS, 'Width' + IntToStr(i), 100),
+                                             saveFile.ReadInteger(SAVESECTIONTOKENS, 'Height' + IntToStr(i), 100),
+                                             saveFile.ReadString(SAVESECTIONTOKENS, 'Text' + IntToStr(i), ''));
         end
         else if FileExists(path) then
         begin

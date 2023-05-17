@@ -581,7 +581,8 @@ begin
                   //  TRangeIndicator(CurToken).RedrawGlyph;
 
                   Rotation := TBGRAAffineBitmapTransform.Create(TokenBmp);
-                  if (fmController.TokenRotationStyle = rsRotateToken) and not (CurToken is TRangeIndicator) then
+                  if ((fmController.TokenRotationStyle = rsRotateToken) and not (CurToken is TRangeIndicator)) or
+                     (CurToken is TTextToken) then
                   begin
                     BoundingRect := CurToken.GetBoundingRect;
                     Rotation.Translate(-TokenBmp.Width / 2, -TokenBmp.Height / 2);
@@ -629,7 +630,7 @@ begin
                     end;
 
                     // Add direction arrow
-                    if (fmController.TokenRotationStyle = rsShowArrow) and not (CurToken is TRangeIndicator) then
+                    if (fmController.TokenRotationStyle = rsShowArrow) and not ((CurToken is TRangeIndicator) or (CurToken is TTextToken)) then
                     begin
                       ArrowLen := Min(CurToken.Width, CurToken.Height) * 0.4 * FMapZoom;
                       ArrowWid := ArrowLen / 4;
