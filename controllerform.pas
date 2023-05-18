@@ -334,6 +334,8 @@ uses
   StrUtils,
   Math,
   GetText,
+  LCLIntf,
+  RegExpr,
   BGRABitmapTypes, 
   BGRATextFX,
   BGRATransform,
@@ -2315,14 +2317,23 @@ procedure TfmController.hvNotesDisplayHotSpotClick(Sender: TObject;
   const SRC: ThtString; var Handled: Boolean);
 begin
   Handled := True;
-
-  if not StartsStr('edit|', SRC) then
+  if ExecRegExpr('(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)', SRC) then
   begin
-    AddToHistory(SRC);
-  end;
+    // Weblinks
+    if MessageDlg(GetString(LangStrings.LanguageID, 'NotesOpenExternalLink'),
+                  mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+      OpenURL(SRC);
+  end
+  else
+  begin
+    if not StartsStr('edit|', SRC) then
+    begin
+      AddToHistory(SRC);
+    end;
 
-  UpdateHistoryButtons;
-  LoadHtml(SRC);
+    UpdateHistoryButtons;
+    LoadHtml(SRC);
+  end;
 end;
 
 procedure TfmController.hvNotesDisplayImageRequest(Sender: TObject;
@@ -2372,8 +2383,7 @@ begin
     fs := FNotesList.CategoryListToHTML
   else if StartsStr('edit|', Entry) then
   begin
-    // Show Editor for selected entry - TBI
-    // Also need to return the stream for the edited item here :/
+    // Show Editor for selected entry
     fs := nil;
     if SameText(Entry, 'edit|categories') then
     begin
@@ -2470,9 +2480,6 @@ begin
   DoLoad := FNotesSaved;
   if not FNotesSaved then
   begin
-    {DlgResult := Application.MessageBox(PChar(GetString(LangStrings.LanguageID, 'NotesUnsavedAlert')),
-                                        PChar('MicroVTT'),
-                                        MB_YESNOCANCEL);}
     DlgResult := MessageDlg(GetString(LangStrings.LanguageID, 'NotesUnsavedAlert'),
                             mtConfirmation,
                             [mbYes, mbNo, mbCancel],
