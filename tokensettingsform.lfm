@@ -11,6 +11,16 @@ object fmTokenSettings: TfmTokenSettings
   OnDeactivate = FormDeactivate
   OnShow = FormShow
   LCLVersion = '2.2.4.0'
+  object mText: TMemo
+    Left = 85
+    Height = 107
+    Top = 119
+    Width = 97
+    Lines.Strings = (
+      'mText'
+    )
+    TabOrder = 22
+  end
   object cbVisible: TCheckBox
     Left = 8
     Height = 19

@@ -48,6 +48,7 @@ type
     Label5: TLabel;
     Label6: TLabel;
     Label7: TLabel;
+    mText: TMemo;
     pnColor: TPanel;
     seNumber: TSpinEditEx;
     seSectorAngle: TSpinEditEx;
@@ -111,6 +112,10 @@ begin
       TRangeIndicator(LinkedToken).Color := pnColor.Color;
       TRangeIndicator(LinkedToken).SectorAngle := seSectorAngle.Value;
       TRangeIndicator(LinkedToken).Alpha := seAlpha.Value;
+    end;
+    if LinkedToken is TTextToken then
+    begin
+      TTextToken(LinkedToken).Text := mText.Text;
     end;
     LinkedToken.UpdateAttached;
     LinkedToken := nil;
@@ -191,6 +196,10 @@ begin
     Label3.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsAlpha');
     Label6.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsColor');
     Label7.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsSectorAngle');
+  end
+  else if LinkedToken is TTextToken then
+  begin
+    Label7.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsText');
   end
   else
   begin
