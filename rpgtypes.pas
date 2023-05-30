@@ -631,14 +631,115 @@ begin
   RedrawGlyph;
 end;
 
-procedure TTextToken.RedrawGlyph;
+procedure TTextToken.RedrawGlyph; 
+var
+  CurWidth, CurHeight: Double;
+  AddedH, AddedV, i: Integer;
+  svgpath: string;
+const
+  TOPLEFT = 'm %d %d c -4 0 -5 0 -5 -4 c 1 -2 0 -3.3333 0 -5 c 0 -2 1 -4 0 -6 c 1 -2 0 -4 0 -6 c 0 -5 0 -3 4 -4 c 2 0 4 2 6 1 c 1 -1 4 0 6 -1 c 11 1 8 0 9 5 ';
+
+  INSERTV1T ='c 0 -8 2 -3 3 -5 c 2 1 4 0 5 0 c 3 1 0 1 5 0 c 2 1 7 0 7 0 c 6 0 4 4 5 5 ';
+
+  INSERTV2T = 'c 1 1 -2 -5 5 -5 c 2 1 2.6667 0 4 0 c 1.3333 0 -1 1 4 0 c 1 1 5 0 7 1 c 2 1 5 -3 5 4 ';
+
+  TOPRIGHT = 'c 1 -7 3.3333 -3.3333 5 -5 c 4 0 -1 2 7 1 c 2 0 2 -1 4 -1 c 1 0 2 1 4 0 c 3 0 4 1 5 5 c 0 3 -1 3 -1 5 c 2 2 -1 4 0 6 c 1 1 1 3 1 4 c -1 2 2 5 -5 5 ';
+
+  INSERTH1R = 'c 8 0 2.6667 3.3333 4 5 c 1 1 0 3 1 5 c 0 1.3333 -1 2 0 4 c -1 1 0 2 -1 3 c 1 2 0 1 1 3 c -1 4 2 5 -5 5 ';
+
+  INSERTH2R = 'c 7 0 3.3333 3.3333 5 5 c 0 4 -1 3 -1 6 c 1 2 1 4 1 6 c -1 1 0 2.6667 0 4 c 0 2 1 4 -5 4 ';
+
+  BOTTOMRIGHT = 'c 7 0 4 3 5 5 c -0.6667 1.3333 1 4 -2 4 c 2 0 2 3 2 5 c -1 1 0 1 0 6 c 0 8 -2 3 -5 5 c -2 -1 -6 0 -6 -1 c -3 1 -6 1 -6 -1 c 0 3 -2 1.3333 -3 2 c -3 0 -5 0 -5 -5 ';
+
+  INSERTV2B = 'c 0 4 -2 7 -5 3 c -1 -1 -1 2 -6 2 c -2 0 -4 -3 -4 -1 c 0 1 -3.3333 0.6667 -5 1 c -2 0 -4 0 -5 -5 ';
+
+  INSERTV1B = 'c -2 -1 1 7 -5 4 c -1 -1 -2 1 -5 1 c -4 -2 -4 0 -10 0 c -2 -1 -5 2 -5 -5 ';
+
+  BOTTOMLEFT = 'c -1 5 -2 5 -5 5 c 0 -1 -3 0 -4 -2 c -1 -1 0 4 -3 1 c -1 -1 -1 1 -4 1 c -1.3333 -0.3333 -4 -2 -4 -1 c -2 2.5 -7 -1 -4 -3 c 1 -1 -1 -1 -1 -5 c 0 -4 3 -3 2 -4 c -3 0 -0.6667 -2.6667 -1 -4 c 0 -1 -1 0 -1 -3 c 0 -8 1 -3 5 -5 ';
+
+  INSERTH2L = 'c -5 0 -4 0 -5 -5 c 2 -2 -1 -4 1 -4 c -2 0 0 -3 -1 -5 c 0 -3 2 0 0 -6 c 0 -6 1 -4 5 -5 ';
+
+  INSERTH1L = 'c -7 0 -4 -3 -4 -5 c -2 -3 0.6667 -1.3333 1 -2 c -1 -1 -3 0 -1 -4 c 1 -1 -1 -1 -1 -4 c 1 -2 0 -2 0 -5 c 0 -5 1 -4 5 -5 ';
+
+  SCALE = 1; // Leave this at 1 for now, otherwise the smallest version of the frame
+             // would not fit the 100*200px default text token
+             // Maybe scale this with the token size?
 begin
   FGlyph.Free;
   FGlyph := TBGRABitmap.Create(FWidth, FHeight);
-  // Todo: Make prettier...
-  FGlyph.FillRect(0, 0, FWidth, FHeight, clWhite);
+
+  CurWidth := 54;  // the segments are all 25*25, but we leave a thin margin
+  CurHeight := 54;
+  AddedH := 0;
+  AddedV := 0;
+  while CurWidth + 25 < FWidth / SCALE do
+  begin
+    CurWidth := CurWidth + 25;
+    Inc(AddedV);
+  end;
+  while CurHeight + 25 < FHeight / SCALE do
+  begin
+    CurHeight := CurHeight + 25;
+    Inc(AddedH);
+  end;
+
+  // Assemble the path for our frame
+  svgpath := Format(TOPLEFT, [Round(7 + (FWidth - CurWidth * SCALE) / 2 / SCALE), Round(27 + (FHeight - CurHeight * SCALE) / 2 / SCALE)]);
+
+  i := 0;
+  while i < AddedV do
+  begin
+    if Odd(i) then
+      svgpath := svgpath + INSERTV2T
+    else
+      svgpath := svgpath + INSERTV1T;
+    Inc(i);
+  end;
+  svgpath := svgpath + TOPRIGHT;
+  i := AddedH;
+  while i > 0 do
+  begin
+    if Odd(i) then
+      svgpath := svgpath + INSERTH1R
+    else
+      svgpath := svgpath + INSERTH2R;
+    Dec(i);
+  end;
+  svgpath := svgpath + BOTTOMRIGHT;
+  i := AddedV;
+  while i > 0 do
+  begin
+    if Odd(i) then
+      svgpath := svgpath + INSERTV1B
+    else
+      svgpath := svgpath + INSERTV2B;
+    Dec(i);
+  end;
+
+  svgpath := svgpath + BOTTOMLEFT;
+  i := 0;
+  while i < AddedH do
+  begin
+    if Odd(i) then
+      svgpath := svgpath + INSERTH2L
+    else
+      svgpath := svgpath + INSERTH1L;
+    Inc(i);
+  end;
+
+  // Change this to the parchment texture?
+  FGlyph.Canvas2D.fillStyle('FFDEAD');
+  FGlyph.Canvas2D.strokeStyle('DFBE8D');
+  FGlyph.Canvas2D.beginPath();
+  FGlyph.Canvas2D.lineWidth := 2;
+
+  FGlyph.Canvas2D.scale(SCALE);
+  FGlyph.Canvas2D.path(svgpath);
+  FGlyph.Canvas2D.closePath();
+  FGlyph.Canvas2D.stroke();
+  FGlyph.Canvas2D.fill();
+
   FGlyph.TextRect(Rect(3, 3, FWidth - 3, FHeight - 3), FText, taCenter, tlCenter, clBlack);
-  FGlyph.Rectangle(Rect(1, 1, FWidth - 1, FHeight - 1), clBlack, dmSet);
 end;
 
 
