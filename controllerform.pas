@@ -85,6 +85,7 @@ type
     ToolButton4: TToolButton;
     tbExportForDM: TToolButton;
     tbExportForPlayers: TToolButton;
+    tbMeasure: TToolButton;
     tsCategoryEditor: TTabSheet;
     tsEntryListEditor: TTabSheet;
     tsEntryEditor: TTabSheet;
@@ -180,6 +181,7 @@ type
     procedure tbLoadNotesClick(Sender: TObject);
     procedure tbLoadSessionClick(Sender: TObject);
     procedure tbMapZoomChange(Sender: TObject);
+    procedure tbMeasureClick(Sender: TObject);
     procedure tbNextCombatantClick(Sender: TObject);
     procedure tbRefreshMapsClick(Sender: TObject);
     procedure tbRefreshTokensClick(Sender: TObject);
@@ -209,6 +211,8 @@ type
     FDragStartX, FDragStartY, // In pbViewPort-coordinates
     FLastMouseX, FLastMouseY, // In pbViewPort-coordinates
     FStartDragXOffset, FStartDragYOffset: Integer;
+    FLastClicked, FLastLastClicked: TPoint; // MapPic-coordinates
+    FCurMeasure: Double;
     FGridSizeX, FGridSizeY, FGridOffsetX, FGridOffsetY: Single;
     FShowGrid: Boolean;
     FGridColor: TColor;
@@ -629,6 +633,7 @@ var
   ClickedToken: TToken;
   AttachToken: TToken;
   AttachedIdx, CurIdx: Integer;
+  diffGrid: TPointF;
   //Modal: TModalResult;
 begin
   if Button = mbLeft then
@@ -669,6 +674,21 @@ begin
     FIsDraggingToken := False;
     FIsRotatingToken := False;
     FCurDraggedToken := nil;
+    FLastLastClicked := FLastClicked;
+    FLastClicked := Point(ViewportToMapX(X), ViewPortToMapY(Y));
+    if (FLastClicked.X >= 0) and (FLastClicked.Y >= 0) and
+       (FLastLastClicked.X >= 0) and (FLastLastClicked.Y >= 0) then
+    begin
+      DiffGrid.x := Abs(FLastLastClicked.X - FLastClicked.X) / FGridSizeX;
+      DiffGrid.y := Abs(FLastLastClicked.Y - FLastClicked.Y) / FGridSizeY;
+      if tbMeasure.Down then
+      begin
+        pbViewport.ShowHint := False;
+        FCurMeasure := Hypot(DiffGrid.X, DiffGrid.Y);
+        pbViewport.Hint := FloatToStrF(FCurMeasure, ffFixed, 4, 2);
+        pbViewport.ShowHint := True;
+      end;
+    end;
   end
   else if Button = mbRight then
   begin
@@ -773,6 +793,9 @@ var
   ArrowPntsTrans: array[0..3] of TPointF;
   NumSize: TSize;
   TextRenderer: TBGRATextEffectFontRenderer;
+  AngleText: string;
+  TextAngle: Integer;
+  TextSize: TSize;
 begin
   // Draw Map
   if Assigned(FMapPic) then
@@ -975,6 +998,49 @@ begin
           CurMarkerX := MapToViewPortX(FMarkerPosX);
           CurMarkerY := MapToViewPortY(FMarkerPosY);
           DrawnMapSegment.EllipseAntialias(CurMarkerX, CurMarkerY, 3, 3, clRed, 2);
+        end;
+
+        // Draw Measurement
+        if (FLastClicked.X >= 0) and (FLastClicked.Y >= 0) and
+           (FLastLastClicked.X >= 0) and (FLastLastClicked.Y >= 0) and
+           tbMeasure.Down then
+        begin
+          DrawnMapSegment.DrawLineAntialias(MapToViewPortX(FLastClicked.X) - 5,
+                                            MapToViewPortY(FLastClicked.Y),
+                                            MapToViewPortX(FLastClicked.X) + 5,
+                                            MapToViewPortY(FLastClicked.Y),
+                                            clYellow, 1);
+          DrawnMapSegment.DrawLineAntialias(MapToViewPortX(FLastClicked.X),
+                                            MapToViewPortY(FLastClicked.Y) - 5,
+                                            MapToViewPortX(FLastClicked.X),
+                                            MapToViewPortY(FLastClicked.Y) + 5,
+                                            clYellow, 1);
+          DrawnMapSegment.DrawLineAntialias(MapToViewPortX(FLastLastClicked.X) - 5,
+                                            MapToViewPortY(FLastLastClicked.Y),
+                                            MapToViewPortX(FLastLastClicked.X) + 5,
+                                            MapToViewPortY(FLastLastClicked.Y),
+                                            clYellow, 1);
+          DrawnMapSegment.DrawLineAntialias(MapToViewPortX(FLastLastClicked.X),
+                                            MapToViewPortY(FLastLastClicked.Y) - 5,
+                                            MapToViewPortX(FLastLastClicked.X),
+                                            MapToViewPortY(FLastLastClicked.Y) + 5,
+                                            clYellow, 1);
+          DrawnMapSegment.DrawLineAntialias(MapToViewPortX(FLastClicked.X),
+                                            MapToViewPortY(FLastClicked.Y),
+                                            MapToViewPortX(FLastLastClicked.X),
+                                            MapToViewPortY(FLastLastClicked.Y),
+                                            clYellow, 1);
+          TextAngle := Round(RadToDeg(-ArcTan2(FLastClicked.Y - FLastLastClicked.Y, FLastClicked.X - FLastLastClicked.X))) * 10;
+          if TextAngle > 900 then
+            TextAngle := TextAngle - 1800
+          else if TextAngle < -900 then
+            TextAngle := TextAngle + 1800;
+          AngleText := FloatToStrF(FCurMeasure, ffFixed, 3, 2);
+          TextSize := DrawnMapSegment.TextSize(AngleText);
+          DrawnMapSegment.TextOutAngle(MapToViewPortX((FLastClicked.X + FLastLastClicked.X - (Cos(DegToRad(TextAngle / 10)) * TextSize.cX)) / 2),
+                                       MapToViewPortY((FLastClicked.Y + FLastLastClicked.Y + (Sin(DegToRad(TextAngle / 10)) * TextSize.cX)) / 2),
+                                       TextAngle,
+                                       AngleText, clYellow);
         end;
 
         DrawnMapSegment.Draw(pbViewPort.Canvas, 0, 0, False);
@@ -1270,6 +1336,11 @@ begin
   fmDisplay.MapZoom := FZoomFactor;
   lZoom.Caption := IntToStr(Round(100 * FZoomFactor)) + '%';
   UpdateViewPort;
+end;
+
+procedure TfmController.tbMeasureClick(Sender: TObject);
+begin
+  pbViewPort.ShowHint := tbMeasure.Down;
 end;
 
 procedure TfmController.tbNextCombatantClick(Sender: TObject);
@@ -2011,6 +2082,8 @@ begin
   FInitiativeNumList := TList.Create;
   FAppSettings := TIniFile.Create('Settings.ini', [ifoWriteStringBoolean]);
   pcMain.ActivePage := tsController;
+  FLastClicked := Point(-1, -1);
+  FLastLastClicked := Point(-1, -1);
 
   // Load settings
   FMapDir := FAppSettings.ReadString('Settings', 'MapDir', 'Content\Maps\');
