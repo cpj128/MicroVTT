@@ -375,7 +375,8 @@ begin
   tbShowgrid.Hint := GetString(LangStrings.LanguageID, 'ControllerToggleGridHint');
   tbGridSettings.Hint := GetString(LangStrings.LanguageID, 'ControllerGridSettingsHint'); 
   tbSnapTokensToGrid.Hint := GetString(LangStrings.LanguageID, 'ControllerSnapToGridHint');
-  tbHideTokens.Hint := GetString(LangStrings.LanguageID, 'ControllerHideAllTokensHint');
+  tbHideTokens.Hint := GetString(LangStrings.LanguageID, 'ControllerHideAllTokensHint');       
+  tbMeasure.Hint := GetString(LangStrings.LanguageID, 'ControllerShowMeasurementHint');
 
   tbHideMarker.Hint := GetString(LangStrings.LanguageID, 'ControllerHideMarkerHint');
   tbHidePortrait.Hint := GetString(LangStrings.LanguageID, 'ControllerHidePortraitHint');
@@ -670,25 +671,30 @@ begin
         FCurDraggedToken.StartAnimation;
       end;
     end;
+    if (Abs(Y - FDragStartY) < 2) and (Abs(X - FDragStartX) < 2) then
+    begin
+      FLastLastClicked := FLastClicked;
+      FLastClicked := Point(ViewportToMapX(X), ViewPortToMapY(Y));
+      if (FLastClicked.X >= 0) and (FLastClicked.Y >= 0) and
+         (FLastLastClicked.X >= 0) and (FLastLastClicked.Y >= 0) then
+      begin
+        DiffGrid.x := Abs(FLastLastClicked.X - FLastClicked.X) / FGridSizeX;
+        DiffGrid.y := Abs(FLastLastClicked.Y - FLastClicked.Y) / FGridSizeY;
+        if tbMeasure.Down then
+        begin
+          pbViewport.ShowHint := False;
+          FCurMeasure := Hypot(DiffGrid.X, DiffGrid.Y);
+          pbViewport.Hint := FloatToStrF(FCurMeasure, ffFixed, 4, 2);
+          pbViewport.ShowHint := True;
+        end;
+      end;
+    end;
+
     FIsDragging := False;
     FIsDraggingToken := False;
     FIsRotatingToken := False;
     FCurDraggedToken := nil;
-    FLastLastClicked := FLastClicked;
-    FLastClicked := Point(ViewportToMapX(X), ViewPortToMapY(Y));
-    if (FLastClicked.X >= 0) and (FLastClicked.Y >= 0) and
-       (FLastLastClicked.X >= 0) and (FLastLastClicked.Y >= 0) then
-    begin
-      DiffGrid.x := Abs(FLastLastClicked.X - FLastClicked.X) / FGridSizeX;
-      DiffGrid.y := Abs(FLastLastClicked.Y - FLastClicked.Y) / FGridSizeY;
-      if tbMeasure.Down then
-      begin
-        pbViewport.ShowHint := False;
-        FCurMeasure := Hypot(DiffGrid.X, DiffGrid.Y);
-        pbViewport.Hint := FloatToStrF(FCurMeasure, ffFixed, 4, 2);
-        pbViewport.ShowHint := True;
-      end;
-    end;
+
   end
   else if Button = mbRight then
   begin
