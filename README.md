@@ -6,7 +6,7 @@ A minimalistic VTT for local play. System-agnostic, because it enforces almost n
 
 MicroVTT comes with a controller form for the DM's laptop, and a display form for the players to watch on your second screen / TV / display table / whatever your setup looks like.
 
-### So i cannot use this to play with others online?
+### So I cannot use this to play with others online?
 
 I guess you could stream the player's window over the screensharing system of your choice, but remember that MicroVTT assumes that everyone can talk to each other. The only way for a player to do anything on screen is asking the DM to do it. It might work when combined with an external voice chat program, but at that point you are probably better off using a "real" VTT.
 
@@ -57,7 +57,7 @@ And a few things that might happen, but are most likely going to take some time:
 
 - Some kind of campaign planning- and note keeping system (still in the concept stage, as you can tell from that description)
 - Ambient sound generation (because I have a procedural sound-project that I would really like to revisit)
-- -Random generators for Names, NPCs, Taverns, whatever (There are already more than enough online, but... No, I have no justification other than "Would like to do it".)
+- Random generators for Names, NPCs, Taverns, whatever (There are already more than enough online, but... No, I have no justification other than "Would like to do it".)
 
 ### Anything more system-specific? Character sheet management, automatic rolls,...?
 
@@ -70,4 +70,5 @@ Other than Lazarus, the following packages:
 - [BGRABitmap](https://github.com/bgrabitmap/bgrabitmap/releases)
 - [HtmlViewer](https://github.com/BerndGabriel/HtmlViewer)
 - [fpc-markdown](https://github.com/mriscoc/fpc-markdown)
+
 
