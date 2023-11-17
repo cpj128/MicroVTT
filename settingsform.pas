@@ -44,8 +44,6 @@ type
     sbSelectMapDirectory: TSpeedButton;
     sbSelectTokenDirectory: TSpeedButton;
     sbSelectOverlayDirectory: TSpeedButton;
-    procedure bCancelClick(Sender: TObject);
-    procedure bOkClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure sbSelectMapDirectoryClick(Sender: TObject);
     procedure sbSelectOverlayDirectoryClick(Sender: TObject);
@@ -109,17 +107,6 @@ begin
   Label5.Caption := GetString(LangStrings.LanguageID, 'SettingsLanguageHint');
   bCancel.Caption := GetString(LangStrings.LanguageID, 'ButtonCancel');
   bOk.Caption := GetString(LangStrings.LanguageID, 'ButtonOk');
-end;
-
-procedure TfmSettings.bOkClick(Sender: TObject);
-begin
-  fmController.SaveSettings;
-  Close;
-end;
-
-procedure TfmSettings.bCancelClick(Sender: TObject);
-begin
-  Close;
 end;
 
 end.

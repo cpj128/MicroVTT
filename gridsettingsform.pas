@@ -43,8 +43,6 @@ type
     Label7: TLabel;
     pGridColor: TPanel;
     tbGridAlpha: TTrackBar;
-    procedure bCancelClick(Sender: TObject);
-    procedure bOkClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure fseGridSizeXChange(Sender: TObject);
     procedure pGridColorClick(Sender: TObject);
@@ -95,19 +93,6 @@ begin
   cbGridType.Items[3] := GetString(LangStrings.LanguageID, 'GridSettingsType3');
   bCancel.Caption := GetString(LangStrings.LanguageID, 'ButtonCancel');
   bOk.Caption := GetString(LangStrings.LanguageID, 'ButtonOk');
-end;
-
-procedure TfmGridSettings.bOkClick(Sender: TObject);
-begin
-  fmController.SaveGridData;
-  fmController.SnapAllTokensToGrid;
-  Close;
-end;
-
-procedure TfmGridSettings.bCancelClick(Sender: TObject);
-begin
-  fmController.RestoreGridData;
-  Close;
 end;
 
 procedure TfmGridSettings.fseGridSizeXChange(Sender: TObject);

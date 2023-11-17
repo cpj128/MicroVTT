@@ -218,10 +218,6 @@ type
     FGridColor: TColor;
     FGridAlpha: Byte;
     FGridType: TGridType;
-    FOldGridSizeX, FOldGridSizeY, FOldGridOffsetX, FOldGridOffsetY: Single;
-    FOldGridType: TGridType;
-    FOldGridColor: TColor;
-    FOldGridAlpha: Byte;
     FMarkerPosX, FMarkerPosY: Integer; // In MapPic-coordinates
     FShowMap: Boolean;
     FShowMarker: Boolean;
@@ -270,12 +266,9 @@ type
     function GetInitiativeNum(idx: Integer): Integer;
     function GetInitiativeCount: Integer;
     function GetCurInitiativeIdx: Integer;
-    procedure SnapAllTokensToGrid;
+    //procedure SnapAllTokensToGrid;
     procedure SnapTokenToGrid(token: TToken);
     procedure SaveLibraryData;
-    procedure SaveSettings;
-    procedure RestoreGridData;
-    procedure SaveGridData;
     procedure AddToInitiative(pName, Path: string; Num, Value: Integer);
     // Notes module
     procedure LoadHTML(Entry: string);
@@ -776,7 +769,7 @@ begin
       fmTokenSettings.Left := Left + pbViewPort.Left + X;
       fmTokenSettings.Top  := Top  + pbViewPort.Top  + Y;
       fmTokenSettings.LinkedToken := ClickedToken;
-      fmTokenSettings.Show; // So apparently ShowModal is broken and I have to do everything like this now?
+      fmTokenSettings.Show; // Treat this one more like a popup menu
 
     end;
   end;
@@ -1246,20 +1239,21 @@ begin
 end;
 
 procedure TfmController.tbGridSettingsClick(Sender: TObject);
-//var
-  {OldGridSizeX, OldGridSizeY, OldGridOffsetX, OldGridOffsetY: Single;
+var
+  OldGridSizeX, OldGridSizeY, OldGridOffsetX, OldGridOffsetY: Single;
+  OldGridAlpha: Byte;
   OldGridType: TGridType;
-  OldGridColor: TColor;}
-  //i: Integer;
-  //CurToken: TToken;
+  OldGridColor: TColor;
+  i: Integer;
+  CurToken: TToken;
 begin
-  FOldGridSizeX := FGridSizeX;    
-  FOldGridSizeY := FGridSizeY;
-  FOldGridOffsetX := FGridOffsetX;
-  FOldGridOffsetY := FGridOffsetY;
-  FOldGridColor := FGridColor;
-  FOldGridAlpha := FGridAlpha;
-  FOldGridType := FGridType;
+  OldGridSizeX := FGridSizeX;
+  OldGridSizeY := FGridSizeY;
+  OldGridOffsetX := FGridOffsetX;
+  OldGridOffsetY := FGridOffsetY;
+  OldGridColor := FGridColor;
+  OldGridAlpha := FGridAlpha;
+  OldGridType := FGridType;
   fmGridSettings.fseGridOffsetX.Value := FGridOffsetX;    
   fmGridSettings.fseGridOffsetY.Value := FGridOffsetY;
   fmGridSettings.fseGridSizeX.Value   := FGridSizeX;
@@ -1267,8 +1261,8 @@ begin
   fmGridSettings.pGridColor.Color     := FGridColor;
   fmGridSettings.tbGridAlpha.Position := FGridAlpha;
   fmGridSettings.cbGridType.ItemIndex := Ord(FGridType);
-  fmGridSettings.Show;
-  {if fmGridSettings.ShowModal = mrOK then
+
+  if fmGridSettings.ShowModal = mrOK then
   begin
     FGridOffsetX := fmGridSettings.fseGridOffsetX.Value;
     FGridOffsetY := fmGridSettings.fseGridOffsetY.Value;
@@ -1300,9 +1294,10 @@ begin
     FGridOffsetX := OldGridOffsetX;
     FGridOffsetY := OldGridOffsetY;
     FGridColor   := OldGridColor;
+    FGridAlpha   := OldGridAlpha;
     FGridType    := OldGridType;
   end;
-  pbViewPort.Invalidate;}
+  pbViewPort.Invalidate;
 end;
 
 procedure TfmController.tbHideMarkerClick(Sender: TObject);
@@ -1325,7 +1320,7 @@ end;
 
 procedure TfmController.tbLibraryClick(Sender: TObject);
 begin
-  fmLibrary.Show;
+  fmLibrary.ShowModal;
   {FMapLib.SaveToFile(MAPLIBFILE);
   FTokenLib.SaveToFile(TOKENLIBFILE);
   FOverlayLib.SaveToFile(OVERLAYLIBFILE);
@@ -1630,7 +1625,39 @@ begin
   fmSettings.cbTokenRotation.ItemIndex := Ord(FTokenRotationStyle);
   fmSettings.cbLanguage.Items := GetLanguages;
   fmSettings.cbLanguage.ItemIndex := fmSettings.cbLanguage.Items.IndexOf(LanguageID);
-  fmSettings.Show;
+  if fmSettings.ShowModal = mrOK then
+  begin
+    if not SameText(FMapDir, fmSettings.eMapDirectory.Text) then
+    begin
+      FMapDir := fmSettings.eMapDirectory.Text;
+      UpdateMapList;
+    end;
+    if not SameText(FTokenDir, fmSettings.eTokenDirectory.Text) then
+    begin
+      FTokenDir := fmSettings.eTokenDirectory.Text;
+      UpdateTokenList;
+    end;
+    if not SameText(FOverlayDir, fmSettings.eOverlayDirectory.Text) then
+    begin
+      FOverlayDir := fmSettings.eOverlayDirectory.Text;
+      UpdateOverlayList;
+    end;
+    FTokensStartInvisible := fmSettings.cbTokensStartInvisible.Checked;
+    FInitiativeDesc := fmSettings.cbInitiativeOrder.ItemIndex = 0;
+    FTokenRotationStyle := TTokenRotationStyle(fmSettings.cbTokenRotation.ItemIndex);
+    LanguageID := fmSettings.cbLanguage.Items[fmSettings.cbLanguage.ItemIndex];
+    // Save changes to ini
+    FAppSettings.WriteString('Settings', 'MapDir', FMapDir);
+    FAppSettings.WriteString('Settings', 'TokenDir', FTokenDir);
+    FAppSettings.WriteString('Settings', 'OverlayDir', FOverlayDir);
+    FAppSettings.WriteString('Settings', 'InitiativeDesc', BoolToStr(FInitiativeDesc));
+    FAppSettings.WriteString('Settings', 'TokensStartInvisible', BoolToStr(FTokensStartInvisible));
+    FAppSettings.WriteInteger('Settings', 'TokenRotationStyle', Ord(FTokenRotatioNStyle));
+    FAppSettings.WriteString('Settings', 'Language', LanguageID);
+    FAppSettings.UpdateFile;
+
+    pbViewPort.Invalidate;
+  end;
 end;
 
 procedure TfmController.tbShowGridClick(Sender: TObject);
@@ -1910,7 +1937,7 @@ begin
   Result := FCurInitiativeIndex;
 end;
 
-procedure TfmController.SnapAllTokensToGrid;
+{procedure TfmController.SnapAllTokensToGrid;
 var
   i: Integer;
   CurToken: TToken;
@@ -1925,7 +1952,7 @@ begin
       CurToken.SnapToGrid(FGridSizeX, FGridSizeY, FGridOffsetX, FGridOffsetY, FGridType);
     end;
   end;
-end;
+end;}
 
 procedure TfmController.SnapTokenToGrid(Token: TToken);
 begin
@@ -1942,68 +1969,6 @@ begin
   UpdateMapList; // Maybe change just names here?
   UpdateTokenList;
   UpdateOverlayList;
-end;
-
-procedure TfmController.SaveSettings;
-begin
-  if not SameText(FMapDir, fmSettings.eMapDirectory.Text) then
-  begin
-    FMapDir := fmSettings.eMapDirectory.Text;
-    UpdateMapList;
-  end;
-  if not SameText(FTokenDir, fmSettings.eTokenDirectory.Text) then
-  begin
-    FTokenDir := fmSettings.eTokenDirectory.Text;
-    UpdateTokenList;
-  end;
-  if not SameText(FOverlayDir, fmSettings.eOverlayDirectory.Text) then
-  begin
-    FOverlayDir := fmSettings.eOverlayDirectory.Text;
-    UpdateOverlayList;
-  end;
-  FTokensStartInvisible := fmSettings.cbTokensStartInvisible.Checked;
-  FInitiativeDesc := fmSettings.cbInitiativeOrder.ItemIndex = 0;
-  FTokenRotationStyle := TTokenRotationStyle(fmSettings.cbTokenRotation.ItemIndex);
-  LanguageID := fmSettings.cbLanguage.Items[fmSettings.cbLanguage.ItemIndex];
-  // Save changes to ini
-  FAppSettings.WriteString('Settings', 'MapDir', FMapDir);
-  FAppSettings.WriteString('Settings', 'TokenDir', FTokenDir);
-  FAppSettings.WriteString('Settings', 'OverlayDir', FOverlayDir);
-  FAppSettings.WriteString('Settings', 'InitiativeDesc', BoolToStr(FInitiativeDesc));
-  FAppSettings.WriteString('Settings', 'TokensStartInvisible', BoolToStr(FTokensStartInvisible));
-  FAppSettings.WriteInteger('Settings', 'TokenRotationStyle', Ord(FTokenRotatioNStyle));
-  FAppSettings.WriteString('Settings', 'Language', LanguageID);
-  FAppSettings.UpdateFile;
-end;
-
-procedure TfmController.SaveGridData;
-begin
-  FOldGridSizeX   := FGridSizeX;
-  FOldGridSizeY   := FGridSizeY;
-  FOldGridOffsetX := FGridOffsetX;
-  FOldGridOffsetY := FGridOffsetY;
-  FOldGridColor   := FGridColor;
-  FOldGridAlpha   := FGridAlpha;
-  FOldGridType    := FGridType;
-  fmDisplay.GridOffsetX := FGridOffsetX;
-  fmDisplay.GridOffsetY := FGridOffsetY;
-  fmDisplay.GridSizeX   := FGridSizeX;
-  fmDisplay.GridSizeY   := FGridSizeY;
-  fmDisplay.GridColor   := FGridColor;
-  fmDisplay.GridAlpha   := FGridAlpha;
-  fmDisplay.GridType    := FGridType;
-end;
-
-procedure TfmController.RestoreGridData;
-begin
-  FGridSizeX   := FOldGridSizeX;
-  FGridSizeY   := FOldGridSizeY;
-  FGridOffsetX := FOldGridOffsetX;
-  FGridOffsetY := FOldGridOffsetY;
-  FGridColor   := FOldGridColor;
-  FGridAlpha   := FOldGridAlpha;
-  FGridType    := FOldGridType;
-  pbViewPort.Invalidate;
 end;
 
 procedure TfmController.AddToInitiative(pName, Path: string; Num, Value: Integer);

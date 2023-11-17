@@ -9,7 +9,6 @@ object fmGridSettings: TfmGridSettings
   ClientHeight = 245
   ClientWidth = 218
   FormStyle = fsStayOnTop
-  OnDeactivate = bCancelClick
   OnShow = FormShow
   LCLVersion = '2.2.4.0'
   object Label1: TLabel
@@ -59,7 +58,7 @@ object fmGridSettings: TfmGridSettings
     Top = 208
     Width = 75
     Caption = 'OK'
-    OnClick = bOkClick
+    ModalResult = 1
     TabOrder = 2
   end
   object bCancel: TButton
@@ -68,7 +67,7 @@ object fmGridSettings: TfmGridSettings
     Top = 208
     Width = 75
     Caption = 'Cancel'
-    OnClick = bCancelClick
+    ModalResult = 2
     TabOrder = 3
   end
   object fseGridSizeY: TFloatSpinEditEx
