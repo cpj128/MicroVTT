@@ -19,7 +19,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ComCtrls,
-  ExtCtrls, SpinEx;
+  RPGTypes, ExtCtrls, SpinEx;
 
 type
 
@@ -47,9 +47,10 @@ type
     procedure fseGridSizeXChange(Sender: TObject);
     procedure pGridColorClick(Sender: TObject);
   private
-
+    FCurGridData: TGridData;
   public
-
+    procedure SetData(data: TGridData);
+    function GetData: TGridData;
   end;
 
 var
@@ -61,10 +62,25 @@ implementation
 
 uses
   ControllerForm,
-  RPGTypes,
   LangStrings;
 
 { TfmGridSettings }
+
+procedure TfmGridSettings.SetData(data: TGridData);
+begin
+  FCurGridData := data;
+  fseGridSizeX.Value := FCurGridData.GridSizeX;
+  fseGridSizeY.Value := FCurGridData.GridSizeY;
+  fseGridOffsetX.Value := FCurGridData.GridOffsetX;
+  fseGridOffsetY.Value := FCurGridData.GridOffsetY;
+  cbGridType.ItemIndex := Ord(FCurGridData.GridType);
+  tbGridAlpha.Position := FCurGridData.GridAlpha;
+end;
+
+function TfmGridSettings.GetData: TGridData;
+begin
+  Result := FCurGridData;
+end;
 
 procedure TfmGridSettings.pGridColorClick(Sender: TObject);
 begin
@@ -72,7 +88,8 @@ begin
   if cdGridColor.Execute then
   begin
     pGridColor.Color := cdGridColor.Color;
-    fmController.GridColor := cdGridColor.Color;
+    FCurGridData.GridColor := cdGridColor.Color;
+    fmController.GridData := FCurGridData;
     fmController.pbViewport.Invalidate;
   end;
 end;
@@ -97,12 +114,13 @@ end;
 
 procedure TfmGridSettings.fseGridSizeXChange(Sender: TObject);
 begin
-  fmController.GridSizeX   := fseGridSizeX.Value;
-  fmController.GridSizeY   := fseGridSizeY.Value;
-  fmController.GridOffsetX := fseGridOffsetX.Value;
-  fmController.GridOffsetY := fseGridOffsetY.Value;
-  fmController.GridType    := TGridType(cbGridType.ItemIndex);
-  fmCOntroller.GridAlpha   := tbGridAlpha.Position;
+  FCurGridData.GridSizeX   := fseGridSizeX.Value;
+  FCurGridData.GridSizeY   := fseGridSizeY.Value;
+  FCurGridData.GridOffsetX := fseGridOffsetX.Value;
+  FCurGridData.GridOffsetY := fseGridOffsetY.Value;
+  FCurGridData.GridType    := TGridType(cbGridType.ItemIndex);
+  FCurGridData.GridAlpha   := tbGridAlpha.Position;
+  fmController.GridData := FCurGridData;
   fmController.pbViewport.Invalidate;
 end;
 

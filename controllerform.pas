@@ -212,12 +212,9 @@ type
     FLastMouseX, FLastMouseY, // In pbViewPort-coordinates
     FStartDragXOffset, FStartDragYOffset: Integer;
     FLastClicked, FLastLastClicked: TPoint; // MapPic-coordinates
-    FCurMeasure: Double;
-    FGridSizeX, FGridSizeY, FGridOffsetX, FGridOffsetY: Single;
+    FCurMeasure: Double; 
     FShowGrid: Boolean;
-    FGridColor: TColor;
-    FGridAlpha: Byte;
-    FGridType: TGridType;
+    FGridData: TGridData;
     FMarkerPosX, FMarkerPosY: Integer; // In MapPic-coordinates
     FShowMap: Boolean;
     FShowMarker: Boolean;
@@ -274,13 +271,7 @@ type
     procedure LoadHTML(Entry: string);
     procedure AddToHistory(Entry: string);
 
-    property GridSizeX: Single read FGridSizeX write FGridSizeX; 
-    property GridSizeY: Single read FGridSizeY write FGridSizeY;
-    property GridOffsetX: Single read FGridOffsetX write FGridOffsetX;
-    property GridOffsetY: Single read FGridOffsetY write FGridOffsetY;
-    property GridColor: TColor read FGridColor write FGridColor;
-    property GridAlpha: Byte read FGridAlpha write FGridAlpha;
-    property GridType: TGridType read FGridType write FGridType;
+    property GridData: TGridData read FGridData write FGridData;
     property TokenRotationStyle: TTokenRotationStyle read FTokenRotationStyle;
     property CurInitiativeIndex: Integer read FCurInitiativeIndex write SetCurInitiativeIndex;
     property MapLib: TStringList read FMapLib;
@@ -513,7 +504,7 @@ begin
       tmpToken.BaseInitiative := TTokenNodeData(TTreeView(Source).Selected.Data).BaseInitiative;
       tmpToken.Visible := FTokensStartInvisible;
       if FSnapTokensToGrid then
-        tmpToken.SnapToGrid(FGridSizeX, FGridSizeY, FGridOffsetX, FGridOffsetY, FGridType);
+        tmpToken.SnapToGrid(FGridData.GridSizeX, FGridData.GridSizeY, FGridData.GridOffsetX, FGridData.GridOffsetY, FGridData.GridType);
     end;
     FTokenlist.Add(tmpToken);
     pbViewPort.Invalidate;
@@ -660,7 +651,7 @@ begin
           end;
         end;
         if FSnapTokensToGrid then
-          FCurDraggedToken.SnapToGrid(FGridSizeX, FGridSizeY, FGridOffsetX, FGridOffsetY, FGridType);
+          FCurDraggedToken.SnapToGrid(FGridData.GridSizeX, FGridData.GridSizeY, FGridData.GridOffsetX, FGridData.GridOffsetY, FGridData.GridType);
         FCurDraggedToken.StartAnimation;
       end;
     end;
@@ -671,8 +662,8 @@ begin
       if (FLastClicked.X >= 0) and (FLastClicked.Y >= 0) and
          (FLastLastClicked.X >= 0) and (FLastLastClicked.Y >= 0) then
       begin
-        DiffGrid.x := Abs(FLastLastClicked.X - FLastClicked.X) / FGridSizeX;
-        DiffGrid.y := Abs(FLastLastClicked.Y - FLastClicked.Y) / FGridSizeY;
+        DiffGrid.x := Abs(FLastLastClicked.X - FLastClicked.X) / FGridData.GridSizeX;
+        DiffGrid.y := Abs(FLastLastClicked.Y - FLastClicked.Y) / FGridData.GridSizeY;
         if tbMeasure.Down then
         begin
           pbViewport.ShowHint := False;
@@ -809,94 +800,94 @@ begin
         // Grid
         if FShowGrid then
         begin
-          case FGridType of
+          case FGridData.GridType of
             gtRect:
             begin
               // Horizontal lines
-              for i := 0 to Ceil(((FMapPic.Height - (FGridOffsetY mod FGridSizeY)) / FGridSizeY)) do
+              for i := 0 to Ceil(((FMapPic.Height - (FGridData.GridOffsetY mod FGridData.GridSizeY)) / FGridData.GridSizeY)) do
               begin
-                CurGridPos := MapToViewPortY(FGridOffsetY + i * FGridSizeY);
+                CurGridPos := MapToViewPortY(FGridData.GridOffsetY + i * FGridData.GridSizeY);
                 if InRange(CurGridPos, 0, MapToViewPortY(FMapPic.Height)) then
                 begin
                   DrawnMapSegment.DrawLineAntialias(0.0, CurGridPos,
                                                     MapToViewPortX(FMapPic.Width), CurGridPos,
-                                                    ColorToBGRA(FGridColor, FGridAlpha), 1);
+                                                    ColorToBGRA(FGridData.GridColor, FGridData.GridAlpha), 1);
                 end;
               end;
               // Vertical lines
-              for i := 0 to Ceil(((FMapPic.Width - (FGridOffsetX mod FGridSizeX)) / FGridSizeX)) do
+              for i := 0 to Ceil(((FMapPic.Width - (FGridData.GridOffsetX mod FGridData.GridSizeX)) / FGridData.GridSizeX)) do
               begin
-                CurGridPos := MapToViewPortX(FGridOffsetX + i * FGridSizeX);
+                CurGridPos := MapToViewPortX(FGridData.GridOffsetX + i * FGridData.GridSizeX);
                 if InRange(CurGridPos, 0, MapToViewPortX(FMapPic.Width)) then
                 begin
                   DrawnMapSegment.DrawLineAntialias(CurGridPos, 0,
                                                     CurGridPos, MapToViewPortY(FMapPic.Height),
-                                                    ColorToBGRA(FGridColor, FGridAlpha), 1);
+                                                    ColorToBGRA(FGridData.GridColor, FGridData.GridAlpha), 1);
                 end;
               end;
 
             end;
             gtHexH:
             begin
-              tmpGridSize := FGridSizeY  * 3 / 4;
-              for i := 0 to Ceil(((FMapPic.Height - (FGridOffsetY mod tmpGridSize)) / tmpGridSize)) do
-                for j := 0 to Ceil(((FMapPic.Width - (FGridOffsetX mod FGridSizeX)) / FGridSizeX)) do
+              tmpGridSize := FGridData.GridSizeY  * 3 / 4;
+              for i := 0 to Ceil(((FMapPic.Height - (FGridData.GridOffsetY mod tmpGridSize)) / tmpGridSize)) do
+                for j := 0 to Ceil(((FMapPic.Width - (FGridData.GridOffsetX mod FGridData.GridSizeX)) / FGridData.GridSizeX)) do
                 begin
-                  CellRect := Rect(MapToViewPortX(FGridOffsetX + j * FGridSizeX),
-                                   MapToViewportY(FGridOffsetY + i * tmpGridSize),
-                                   MapToViewPortX(FGridOffsetX + (j + 1) * FGridSizeX),
-                                   MapToViewportY(FGridOffsetY + i * tmpGridSize + FGridSizeY));
+                  CellRect := Rect(MapToViewPortX(FGridData.GridOffsetX + j * FGridData.GridSizeX),
+                                   MapToViewportY(FGridData.GridOffsetY + i * tmpGridSize),
+                                   MapToViewPortX(FGridData.GridOffsetX + (j + 1) * FGridData.GridSizeX),
+                                   MapToViewportY(FGridData.GridOffsetY + i * tmpGridSize + FGridData.GridSizeY));
                   if Odd(i) then
-                    CellRect.Offset(Round(FGridSizeX  * FDisplayScale * FZoomFactor / 2), 0);
+                    CellRect.Offset(Round(FGridData.GridSizeX  * FDisplayScale * FZoomFactor / 2), 0);
                   Hex[0] := Point(CellRect.Left, CellRect.Bottom - CellRect.Height div 4);
                   Hex[1] := Point(CellRect.Left, CellRect.Top + CellRect.Height div 4);
                   Hex[2] := Point(CellRect.Left + CellRect.Width div 2, CellRect.Top);
                   Hex[3] := Point(CellRect.Right, CellRect.Top + CellRect.Height div 4);
                   Hex[4] := Point(CellRect.Right, CellRect.Bottom - CellRect.Height div 4);
                   Hex[5] := Point(CellRect.Left + CellRect.Width div 2, CellRect.Bottom);
-                  DrawnMapSegment.DrawPolygonAntialias(Hex, ColorToBGRA(FGridColor, FGridAlpha), 1, BGRAPixelTransparent);
+                  DrawnMapSegment.DrawPolygonAntialias(Hex, ColorToBGRA(FGridData.GridColor, FGridData.GridAlpha), 1, BGRAPixelTransparent);
                 end;
             end;
             gtHexV:
             begin
-              tmpGridSize := FGridSizeX  * 3 / 4;
-              for i := 0 to Ceil(((FMapPic.Height - (FGridOffsetY mod FGridSizeY)) / FGridSizeY)) do
-                for j := 0 to Ceil(((FMapPic.Width - (FGridOffsetX mod tmpGridSize)) / tmpGridSize)) do
+              tmpGridSize := FGridData.GridSizeX  * 3 / 4;
+              for i := 0 to Ceil(((FMapPic.Height - (FGridData.GridOffsetY mod FGridData.GridSizeY)) / FGridData.GridSizeY)) do
+                for j := 0 to Ceil(((FMapPic.Width - (FGridData.GridOffsetX mod tmpGridSize)) / tmpGridSize)) do
                 begin
-                  CellRect := Rect(MapToViewPortX(FGridOffsetX + j * tmpGridSize),
-                                   MapToViewportY(FGridOffsetY + i * FGridSizeY),
-                                   MapToViewPortX(FGridOffsetX + j * tmpGridSize + FGridSizeX),
-                                   MapToViewportY(FGridOffsetY + (i + 1) * FGridSizeY));
+                  CellRect := Rect(MapToViewPortX(FGridData.GridOffsetX + j * tmpGridSize),
+                                   MapToViewportY(FGridData.GridOffsetY + i * FGridData.GridSizeY),
+                                   MapToViewPortX(FGridData.GridOffsetX + j * tmpGridSize + FGridData.GridSizeX),
+                                   MapToViewportY(FGridData.GridOffsetY + (i + 1) * FGridData.GridSizeY));
                   if Odd(j) then
-                    CellRect.Offset(0, Round(FGridSizeY  * FDisplayScale * FZoomFactor / 2));
+                    CellRect.Offset(0, Round(FGridData.GridSizeY  * FDisplayScale * FZoomFactor / 2));
                   Hex[0] := Point(CellRect.Left, CellRect.Top + CellRect.Height div 2);
                   Hex[1] := Point(CellRect.Left + CellRect.Width div 4, CellRect.Top);
                   Hex[2] := Point(CellRect.Right - CellRect.Width div 4, CellRect.Top);
                   Hex[3] := Point(CellRect.Right, CellRect.Top + CellRect.Height div 2);
                   Hex[4] := Point(CellRect.Right - CellRect.Width div 4, CellRect.Bottom);
                   Hex[5] := Point(CellRect.Left + CellRect.Width div 4, CellRect.Bottom);
-                  DrawnMapSegment.DrawPolygonAntialias(Hex, ColorToBGRA(FGridColor, FGridAlpha), 1, BGRAPixelTransparent);
+                  DrawnMapSegment.DrawPolygonAntialias(Hex, ColorToBGRA(FGridData.GridColor, FGridData.GridAlpha), 1, BGRAPixelTransparent);
                 end;
             end;
             gtIsometric:
             begin
-              tmpGridSize := FGridSizeY / 2;
-              for i := 0 to Ceil(((FMapPic.Height - (FGridOffsetY mod tmpGridSize)) / tmpGridSize)) do
-                for j := 0 to Ceil(((FMapPic.Width - (FGridOffsetX mod FGridSizeX)) / FGridSizeX)) do
+              tmpGridSize := FGridData.GridSizeY / 2;
+              for i := 0 to Ceil(((FMapPic.Height - (FGridData.GridOffsetY mod tmpGridSize)) / tmpGridSize)) do
+                for j := 0 to Ceil(((FMapPic.Width - (FGridData.GridOffsetX mod FGridData.GridSizeX)) / FGridData.GridSizeX)) do
                 begin
-                  CellRect := Rect(MapToViewPortX(FGridOffsetX + j * FGridSizeX),
-                                   MapToViewportY(FGridOffsetY + i * tmpGridSize),
-                                   MapToViewPortX(FGridOffsetX + (j + 1) * FGridSizeX),
-                                   MapToViewportY(FGridOffsetY + i * tmpGridSize + FGridSizeY));
+                  CellRect := Rect(MapToViewPortX(FGridData.GridOffsetX + j * FGridData.GridSizeX),
+                                   MapToViewportY(FGridData.GridOffsetY + i * tmpGridSize),
+                                   MapToViewPortX(FGridData.GridOffsetX + (j + 1) * FGridData.GridSizeX),
+                                   MapToViewportY(FGridData.GridOffsetY + i * tmpGridSize + FGridData.GridSizeY));
                   if Odd(i) then
-                    CellRect.Offset(Round(FGridSizeX  * FDisplayScale * FZoomFactor / 2), 0);
+                    CellRect.Offset(Round(FGridData.GridSizeX  * FDisplayScale * FZoomFactor / 2), 0);
 
                   Iso[0] := Point(CellRect.Left, (CellRect.Bottom + CellRect.Top) div 2);
                   Iso[1] := Point((CellRect.Left + CellRect.Right) div 2, CellRect.Top);
                   Iso[2] := Point(CellRect.Right, (CellRect.Top + CellRect.Bottom) div 2);
                   Iso[3] := Point((CellRect.Left + CellRect.Right) div 2, CellRect.Bottom);
 
-                  DrawnMapSegment.DrawPolygonAntialias(Iso, ColorToBGRA(FGridColor, FGridAlpha), 1, BGRAPixelTransparent);
+                  DrawnMapSegment.DrawPolygonAntialias(Iso, ColorToBGRA(FGridData.GridColor, FGridData.GridAlpha), 1, BGRAPixelTransparent);
                 end;
             end;
           end;
@@ -1240,62 +1231,31 @@ end;
 
 procedure TfmController.tbGridSettingsClick(Sender: TObject);
 var
-  OldGridSizeX, OldGridSizeY, OldGridOffsetX, OldGridOffsetY: Single;
-  OldGridAlpha: Byte;
-  OldGridType: TGridType;
-  OldGridColor: TColor;
+  OldGridData: TGridData;
   i: Integer;
   CurToken: TToken;
 begin
-  OldGridSizeX := FGridSizeX;
-  OldGridSizeY := FGridSizeY;
-  OldGridOffsetX := FGridOffsetX;
-  OldGridOffsetY := FGridOffsetY;
-  OldGridColor := FGridColor;
-  OldGridAlpha := FGridAlpha;
-  OldGridType := FGridType;
-  fmGridSettings.fseGridOffsetX.Value := FGridOffsetX;    
-  fmGridSettings.fseGridOffsetY.Value := FGridOffsetY;
-  fmGridSettings.fseGridSizeX.Value   := FGridSizeX;
-  fmGridSettings.fseGridSizeY.Value   := FGridSizeY;
-  fmGridSettings.pGridColor.Color     := FGridColor;
-  fmGridSettings.tbGridAlpha.Position := FGridAlpha;
-  fmGridSettings.cbGridType.ItemIndex := Ord(FGridType);
+  OldGridData := FGridData;
+  fmGridSettings.SetData(FGridData);
 
   if fmGridSettings.ShowModal = mrOK then
   begin
-    FGridOffsetX := fmGridSettings.fseGridOffsetX.Value;
-    FGridOffsetY := fmGridSettings.fseGridOffsetY.Value;
-    FGridSizeX   := fmGridSettings.fseGridSizeX.Value;    
-    FGridSizeY   := fmGridSettings.fseGridSizeY.Value;
-    FGridColor   := fmGridSettings.pGridColor.Color;
-    FGridType    := TGridType(fmGridSettings.cbGridType.ItemIndex);
-    fmDisplay.GridOffsetX := FGridOffsetX;
-    fmDisplay.GridOffsetY := FGridOffsetY;
-    fmDisplay.GridSizeX   := FGridSizeX;   
-    fmDisplay.GridSizeY   := FGridSizeY;
-    fmDisplay.GridColor   := FGridColor;
-    fmDisplay.GridType    := FGridType;
+    FGridData := fmGridSettings.GetData;
+    fmDisplay.GridData := GridData;
     if FSnapTokensToGrid then
     begin
       for i := 0 to FTokenlist.Count - 1 do
       begin
         CurToken := TToken(FTokenList[i]);
-        CurToken.XPos := CurToken.XEndPos - Round(OldGridOffsetX + FGridOffsetX);
-        CurToken.YPos := CurToken.YEndPos - Round(OldGridOffsetY + FGridOffsetY);
-        CurToken.SnapToGrid(FGridSizeX, FGridSizeY, FGridOffsetX, FGridOffsetY, FGridType);
+        CurToken.XPos := CurToken.XEndPos - Round(OldGridData.GridOffsetX + FGridData.GridOffsetX);
+        CurToken.YPos := CurToken.YEndPos - Round(OldGridData.GridOffsetY + FGridData.GridOffsetY);
+        CurToken.SnapToGrid(FGridData.GridSizeX, FGridData.GridSizeY, FGridData.GridOffsetX, FGridData.GridOffsetY, FGridData.GridType);
       end;
     end;
   end
   else
   begin
-    FGridSizeX   := OldGridSizeX;
-    FGridSizeY   := OldGridSizeY;
-    FGridOffsetX := OldGridOffsetX;
-    FGridOffsetY := OldGridOffsetY;
-    FGridColor   := OldGridColor;
-    FGridAlpha   := OldGridAlpha;
-    FGridType    := OldGridType;
+    FGridData := OldGridData;
   end;
   pbViewPort.Invalidate;
 end;
@@ -1408,15 +1368,15 @@ begin
       saveFile.WriteInteger(SAVESECTIONMAP, 'MarkerY', FMarkerPosY);
 
       // Grid data
-      saveFile.WriteInteger(SAVESECTIONGRID, 'Type', Ord(FGridType));
+      saveFile.WriteInteger(SAVESECTIONGRID, 'Type', Ord(FGridData.GridType));
       saveFile.WriteBool(SAVESECTIONGRID, 'GridVisible', FShowGrid); 
       saveFile.WriteBool(SAVESECTIONGRID, 'Snap', FSnapTokensToGrid);
-      saveFile.WriteFloat(SAVESECTIONGRID, 'SizeX', FGridSizeX);
-      saveFile.WriteFloat(SAVESECTIONGRID, 'SizeY', FGridSizeY);
-      saveFile.WriteFloat(SAVESECTIONGRID, 'OffsetX', FGridOffsetX);
-      saveFile.WriteFloat(SAVESECTIONGRID, 'OffsetY', FGridOffsetY);
-      saveFile.WriteInteger(SAVESECTIONGRID, 'Color', FGridColor);
-      saveFile.WriteInteger(SAVESECTIONGRID, 'Alpha', FGridAlpha);
+      saveFile.WriteFloat(SAVESECTIONGRID, 'SizeX', FGridData.GridSizeX);
+      saveFile.WriteFloat(SAVESECTIONGRID, 'SizeY', FGridData.GridSizeY);
+      saveFile.WriteFloat(SAVESECTIONGRID, 'OffsetX', FGridData.GridOffsetX);
+      saveFile.WriteFloat(SAVESECTIONGRID, 'OffsetY', FGridData.GridOffsetY);
+      saveFile.WriteInteger(SAVESECTIONGRID, 'Color', FGridData.GridColor);
+      saveFile.WriteInteger(SAVESECTIONGRID, 'Alpha', FGridData.GridAlpha);
 
       // Portrait
       saveFile.WriteString(SAVESECTIONPORTRAIT, 'FileName', fmDisplay.PortraitFileName);
@@ -1502,15 +1462,15 @@ begin
       FMarkerPosy := saveFile.ReadInteger(SAVESECTIONMAP, 'MarkerY', -1);
 
       // Grid data
-      FGridType := TGridType(saveFile.ReadInteger(SAVESECTIONGRID, 'Type', 0));
+      FGridData.GridType := TGridType(saveFile.ReadInteger(SAVESECTIONGRID, 'Type', 0));
       FShowGrid := saveFile.ReadBool(SAVESECTIONGRID, 'GridVisible', True);
       FSnapTokensToGrid := saveFile.ReadBool(SAVESECTIONGRID, 'Snap', False);
-      FGridSizeX := saveFile.ReadInteger(SAVESECTIONGRID, 'SizeX', 100);     
-      FGridSizeY := saveFile.ReadInteger(SAVESECTIONGRID, 'SizeY', 100);     
-      FGridOffsetX := saveFile.ReadInteger(SAVESECTIONGRID, 'OffsetX', 0);
-      FGridOffsetY := saveFile.ReadInteger(SAVESECTIONGRID, 'OffsetY', 0);
-      FGridColor := saveFile.ReadInteger(SAVESECTIONGRID, 'Color', clSilver);
-      FGridAlpha := saveFile.ReadInteger(SAVESECTIONGRID, 'Alpha', 255);
+      FGridData.GridSizeX := saveFile.ReadInteger(SAVESECTIONGRID, 'SizeX', 100);     
+      FGridData.GridSizeY := saveFile.ReadInteger(SAVESECTIONGRID, 'SizeY', 100);     
+      FGridData.GridOffsetX := saveFile.ReadInteger(SAVESECTIONGRID, 'OffsetX', 0);
+      FGridData.GridOffsetY := saveFile.ReadInteger(SAVESECTIONGRID, 'OffsetY', 0);
+      FGridData.GridColor := saveFile.ReadInteger(SAVESECTIONGRID, 'Color', clSilver);
+      FGridData.GridAlpha := saveFile.ReadInteger(SAVESECTIONGRID, 'Alpha', 255);
        
       // Portrait
       fmDisplay.PortraitFileName := saveFile.ReadString(SAVESECTIONPORTRAIT, 'FileName', '');
@@ -1681,7 +1641,7 @@ begin
   if FSnapTokensToGrid then
   begin
     for i := 0 to FTokenList.Count - 1 do
-      TToken(FTokenList[i]).SnapToGrid(FGridSizeX, FGridSizeY, FGridOffsetX, FGridOffsetY, FGridType);
+      TToken(FTokenList[i]).SnapToGrid(FGridData.GridSizeX, FGridData.GridSizeY, FGridData.GridOffsetX, FGridData.GridOffsetY, FGridData.GridType);
     pbViewPort.Invalidate;
     fmDisplay.Invalidate;
   end;
@@ -1766,8 +1726,8 @@ var
 
             NodeData.Name              := title;
             NodeData.BaseInitiative    := StrToIntDef(ContentList[1], 0);
-            NodeData.DefaultWidth      := StrToIntDef(ContentList[2], Round(FGridSizeX));
-            NodeData.DefaultHeight     := StrToIntDef(ContentList[3], Round(FGridSizeY));
+            NodeData.DefaultWidth      := StrToIntDef(ContentList[2], Round(FGridData.GridSizeX));
+            NodeData.DefaultHeight     := StrToIntDef(ContentList[3], Round(FGridData.GridSizeY));
             NodeData.DefaultGridSlotsX := StrToIntDef(ContentList[4], 1);
             NodeData.DefaultGridSlotsY := StrToIntDef(ContentList[5], 1);
             NodeData.DefaultAngle      := -DegToRad(StrToFloatDef(ContentList[6], 0.0));
@@ -1779,8 +1739,8 @@ var
         begin
           NodeData.Name := title;
           NodeData.BaseInitiative := 0;
-          NodeData.DefaultWidth := Round(FGridSizeX);
-          NodeData.DefaultHeight := Round(FGridSizeY);
+          NodeData.DefaultWidth := Round(FGridData.GridSizeX);
+          NodeData.DefaultHeight := Round(FGridData.GridSizeY);
           NodeData.DefaultGridSlotsX := 1;
           NodeData.DefaultGridSlotsY := 1;
           NodeData.DefaultAngle := 0.0;
@@ -1957,7 +1917,7 @@ end;}
 procedure TfmController.SnapTokenToGrid(Token: TToken);
 begin
   if Assigned(Token) and FSnapTokensToGrid then
-    Token.SnapToGrid(FGridSizeX, FGridSizeY, FGridOffsetX, FGridOffsetY, FGridType);
+    Token.SnapToGrid(FGridData.GridSizeX, FGridData.GridSizeY, FGridData.GridOffsetX, FGridData.GridOffsetY, FGridData.GridType);
 end;
 
 procedure TfmController.SaveLibraryData;
@@ -2088,13 +2048,13 @@ begin
   FIsDraggingToken := False;
   FIsRotatingToken := False;
   FZoomFactor := 1;
-  FGridSizeX := 100;
-  FGridSizeY := 100;
-  FGridColor := clSilver;
-  FGridAlpha := 255;
+  FGridData.GridSizeX := 100;
+  FGridData.GridSizeY := 100;
+  FGridData.GridColor := clSilver;
+  FGridData.GridAlpha := 255;
   FShowMap := False;
   FShowGrid := True;
-  FGridType := gtRect;
+  FGridData.GridType := gtRect;
   FShowMarker := False;
   FShowTokens := True;
   FSnapTokensToGrid := False;

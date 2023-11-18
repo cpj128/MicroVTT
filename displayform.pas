@@ -52,11 +52,8 @@ type
     FMapPic, FPortrait: TBGRABitmap;
     FPortraitFrame, FInitiativeFrame, FMapFrame: TBGRABitmap;
     FBgPic: TPicture;
-    FGridSizeX, FGridSizeY, FGridOffsetX, FGridOffsetY: Single;
-    FGridType: TGridType;
     FMarkerX, FMarkerY: Integer;
-    FGridColor: TColor;
-    FGridAlpha: Byte;
+    FGridData: TGridData;
     FCombatMode: Boolean;
     FPortraitFile: string;
 
@@ -64,15 +61,9 @@ type
     procedure SetMapOffsetX(val: Integer);
     procedure SetMapOffsetY(val: Integer);
     procedure SetMapZoom(val: Double);
-    procedure SetGridSizeX(val: Single);  
-    procedure SetGridSizeY(val: Single);
-    procedure SetGridOffsetX(val: Single);
-    procedure SetGridOffsetY(val: Single);
-    procedure SetGridType(val: TGridType);
+    procedure SetGridData(val: TGridData);
     procedure SetMarkerX(val: Integer);
     procedure SetMarkerY(val: Integer);
-    procedure SetGridColor(val: TColor);
-    procedure SetGridAlpha(val: Byte);
     procedure SetCombatMode(val: Boolean);
     procedure SetPortraitFile(FileName: string);
   public
@@ -80,15 +71,9 @@ type
     property MapOffsetX: Integer read FMapOffsetX write SetMapOffsetX;
     property MapOffsetY: Integer read FMapOffsetY write SetMapOffsetY;
     property MapZoom: Double read FMapZoom write SetMapZoom;
-    property GridSizeX: Single read FGridSizeX write SetGridSizeX;  
-    property GridSizeY: Single read FGridSizeY write SetGridSizeY;
-    property GridOffsetX: Single read FGridOffsetX write SetGridOffsetX;
-    property GridOffsetY: Single read FGridOffsetY write SetGridOffsetY;
-    property GridType: TGridType read FGridType write SetGridType;
+    property GridData: TGridData read FGridData write SetGridData;
     property MarkerX: Integer read FMarkerX write SetMarkerX;
     property MarkerY: Integer read FMarkerY write SetMarkerY;
-    property GridColor: TColor read FGridColor write SetGridColor;
-    property GridAlpha: Byte read FGridAlpha write SetGridAlpha;
     property CombatMode: Boolean read FCombatMode write SetCombatMode;
     property PortraitFileName: string read FPortraitFile write SetPortraitFile;
   end;
@@ -144,10 +129,10 @@ procedure TfmDisplay.FormCreate(Sender: TObject);
 begin        
   FMapZoom := 1;
   FCombatMode := False;
-  FGridSizeX := 100;
-  FGridSizeY := 100;
-  FGridColor := clSilver;
-  FGridAlpha := 255;
+  FGridData.GridSizeX := 100;
+  FGridData.GridSizeY := 100;
+  FGridData.GridColor := clSilver;
+  FGridData.GridAlpha := 255;
   FMapPic := TBGRABitmap.Create(0, 0);
   FPortrait := TBGRABitmap.Create(0, 0);
   FBgPic := TPicture.Create;
@@ -239,33 +224,9 @@ begin
   Invalidate;
 end;
 
-procedure TfmDisplay.SetGridSizeX(val: Single);
+procedure TfmDisplay.SetGridData(val: TGridData);
 begin
-  FGridSizeX := val;
-  Invalidate;
-end;
-            
-procedure TfmDisplay.SetGridSizeY(val: Single);
-begin
-  FGridSizeY := val;
-  Invalidate;
-end;
-
-procedure TfmDisplay.SetGridOffsetX(val: Single);
-begin
-  FGridOffsetX := val;
-  Invalidate;
-end;
-
-procedure TfmDisplay.SetGridOffsetY(val: Single);
-begin
-  FGridOffsetY := val;
-  Invalidate;
-end;
-
-procedure TfmDisplay.SetGridType(val: TGridType);
-begin
-  FGridType := val;
+  FGridData := val;
   Invalidate;
 end;
 
@@ -278,18 +239,6 @@ end;
 procedure TfmDisplay.SetMarkerY(val: Integer);
 begin
   FMarkerY := val;
-  Invalidate;
-end;
-
-procedure TfmDisplay.SetGridColor(val: TColor);
-begin
-  FGridColor := val;
-  Invalidate;
-end;
-
-procedure TfmDisplay.SetGridAlpha(val: Byte);
-begin
-  FGridAlpha := val;
   Invalidate;
 end;
 
@@ -447,94 +396,94 @@ begin
           // Grid
           if fmController.ShowGrid then
           begin
-            case FGridType of
+            case FGridData.GridType of
               gtRect:
               begin
                 // Horizontal lines
-                for i := 0 to Ceil(((FMapPic.Height - (FGridOffsetY mod FGridSizeY)) / FGridSizeY)) do
+                for i := 0 to Ceil(((FMapPic.Height - (FGridData.GridOffsetY mod FGridData.GridSizeY)) / FGridData.GridSizeY)) do
                 begin
-                  CurGridPos := Round((FGridOffsetY + i * FGridSizeY) * FMapZoom - FMapOffsetY);
+                  CurGridPos := Round((FGridData.GridOffsetY + i * FGridData.GridSizeY) * FMapZoom - FMapOffsetY);
                   if InRange(CurGridPos, 0, MapHeight) then
                   begin
                     MapSegmentStretched.DrawLineAntialias(0, CurGridPos,
                                                           MapSegmentStretched.Width, CurGridPos,
-                                                          ColorToBGRA(FGridColor, FGridAlpha), 1);
+                                                          ColorToBGRA(FGridData.GridColor, FGridData.GridAlpha), 1);
                   end;
                 end;
                 // Vertical lines
-                for i := 0 to Ceil(((FMapPic.Width - (FGridOffsetX mod FGridSizeX)) / FGridSizeX)) do
+                for i := 0 to Ceil(((FMapPic.Width - (FGridData.GridOffsetX mod FGridData.GridSizeX)) / FGridData.GridSizeX)) do
                 begin
-                  CurGridPos := Round((FGridOffsetX + i * FGridSizeX) * FMapZoom - FMapOffsetX);
+                  CurGridPos := Round((FGridData.GridOffsetX + i * FGridData.GridSizeX) * FMapZoom - FMapOffsetX);
                   if InRange(CurGridPos, 0, MapWidth) then
                   begin
                     MapSegmentStretched.DrawLineAntialias(CurGridPos, 0,
                                                           CurGridPos, MapSegmentStretched.Height,
-                                                          ColorToBGRA(FGridColor, FGridAlpha), 1);
+                                                          ColorToBGRA(FGridData.GridColor, FGridData.GridAlpha), 1);
                   end;
                 end;
 
               end;
               gtHexH:
               begin
-                tmpGridSize := FGridSizeY  * 3 / 4;
-                for i := 0 to Ceil(((FMapPic.Height - (FGridOffsetY mod tmpGridSize)) / tmpGridSize)) do
-                  for j := 0 to Ceil(((FMapPic.Width - (FGridOffsetX mod FGridSizeX)) / FGridSizeX)) do
+                tmpGridSize := FGridData.GridSizeY  * 3 / 4;
+                for i := 0 to Ceil(((FMapPic.Height - (FGridData.GridOffsetY mod tmpGridSize)) / tmpGridSize)) do
+                  for j := 0 to Ceil(((FMapPic.Width - (FGridData.GridOffsetX mod FGridData.GridSizeX)) / FGridData.GridSizeX)) do
                   begin
-                    CellRect := Rect(Round((FGridOffsetX + j * FGridSizeX) * FMapZoom - FMapOffsetX),
-                                     Round((FGridOffsetY + i * tmpGridSize) * FMapZoom - FMapOffsetY),
-                                     Round((FGridOffsetX + (j + 1) * FGridSizeX) * FMapZoom - FMapOffsetX),
-                                     Round((FGridOffsetY + i * tmpGridSize + FGridSizeY) * FMapZoom - FMapOffsetY));
+                    CellRect := Rect(Round((FGridData.GridOffsetX + j * FGridData.GridSizeX) * FMapZoom - FMapOffsetX),
+                                     Round((FGridData.GridOffsetY + i * tmpGridSize) * FMapZoom - FMapOffsetY),
+                                     Round((FGridData.GridOffsetX + (j + 1) * FGridData.GridSizeX) * FMapZoom - FMapOffsetX),
+                                     Round((FGridData.GridOffsetY + i * tmpGridSize + FGridData.GridSizeY) * FMapZoom - FMapOffsetY));
                     if Odd(i) then
-                      CellRect.Offset(Round(FGridSizeX  * FMapZoom / 2), 0);
+                      CellRect.Offset(Round(FGridData.GridSizeX  * FMapZoom / 2), 0);
                     Hex[0] := Point(CellRect.Left, CellRect.Bottom - CellRect.Height div 4);
                     Hex[1] := Point(CellRect.Left, CellRect.Top + CellRect.Height div 4);
                     Hex[2] := Point(CellRect.Left + CellRect.Width div 2, CellRect.Top);
                     Hex[3] := Point(CellRect.Right, CellRect.Top + CellRect.Height div 4);
                     Hex[4] := Point(CellRect.Right, CellRect.Bottom - CellRect.Height div 4);
                     Hex[5] := Point(CellRect.Left + CellRect.Width div 2, CellRect.Bottom);
-                    MapSegmentStretched.DrawPolygonAntialias(Hex, ColorToBGRA(FGridColor, FGridAlpha), 1, BGRAPixelTransparent);
+                    MapSegmentStretched.DrawPolygonAntialias(Hex, ColorToBGRA(FGridData.GridColor, FGridData.GridAlpha), 1, BGRAPixelTransparent);
                   end;
               end;
               gtHexV:
               begin
-                tmpGridSize := FGridSizeX  * 3 / 4;
-                for i := 0 to Ceil(((FMapPic.Height - (FGridOffsetY mod FGridSizeY)) / FGridSizeY)) do
-                  for j := 0 to Ceil(((FMapPic.Width - (FGridOffsetX mod tmpGridSize)) / tmpGridSize)) do
+                tmpGridSize := FGridData.GridSizeX  * 3 / 4;
+                for i := 0 to Ceil(((FMapPic.Height - (FGridData.GridOffsetY mod FGridData.GridSizeY)) / FGridData.GridSizeY)) do
+                  for j := 0 to Ceil(((FMapPic.Width - (FGridData.GridOffsetX mod tmpGridSize)) / tmpGridSize)) do
                   begin
-                    CellRect := Rect(Round((FGridOffsetX + j * tmpGridSize) * FMapZoom - FMapOffsetX),
-                                     Round((FGridOffsetY + i * FGridSizeY) * FMapZoom - FMapOffsetY),
-                                     Round((FGridOffsetX + j * tmpGridSize + FGridSizeX) * FMapZoom - FMapOffsetX),
-                                     Round((FGridOffsetY + (i + 1) * FGridSizeY) * FMapZoom - FMapOffsetY));
+                    CellRect := Rect(Round((FGridData.GridOffsetX + j * tmpGridSize) * FMapZoom - FMapOffsetX),
+                                     Round((FGridData.GridOffsetY + i * FGridData.GridSizeY) * FMapZoom - FMapOffsetY),
+                                     Round((FGridData.GridOffsetX + j * tmpGridSize + FGridData.GridSizeX) * FMapZoom - FMapOffsetX),
+                                     Round((FGridData.GridOffsetY + (i + 1) * FGridData.GridSizeY) * FMapZoom - FMapOffsetY));
                     if Odd(j) then
-                      CellRect.Offset(0, Round(FGridSizeY  * FMapZoom / 2));
+                      CellRect.Offset(0, Round(FGridData.GridSizeY  * FMapZoom / 2));
                     Hex[0] := Point(CellRect.Left, CellRect.Top + CellRect.Height div 2);
                     Hex[1] := Point(CellRect.Left + CellRect.Width div 4, CellRect.Top);
                     Hex[2] := Point(CellRect.Right - CellRect.Width div 4, CellRect.Top);
                     Hex[3] := Point(CellRect.Right, CellRect.Top + CellRect.Height div 2);
                     Hex[4] := Point(CellRect.Right - CellRect.Width div 4, CellRect.Bottom);
                     Hex[5] := Point(CellRect.Left + CellRect.Width div 4, CellRect.Bottom);
-                    MapSegmentStretched.DrawPolygonAntialias(Hex, ColorToBGRA(FGridColor, FGridAlpha), 1, BGRAPixelTransparent);
+                    MapSegmentStretched.DrawPolygonAntialias(Hex, ColorToBGRA(FGridData.GridColor, FGridData.GridAlpha), 1, BGRAPixelTransparent);
                   end;
               end;
               gtIsometric:
               begin
-                tmpGridSize := FGridSizeY / 2;
-                for i := 0 to Ceil(((FMapPic.Height - (FGridOffsetY mod tmpGridSize)) / tmpGridSize)) do
-                  for j := 0 to Ceil(((FMapPic.Width - (FGridOffsetX mod FGridSizeX)) / FGridSizeX)) do
+                tmpGridSize := FGridData.GridSizeY / 2;
+                for i := 0 to Ceil(((FMapPic.Height - (FGridData.GridOffsetY mod tmpGridSize)) / tmpGridSize)) do
+                  for j := 0 to Ceil(((FMapPic.Width - (FGridData.GridOffsetX mod FGridData.GridSizeX)) / FGridData.GridSizeX)) do
                   begin
-                    CellRect := Rect(Round((FGridOffsetX + j * FGridSizeX) * FMapZoom - FMapOffsetX),
-                                       Round((FGridOffsetY + i * tmpGridSize) * FMapZoom - FMapOffsetY),
-                                       Round((FGridOffsetX + (j + 1) * FGridSizeX) * FMapZoom - FMapOffsetX),
-                                       Round((FGridOffsetY + i * tmpGridSize + FGridSizeY) * FMapZoom - FMapOffsetY));
+                    CellRect := Rect(Round((FGridData.GridOffsetX + j * FGridData.GridSizeX) * FMapZoom - FMapOffsetX),
+                                       Round((FGridData.GridOffsetY + i * tmpGridSize) * FMapZoom - FMapOffsetY),
+                                       Round((FGridData.GridOffsetX + (j + 1) * FGridData.GridSizeX) * FMapZoom - FMapOffsetX),
+                                       Round((FGridData.GridOffsetY + i * tmpGridSize + FGridData.GridSizeY) * FMapZoom - FMapOffsetY));
                     if Odd(i) then
-                      CellRect.Offset(Round(FGridSizeX  * FMapZoom / 2), 0);
+                      CellRect.Offset(Round(FGridData.GridSizeX  * FMapZoom / 2), 0);
 
                     Iso[0] := Point(CellRect.Left, (CellRect.Bottom + CellRect.Top) div 2);
                     Iso[1] := Point((CellRect.Left + CellRect.Right) div 2, CellRect.Top);
                     Iso[2] := Point(CellRect.Right, (CellRect.Top + CellRect.Bottom) div 2);
                     Iso[3] := Point((CellRect.Left + CellRect.Right) div 2, CellRect.Bottom);
 
-                    MapSegmentStretched.DrawPolygonAntialias(Iso, ColorToBGRA(FGridColor, FGridAlpha), 1, BGRAPixelTransparent);
+                    MapSegmentStretched.DrawPolygonAntialias(Iso, ColorToBGRA(FGridData.GridColor, FGridData.GridAlpha), 1, BGRAPixelTransparent);
                   end;
                 end;
             end;

@@ -29,6 +29,13 @@ type
 
   TGridType = (gtRect, gtHexH, gtHexV, gtIsometric);
 
+  TGridData = record
+    GridSizeX, GridSizeY, GridOffsetX, GridOffsetY: Single;
+    GridColor: TColor;
+    GridAlpha: Byte;
+    GridType: TGridType;
+  end;
+
   TTokenRotationStyle = (rsRotateToken, rsShowArrow);
 
   TTokenType = (ttDefault, ttRange, ttText);
