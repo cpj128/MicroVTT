@@ -2,12 +2,12 @@ object fmGridSettings: TfmGridSettings
   Left = 935
   Height = 245
   Top = 295
-  Width = 218
+  Width = 308
   BorderIcons = []
   BorderStyle = bsDialog
   Caption = 'Grid Settings'
   ClientHeight = 245
-  ClientWidth = 218
+  ClientWidth = 308
   FormStyle = fsStayOnTop
   OnShow = FormShow
   LCLVersion = '2.2.4.0'
@@ -44,7 +44,7 @@ object fmGridSettings: TfmGridSettings
     ParentColor = False
   end
   object pGridColor: TPanel
-    Left = 90
+    Left = 97
     Height = 23
     Top = 144
     Width = 120
@@ -53,25 +53,25 @@ object fmGridSettings: TfmGridSettings
     OnClick = pGridColorClick
   end
   object bOk: TButton
-    Left = 8
+    Left = 225
     Height = 25
-    Top = 208
+    Top = 4
     Width = 75
     Caption = 'OK'
     ModalResult = 1
     TabOrder = 2
   end
   object bCancel: TButton
-    Left = 91
+    Left = 225
     Height = 25
-    Top = 208
+    Top = 32
     Width = 75
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 3
   end
   object fseGridSizeY: TFloatSpinEditEx
-    Left = 91
+    Left = 97
     Height = 23
     Top = 60
     Width = 120
@@ -84,7 +84,7 @@ object fmGridSettings: TfmGridSettings
     Value = 100
   end
   object fseGridSizeX: TFloatSpinEditEx
-    Left = 91
+    Left = 97
     Height = 23
     Top = 32
     Width = 120
@@ -105,7 +105,7 @@ object fmGridSettings: TfmGridSettings
     ParentColor = False
   end
   object fseGridOffsetX: TFloatSpinEditEx
-    Left = 91
+    Left = 97
     Height = 23
     Top = 88
     Width = 120
@@ -116,7 +116,7 @@ object fmGridSettings: TfmGridSettings
     Value = 100
   end
   object fseGridOffsetY: TFloatSpinEditEx
-    Left = 91
+    Left = 97
     Height = 23
     Top = 116
     Width = 120
@@ -135,7 +135,7 @@ object fmGridSettings: TfmGridSettings
     ParentColor = False
   end
   object cbGridType: TComboBox
-    Left = 91
+    Left = 97
     Height = 23
     Top = 4
     Width = 120
@@ -153,7 +153,7 @@ object fmGridSettings: TfmGridSettings
     Text = 'Rectangle'
   end
   object tbGridAlpha: TTrackBar
-    Left = 90
+    Left = 97
     Height = 25
     Top = 172
     Width = 120
@@ -170,6 +170,15 @@ object fmGridSettings: TfmGridSettings
     Width = 69
     Caption = 'Grid Opacity:'
     ParentColor = False
+  end
+  object bSaveToLibrary: TButton
+    Left = 8
+    Height = 25
+    Top = 200
+    Width = 209
+    Caption = 'Save to Library'
+    OnClick = bSaveToLibraryClick
+    TabOrder = 9
   end
   object cdGridColor: TColorDialog
     Color = clBlack
@@ -195,7 +204,7 @@ object fmGridSettings: TfmGridSettings
       'ColorS=F0FBFF'
       'ColorT=A4A0A0'
     )
-    Left = 128
+    Left = 134
     Top = 112
   end
 end

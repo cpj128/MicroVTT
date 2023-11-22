@@ -26,6 +26,7 @@ type
   { TfmGridSettings }
 
   TfmGridSettings = class(TForm)
+    bSaveToLibrary: TButton;
     bOk: TButton;
     bCancel: TButton;
     cdGridColor: TColorDialog;
@@ -43,13 +44,15 @@ type
     Label7: TLabel;
     pGridColor: TPanel;
     tbGridAlpha: TTrackBar;
+    procedure bSaveToLibraryClick(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure fseGridSizeXChange(Sender: TObject);
     procedure pGridColorClick(Sender: TObject);
   private
     FCurGridData: TGridData;
+    FUpdateMainForm: Boolean;
   public
-    procedure SetData(data: TGridData);
+    procedure SetData(data: TGridData; FromMainForm: Boolean);
     function GetData: TGridData;
   end;
 
@@ -66,8 +69,10 @@ uses
 
 { TfmGridSettings }
 
-procedure TfmGridSettings.SetData(data: TGridData);
+procedure TfmGridSettings.SetData(data: TGridData; FromMainForm: Boolean);
 begin
+  FUpdateMainForm := FromMainForm;
+  bSaveToLibrary.Visible := FromMainForm;
   FCurGridData := data;
   fseGridSizeX.Value := FCurGridData.GridSizeX;
   fseGridSizeY.Value := FCurGridData.GridSizeY;
@@ -110,6 +115,28 @@ begin
   cbGridType.Items[3] := GetString(LangStrings.LanguageID, 'GridSettingsType3');
   bCancel.Caption := GetString(LangStrings.LanguageID, 'ButtonCancel');
   bOk.Caption := GetString(LangStrings.LanguageID, 'ButtonOk');
+  bSaveToLibrary.Caption := GetString(LangStrings.LanguageID, 'GridSettingsSaveToLibrary');
+end;
+
+procedure TfmGridSettings.bSaveToLibraryClick(Sender: TObject);
+var
+  ContentList: TStringList;
+begin
+  if fmController.MapLib.IndexOfName(fmController.MapFileName) < 0 then
+    Exit;
+  ContentList := TStringList.Create;
+  try
+    ContentList.Delimiter := '|';
+    ContentList.StrictDelimiter := True;
+    ContentList.DelimitedText := fmController.MapLib.Values[fmController.MapFileName];
+    if ContentList.Count > 1 then
+    begin
+      ContentList[1] := FCurGridData.ToString;
+      fmController.MapLib.Values[fmController.MapFileName] := ContentList.DelimitedText;
+    end;
+  finally
+    ContentList.Free;
+  end;
 end;
 
 procedure TfmGridSettings.fseGridSizeXChange(Sender: TObject);
@@ -120,8 +147,11 @@ begin
   FCurGridData.GridOffsetY := fseGridOffsetY.Value;
   FCurGridData.GridType    := TGridType(cbGridType.ItemIndex);
   FCurGridData.GridAlpha   := tbGridAlpha.Position;
-  fmController.GridData := FCurGridData;
-  fmController.pbViewport.Invalidate;
+  if FUpdateMainForm then
+  begin
+    fmController.GridData := FCurGridData;
+    fmController.pbViewport.Invalidate;
+  end;
 end;
 
 end.

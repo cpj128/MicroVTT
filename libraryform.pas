@@ -49,7 +49,8 @@ type
     StrTokensHeader,
     StrOverlaysHeader,
     StrAddNote,
-    StrGoToNote: string;
+    StrGoToNote,
+    StrSetGrid: string;
     procedure ShowMaps;
     procedure ShowTokens;
     procedure ShowOverlays;
@@ -72,8 +73,10 @@ uses
   FileUtil,
   StrUtils,
   ControllerForm,
+  GridSettingsForm,
   DisplayConst,
   LangStrings,
+  RPGTypes,
   Notes;
 
 { TfmLibrary }
@@ -93,6 +96,7 @@ begin
   StrOverlaysHeader:= GetString(LangStrings.LanguageID, 'LibraryGridHeaderOverlays');
   StrAddNote       := GetString(LangStrings.LanguageID, 'LibraryAddNote');
   StrGoToNote      := GetString(LangStrings.LanguageID, 'LibraryGoToNote');
+  StrSetGrid       := GetString(LangStrings.LanguageID, 'LibrarySetGrid');
 end;
 
 procedure TfmLibrary.bCloseClick(Sender: TObject);
@@ -105,17 +109,22 @@ end;
 
 procedure TfmLibrary.ShowMaps;
 var
-  FileList, HeaderList: TStringList;
+  FileList, HeaderList, ContentList: TStringList;
   i: Integer;
+  tmpGridData: TGridData;
 begin
   FileList := TStringList.Create;
   HeaderList := TStringList.Create;
   HeaderList.Delimiter := ',';
   HeaderList.StrictDelimiter := True;
   HeaderList.DelimitedText := StrMapsHeader;
+  ContentList := TStringList.Create;
+  ContentList.Delimiter := '|';
+  ContentList.StrictDelimiter := True;
   sgItemData.Columns.Clear;
   sgItemData.ColWidths[0] := 22;
   sgItemData.Columns.Insert(0);   
+  sgItemData.Columns.Insert(0);
   sgItemData.Columns.Insert(0);
   sgItemData.Columns.Insert(0);
   sgItemData.Columns.Insert(0);
@@ -123,7 +132,9 @@ begin
   sgItemData.Columns[1].Title.Caption := HeaderList[2];
   sgItemData.Columns[2].Title.Caption := HeaderList[3];
   sgItemData.Columns[3].Title.Caption := HeaderList[4];
+  sgItemData.Columns[4].Title.Caption := HeaderList[5];
   sgItemData.Columns.Items[3].ButtonStyle := cbsButtonColumn;
+  sgItemData.Columns.Items[4].ButtonStyle := cbsButtonColumn;
   try
     FindAllFiles(FileList, fmController.MapDir, PicFilterStr, True);
     sgItemData.RowCount := FileList.Count + 1;
@@ -131,10 +142,14 @@ begin
     begin
       sgItemData.Cells[1, i + 1] := ExtractFileName(FileList[i]);
       sgItemData.Cells[2, i + 1] := FileList[i];
+      tmpGridData := DefaultGridData;
       if fmController.MapLib.IndexOfName(FileList[i]) >= 0 then
       begin
-        sgItemData.Cells[3, i + 1] := fmController.MapLib.Values[FileList[i]];
-        if fmController.NotesList.HasEntry(fmController.MapLib.Values[FileList[i]]) then
+        ContentList.DelimitedText := fmController.MapLib.Values[FileList[i]];
+        if ContentList.Count > 1 then
+          tmpGridData.FromString(ContentList[1]);
+        sgItemData.Cells[3, i + 1] := ContentList[0];
+        if fmController.NotesList.HasEntry(ContentList[0]) then
           sgItemData.Cells[4, i + 1] := StrGoToNote
         else
           sgItemData.Cells[4, i + 1] := StrAddNote;
@@ -144,7 +159,11 @@ begin
         sgItemData.Cells[3, i + 1] := '';
         sgItemData.Cells[4, i + 1] := StrAddNote;
       end;
-
+      sgItemData.Cells[5, i + 1] := StrSetGrid;
+      if not Assigned(sgItemData.Objects[5, i + 1]) then
+        sgItemData.Objects[5, i + 1] := TGridDataWrapper.Create(tmpGridData)
+      else
+        TGridDataWrapper(sgItemData.Objects[5, i + 1]).GridData := tmpGridData;
     end;
 
     // Add orphaned entries from database
@@ -156,10 +175,14 @@ begin
         sgItemData.Cells[1, sgItemData.RowCount - 1] := ExtractFileName(fmController.MapLib.Names[i]);
         sgItemData.Cells[2, sgItemData.RowCount - 1] := fmController.MapLib.Names[i];
         sgItemData.Cells[3, sgItemData.RowCount - 1] := fmController.MapLib.ValueFromIndex[i];
+        tmpGridData := DefaultGridData;
         if fmController.MapLib.IndexOfName(FileList[i]) >= 0 then
         begin
-          sgItemData.Cells[3, i + 1] := fmController.MapLib.Values[FileList[i]];
-          if fmController.NotesList.HasEntry(fmController.MapLib.Values[FileList[i]]) then
+          ContentList.DelimitedText := fmController.MapLib.Values[FileList[i]];
+          if ContentList.Count > 1 then
+            tmpGridData.FromString(ContentList[1]);
+          sgItemData.Cells[3, i + 1] := ContentList[0];
+          if fmController.NotesList.HasEntry(ContentList[0]) then
             sgItemData.Cells[4, i + 1] := StrGoToNote
           else
             sgItemData.Cells[4, i + 1] := StrAddNote;
@@ -169,13 +192,22 @@ begin
           sgItemData.Cells[3, i + 1] := '';
           sgItemData.Cells[4, i + 1] := StrAddNote;
         end;
+        sgItemData.Cells[5, i + 1] := StrSetGrid;
+        if not Assigned(sgItemData.Objects[5, i + 1]) then
+          sgItemData.Objects[5, i + 1] := TGridDataWrapper.Create(tmpGridData)
+        else
+          TGridDataWrapper(sgItemData.Objects[5, i + 1]).GridData := tmpGridData;
       end;
     end;
   finally
     FileList.Free;
     HeaderList.Free;
+    ContentList.Free;
   end;
 end;
+
+// TODO: -Rasterdialog aufrufen, Daten anpassen
+//       -Beim Laden einer Map Rasterdaten einsetzen, wenn vorhanden
 
 procedure TfmLibrary.ShowTokens;  
 var
@@ -353,10 +385,25 @@ begin
 end;
    
 procedure TfmLibrary.UpdateMaps;
-var i: Integer;
+var
+  i: Integer;
+  ContentList: TStringList;
 begin
-  for i := 1 to sgItemData.RowCount - 1 do
-    fmController.MapLib.Values[sgItemData.Cells[2, i]] := sgItemData.Cells[3,i];
+  ContentList := TStringList.Create;
+  try
+    ContentList.Delimiter := '|';
+    ContentList.StrictDelimiter := True;
+    for i := 1 to sgItemData.RowCount - 1 do
+    begin
+      ContentList.Clear;
+      ContentList.Add(sgItemData.Cells[3,i]);
+      if Assigned(sgItemData.Objects[5, i]) then
+        ContentList.Add(TGridDataWrapper(sgItemData.Objects[5, i]).GridData.ToString);
+      fmController.MapLib.Values[sgItemData.Cells[2, i]] := ContentList.DelimitedText;
+    end;
+  finally
+    ContentList.Free;
+  end;
 end;
 
 procedure TfmLibrary.UpdateTokens;
@@ -417,6 +464,20 @@ var
   EntryName: string;
   tmpEntry: TNoteEntry;
 begin
+  // Grid settings button
+  if (aCol = 5) and (tcHeader.TabIndex = 0) then
+  begin
+    if Assigned(sgItemData.Objects[5, aRow]) then
+    begin
+      fmGridSettings.SetData(TGridDataWrapper(sgItemData.Objects[5, aRow]).GridData, False);
+      if fmGridSettings.ShowModal = mrOk then
+        TGridDataWrapper(sgItemData.Objects[5, aRow]).GridData := fmGridSettings.GetData;
+    end;
+
+    Exit;
+  end;
+
+  // Add / go to note button
   EntryName := '';
   // ...ok, this is the exact same code for all three branches.
   if tcHeader.TabIndex = 0 then

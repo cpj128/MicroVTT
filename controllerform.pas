@@ -272,6 +272,7 @@ type
     procedure AddToHistory(Entry: string);
 
     property GridData: TGridData read FGridData write FGridData;
+    property MapFileName: string read FMapFileName;
     property TokenRotationStyle: TTokenRotationStyle read FTokenRotationStyle;
     property CurInitiativeIndex: Integer read FCurInitiativeIndex write SetCurInitiativeIndex;
     property MapLib: TStringList read FMapLib;
@@ -428,9 +429,28 @@ begin
 end;
 
 procedure TfmController.LoadMap(FileName: string);
+var
+  ContentList: TStringList;
+  GridSettings: string;
 begin
   if not FileExists(FileName) then
     Exit;
+  GridSettings := '';
+  ContentList := TStringList.Create;
+  try
+    ContentList.Delimiter := '|';
+    ContentList.StrictDelimiter := True;
+    if FMapLib.IndexOfName(FileName) >= 0 then
+    begin
+      ContentList.DelimitedText := FMapLib.Values[FileName];
+      if ContentList.Count > 1 then
+        GridSettings := ContentList[1];
+    end;
+  finally
+    ContentList.Free;
+  end;
+  if Length(GridSettings) > 0 then
+    FGridData.FromString(GridSettings);
   FMapFileName := FileName;
   fmDisplay.MapFileName := FMapFileName;
   FMapPic := TBGRABitmap.Create(FMapFileName, True);
@@ -1236,7 +1256,7 @@ var
   CurToken: TToken;
 begin
   OldGridData := FGridData;
-  fmGridSettings.SetData(FGridData);
+  fmGridSettings.SetData(FGridData, True);
 
   if fmGridSettings.ShowModal = mrOK then
   begin
@@ -1665,13 +1685,16 @@ end;
 procedure TfmController.UpdateMapList;
 var
   i: Integer;
-  FileList: TStringList;
+  FileList, ContentList: TStringList;
   FileName: string;
   title: string;
 begin
   lvMaps.Clear;
   FileList := TStringList.Create;
+  ContentList := TStringList.Create;
   try
+    ContentList.Delimiter := '|';
+    ContentList.StrictDelimiter := True;
     FindAllFiles(FileList, FMapDir, PicFilterStr, True);
     for i := 0 to FileList.Count - 1 do
     begin
@@ -1679,7 +1702,13 @@ begin
       with lvMaps.Items.Add do
       begin
         if FMapLib.IndexOfName(FileName) >= 0 then
-          title := FMapLib.Values[FileName]
+        begin
+          ContentList.DelimitedText := FMapLib.Values[FileName];
+          if ContentList.Count > 0 then
+            title := ContentList[0]
+          else
+            title := ExtractFileName(FileName);
+        end
         else
           title := ExtractFileName(FileName);
         Caption := title;
@@ -1688,6 +1717,7 @@ begin
     end;
   finally
     //FileList.Free; // Moved to separate thread
+    ContentList.Free;
   end;
   TPicLoaderThread.Create(False, FileList, ilMapIcons.Width, ilMapIcons.Height);
 end;

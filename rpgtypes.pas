@@ -14,6 +14,7 @@ Permission is granted to anyone to use this software for any purpose, including 
 unit RPGTypes;
 
 {$mode objfpc}{$H+}
+{$modeswitch advancedrecords}
 
 interface
 
@@ -34,8 +35,27 @@ type
     GridColor: TColor;
     GridAlpha: Byte;
     GridType: TGridType;
+    function ToString: string;
+    procedure FromString(str: string);
   end;
 
+  TGridDataWrapper = class
+  public
+    GridData: TGridData;
+    constructor Create;
+    constructor Create(data: TGridData);
+  end;
+var
+  DefaultGridData: TGridData =
+  ( GridSizeX: 100;
+    GridSizeY: 100;
+    GridOffsetX: 0;
+    GridOffsetY: 0;
+    GridColor: clSilver;
+    GridAlpha: 255;
+    GridType: gtRect;);
+
+type
   TTokenRotationStyle = (rsRotateToken, rsShowArrow);
 
   TTokenType = (ttDefault, ttRange, ttText);
@@ -186,6 +206,86 @@ uses
   Math,
   BGRABitmapTypes;
 
+{ TGridData }
+
+function TGridData.ToString: string;
+var
+  fs: TFormatSettings;
+  list: TStringList;
+begin
+  Result := '';
+  fs := FormatSettings;
+  fs.DecimalSeparator := '.';
+  list := TStringList.Create;
+  try
+    list.Delimiter := ';';
+    list.StrictDelimiter := True;
+    list.Add(FloatToStrF(GridSizeX, ffNumber, 8, 8, fs));
+    list.Add(FloatToStrF(GridSizeY, ffNumber, 8, 8, fs));
+    list.Add(FloatToStrF(GridOffsetX, ffNumber, 8, 8, fs));
+    list.Add(FloatToStrF(GridOffsetY, ffNumber, 8, 8, fs));
+    list.Add(IntToStr(GridColor));
+    list.Add(IntToStr(GridAlpha));
+    list.Add(IntToStr(Ord(GridType)));
+    Result := list.DelimitedText;
+  finally
+    list.Free;
+  end;
+end;
+
+procedure TGridData.FromString(str: string);
+var
+  fs: TFormatSettings;
+  list: TStringList;
+begin
+  fs := FormatSettings;
+  fs.DecimalSeparator := '.';
+  list := TStringList.Create;
+  try
+    list.Delimiter := ';';
+    list.StrictDelimiter := True;
+    list.DelimitedText := str;
+    // Set default values
+    GridSizeX := 100;
+    GridSizeY := 100;
+    GridOffsetX := 0;
+    GridOffsetY := 0;
+    GridColor := clSilver;
+    GridAlpha := 255;
+    GridType := gtRect;
+
+    if list.Count > 0 then
+      GridSizeX := StrToFloat(list[0], fs);
+    if list.Count > 1 then
+      GridSizeY := StrToFloat(list[1], fs);
+    if list.Count > 2 then
+      GridOffsetX := StrToFloat(list[2], fs);
+    if list.Count > 3 then
+      GridOffsetY := StrToFloat(list[3], fs);
+    if list.Count > 4 then
+      GridColor := StrToInt(list[4]);
+    if list.Count > 5 then
+      GridAlpha := StrToInt(list[5]);
+    if list.Count > 6 then
+      GridType := TGridType(StrToInt(list[6]));
+  finally
+    list.Free;
+  end;
+end;
+
+{ TGridDataWrapper }
+
+constructor TGridDataWrapper.Create;
+begin
+  inherited Create;
+  GridData := DefaultGridData;
+end;
+
+constructor TGridDataWrapper.Create(data: TGridData);
+begin
+  inherited Create;
+  GridData := data;
+end;
 
 { TToken }
 
