@@ -705,81 +705,12 @@ begin
     ClickedToken := GetTokenAtPos(X, Y);
     if Assigned(ClickedToken) then
     begin
-      fmTokenSettings.cbVisible.Checked := ClickedToken.Visible;
-      fmTokenSettings.udWidth.Position  := ClickedToken.Width;
-      fmTokenSettings.udHeight.Position := ClickedToken.Height;
-      fmTokenSettings.fseRotation.Value := -RadToDeg(ClickedToken.Angle);
-      fmTokenSettings.udGridSlotsX.Position := ClickedToken.GridSlotsX;
-      fmTokenSettings.udGridSlotsY.Position := ClickedToken.GridSlotsY;
-      fmTokenSettings.seNumber.Value := ClickedToken.Number;
-      fmTokenSettings.cbOverlay.ItemIndex := ClickedToken.OverlayIdx + 1;
-
-      if ClickedToken is TRangeIndicator then
-      begin
-        fmTokenSettings.seNumber.Hide;
-        fmTokenSettings.cbOverlay.Hide;
-        fmTokenSettings.eGridSlotsX.Hide;
-        fmTokenSettings.Label4.Hide;
-        fmTokenSettings.eGridSlotsY.Hide;
-
-        fmTokenSettings.seSectorAngle.Show;
-        fmTokenSettings.seSectorAngle.Value := Round(TRangeIndicator(ClickedToken).SectorAngle);  
-        fmTokenSettings.Label3.Show;
-        fmTokenSettings.Label6.Show;
-        fmTokenSettings.pnColor.Show;
-        fmTokenSettings.pnColor.Color := TRangeIndicator(ClickedToken).Color;
-        fmTokenSettings.seAlpha.Show;
-        fmTokenSettings.seAlpha.Value := TRangeIndicator(ClickedToken).Alpha;
-        fmTokenSettings.mText.Hide;
-        fmTokenSettings.bDetach.Show;
-        fmTokenSettings.bDetach.Enabled := TRangeIndicator(ClickedToken).IsAttached;
-        fmTokenSettings.bBringToFront.Enabled := not TRangeIndicator(ClickedToken).IsAttached;
-        fmTokenSettings.bSendToBack.Enabled := fmTokenSettings.bBringToFront.Enabled;
-        fmTokenSettings.bAddToInitiative.Enabled := False;
-      end
-      else if ClickedToken is TTextToken then
-      begin
-        fmTokenSettings.seSectorAngle.Hide;
-        fmTokenSettings.pnColor.Hide;
-        fmTokenSettings.seAlpha.Hide;
-        fmTokenSettings.bDetach.Hide;
-        fmTokenSettings.bBringToFront.Enabled := True;
-        fmTokenSettings.bSendToBack.Enabled := True;
-        fmTokenSettings.seNumber.Hide;
-        fmTokenSettings.cbOverlay.Hide;   
-        fmTokenSettings.Label3.Hide;      
-        fmTokenSettings.Label6.Hide;
-        fmTokenSettings.eGridSlotsX.Hide;
-        fmTokenSettings.Label4.Hide;
-        fmTokenSettings.eGridSlotsY.Hide;
-        fmTokenSettings.mText.Show;
-        fmTokenSettings.mText.Text := TTextToken(ClickedToken).Text; 
-        fmTokenSettings.bAddToInitiative.Enabled := False;
-      end
-      else
-      begin
-        fmTokenSettings.seNumber.Show;
-        fmTokenSettings.cbOverlay.Show;
-        fmTokenSettings.Label3.Show;
-        fmTokenSettings.Label6.Show;
-        fmTokenSettings.eGridSlotsX.Show;
-        fmTokenSettings.Label4.Show;
-        fmTokenSettings.eGridSlotsY.Show;
-
-        fmTokenSettings.seSectorAngle.Hide;
-        fmTokenSettings.pnColor.Hide;
-        fmTokenSettings.seAlpha.Hide;
-        fmTokenSettings.mText.Hide;
-        fmTokenSettings.bDetach.Hide;
-        fmTokenSettings.bBringToFront.Enabled := True;
-        fmTokenSettings.bSendToBack.Enabled := True;
-        fmTokenSettings.bAddToInitiative.Enabled := not FCombatMode;
-      end;
-
 
       fmTokenSettings.Left := Left + pbViewPort.Left + X;
       fmTokenSettings.Top  := Top  + pbViewPort.Top  + Y;
+      fmTokenSettings.CombatMode := FCombatMode;
       fmTokenSettings.LinkedToken := ClickedToken;
+
       fmTokenSettings.Show; // Treat this one more like a popup menu
 
     end;

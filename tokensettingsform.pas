@@ -68,9 +68,12 @@ type
     procedure FormShow(Sender: TObject);
     procedure pnColorClick(Sender: TObject);
   private
-
+    FLinkedToken: TToken;
+    procedure SetToken(token: TToken);
+    procedure SetCombatMode(val: Boolean);
   public
-    LinkedToken: TToken;
+    property LinkedToken: TToken read FLinkedToken write SetToken;
+    property CombatMode: Boolean write SetCombatMode;
   end;
 
 var
@@ -88,6 +91,87 @@ uses
   InitiativeForm;
 
 { TfmTokenSettings }
+
+procedure TfmTokenSettings.SetCombatMode(val: Boolean);
+begin
+  bAddToInitiative.Enabled := not val;
+end;
+
+procedure TfmTokenSettings.SetToken(token: TToken);
+begin
+  FLinkedToken := token;
+  if not Assigned(token) then
+    Exit;
+  cbVisible.Checked := token.Visible;
+  udWidth.Position  := token.Width;
+  udHeight.Position := token.Height;
+  fseRotation.Value := -RadToDeg(token.Angle);
+  udGridSlotsX.Position := token.GridSlotsX;
+  udGridSlotsY.Position := token.GridSlotsY;
+  seNumber.Value := token.Number;
+  cbOverlay.ItemIndex := token.OverlayIdx + 1;
+
+  if token is TRangeIndicator then
+  begin
+    seNumber.Hide;
+    cbOverlay.Hide;
+    eGridSlotsX.Hide;
+    Label4.Hide;
+    eGridSlotsY.Hide;
+
+    seSectorAngle.Show;
+    seSectorAngle.Value := Round(TRangeIndicator(token).SectorAngle);
+    Label3.Show;
+    Label6.Show;
+    pnColor.Show;
+    pnColor.Color := TRangeIndicator(token).Color;
+    seAlpha.Show;
+    seAlpha.Value := TRangeIndicator(token).Alpha;
+    mText.Hide;
+    bDetach.Show;
+    bDetach.Enabled := TRangeIndicator(token).IsAttached;
+    bBringToFront.Enabled := not TRangeIndicator(token).IsAttached;
+    bSendToBack.Enabled := bBringToFront.Enabled;
+    bAddToInitiative.Enabled := False;
+  end
+  else if token is TTextToken then
+  begin
+    seSectorAngle.Hide;
+    pnColor.Hide;
+    seAlpha.Hide;
+    bDetach.Hide;
+    bBringToFront.Enabled := True;
+    bSendToBack.Enabled := True;
+    seNumber.Hide;
+    cbOverlay.Hide;
+    Label3.Hide;
+    Label6.Hide;
+    eGridSlotsX.Hide;
+    Label4.Hide;
+    eGridSlotsY.Hide;
+    mText.Show;
+    mText.Text := TTextToken(token).Text;
+    bAddToInitiative.Enabled := False;
+  end
+  else
+  begin
+    seNumber.Show;
+    cbOverlay.Show;
+    Label3.Show;
+    Label6.Show;
+    eGridSlotsX.Show;
+    Label4.Show;
+    eGridSlotsY.Show;
+
+    seSectorAngle.Hide;
+    pnColor.Hide;
+    seAlpha.Hide;
+    mText.Hide;
+    bDetach.Hide;
+    bBringToFront.Enabled := True;
+    bSendToBack.Enabled := True;
+  end;
+end;
 
 procedure TfmTokenSettings.FormDeactivate(Sender: TObject);
 begin
