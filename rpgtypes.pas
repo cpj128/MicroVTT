@@ -96,6 +96,7 @@ type
       procedure StopAnimation;
       procedure DoAnimationStep;
       function GetBoundingRect: TRect;
+      procedure Attach(token: TToken);
       function GetAttached(idx: Integer): TToken;
       function AttachedCount: Integer;
       procedure RemoveAttached(token: TToken);
@@ -312,7 +313,17 @@ begin
 end;
 
 destructor TToken.Destroy;
+var
+  i, j: Integer;
+  tmpToken: TToken;
 begin
+  j := AttachedCount - 1;
+  for i := 0 to j do
+  begin
+    tmpToken := GetAttached(i);
+    if Assigned(tmpToken) and (tmpToken is TRangeIndicator) then
+      TRangeIndicator(tmpToken).Detach;
+  end;
   FGlyph.Free;
   FAttached.Free;
   inherited;
@@ -452,6 +463,11 @@ begin
   for i := 0 to AttachedCount - 1 do
     if GetAttached(i) is TRangeIndicator then
       TRangeIndicator(GetAttached(i)).RedrawGlyph;
+end;
+
+procedure TToken.Attach(token: TToken);
+begin
+  FAttached.Add(token);
 end;
 
 function TToken.GetAttached(idx: Integer): TToken;
@@ -673,6 +689,7 @@ end;
 procedure TRangeIndicator.AttachTo(token: TToken);
 begin
   FAttachedTo := token;
+  FAttachedTo.Attach(self);
 end;
 
 procedure TRangeIndicator.Detach;
