@@ -225,6 +225,7 @@ type
     FCurInitiativeIndex: Integer;
     FTokenList: TList;
     FMapDir, FTokenDir, FOverlayDir: string;
+    FThumbnailDir: string;
     FInitiativeDesc, FTokensStartInvisible: Boolean;
     FTokenRotationStyle: TTokenRotationStyle;
     FAppSettings: TIniFile;
@@ -281,6 +282,7 @@ type
     property MapDir: string read FMapDir;
     property TokenDir: string read FTokenDir;
     property OverlayDir: string read FOverlayDir;
+    property ThumbnailDir: string read FThumbnailDir;
     property NotesList: TEntryList read FNotesList;
     property ShowMap: Boolean read FShowMap;
     property ShowMarker: Boolean read FShowMarker;
@@ -1629,6 +1631,7 @@ begin
     FindAllFiles(FileList, FMapDir, PicFilterStr, True);
     for i := 0 to FileList.Count - 1 do
     begin
+      FileList.Objects[i] := TObject(Pointer(i));
       FileName := FileList[i];
       with lvMaps.Items.Add do
       begin
@@ -1643,6 +1646,7 @@ begin
         else
           title := ExtractFileName(FileName);
         Caption := title;
+        ImageIndex := 0;
         SubItems.Add(FileName);
       end;
     end;
@@ -1984,7 +1988,12 @@ begin
   FInitiativeDesc := StrToBoolDef(FAppSettings.ReadString('Settings', 'InitiativeDesc', 'true'), True);
   FTokensStartInvisible := StrToBoolDef(FAppSettings.ReadString('Settings', 'TokensStartInvisible', 'true'), True);
   FTokenRotationStyle := TTokenRotationStyle(FAppSettings.ReadInteger('Settings', 'TokenRotationStyle', 0));
-   
+
+  FThumbnailDir := IncludeTrailingPathDelimiter(ExtractFilePath(Application.ExeName)) + 'Thumbnails\';
+  // Maybe use Appdata instead?
+  if not DirectoryExists(FThumbnailDir) then
+    MkDir(FThumbnailDir);
+
   // Set language
   LangName := 'English';
   GetLanguageIDs(LangID, FallbackLangID);
@@ -2108,25 +2117,45 @@ procedure TPicLoaderThread.Execute;
 var
   i: Integer;
   FullPic, ScaledPic: TBGRABitmap;
+  ThumbnailName: string;
+  HasThumb: Boolean;
 begin
   i := 0;
   FullPic := TBGRABitmap.Create(0, 0);
+  // This needs further optimization. Saving and loading thumbnails works well so far, but if one
+  // icon needs to be created, all icons behind that one in the list keep their "unknown"-status
+  // until the thumbnail is done. The loop should be moved to the Update-procedure, we should
+  // generate a thread for every thumbnail there.
   while (not Terminated) and (i < FFileList.Count) do
   begin
+    HasThumb := False;
     try
-      FullPic.LoadFromFile(FFileList[i]);
+      ThumbnailName := fmController.ThumbnailDir + 't_' + ExtractFileName(FFileList[i]);
+      ThumbnailName := ChangeFileExt(ThumbnailName, '.jpg');
+      HasThumb := FileExists(ThumbnailName);
+      if not HasThumb then
+        FullPic.LoadFromFile(FFileList[i]);
     except
 
     end;
     try
-      ScaledPic := FullPic.Resample(Thumbnail.Width, Thumbnail.Height, rmSimpleStretch);
-      ScaledPic.Draw(Thumbnail.Canvas, Rect(0, 0, Thumbnail.Width, Thumbnail.Height));
-      //Thumbnail.Canvas.StretchDraw(Rect(0, 0, Thumbnail.Width, Thumbnail.Height), Fullpic.Graphic);
-
+      if HasThumb then
+      begin
+        // Load existing thumbnail
+        ScaledPic := TBGRABitmap.Create(ThumbnailName);
+        ScaledPic.Draw(Thumbnail.Canvas, Rect(0, 0, Thumbnail.Width, Thumbnail.Height));
+      end
+      else
+      begin
+        // Create thumbnail, save for next use
+        ScaledPic := FullPic.Resample(Thumbnail.Width, Thumbnail.Height, rmSimpleStretch);
+        ScaledPic.Draw(Thumbnail.Canvas, Rect(0, 0, Thumbnail.Width, Thumbnail.Height));
+        ScaledPic.SaveToFile(ThumbnailName);
+      end;
     finally
       ScaledPic.Free;
     end;
-    CurIdx := i;
+    CurIdx := LongInt(Pointer(FFileList.Objects[i]));
     Synchronize(@SetThumbnail);
 
     Inc(i);
