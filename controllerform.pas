@@ -268,6 +268,7 @@ type
     procedure SnapTokenToGrid(token: TToken);
     procedure SaveLibraryData;
     procedure AddToInitiative(pName, Path: string; Num, Value: Integer);
+    function GetThumbnailName(filename: string): string;
     // Notes module
     procedure LoadHTML(Entry: string);
     procedure AddToHistory(Entry: string);
@@ -289,6 +290,7 @@ type
     property ShowGrid: Boolean read FShowGrid;
     property ShowTokens: Boolean read FShowTokens;
   end;
+
 
   TTokenNodeData = class
     public
@@ -1618,21 +1620,24 @@ end;
 procedure TfmController.UpdateMapList;
 var
   i: Integer;
-  FileList, ContentList: TStringList;
-  FileName: string;
+  FileList, ContentList, ToBeLoaded: TStringList;
+  FileName, ThumbnailName: string;
   title: string;
+  Thumbnail: TJPEGImage;
 begin
   lvMaps.Clear;
   FileList := TStringList.Create;
   ContentList := TStringList.Create;
+  ToBeLoaded := TStringList.Create;
   try
     ContentList.Delimiter := '|';
     ContentList.StrictDelimiter := True;
     FindAllFiles(FileList, FMapDir, PicFilterStr, True);
     for i := 0 to FileList.Count - 1 do
     begin
-      FileList.Objects[i] := TObject(Pointer(i));
-      FileName := FileList[i];
+      FileName := FileList[i];                    
+      ThumbnailName := GetThumbnailName(FileName);
+
       with lvMaps.Items.Add do
       begin
         if FMapLib.IndexOfName(FileName) >= 0 then
@@ -1646,15 +1651,26 @@ begin
         else
           title := ExtractFileName(FileName);
         Caption := title;
-        ImageIndex := 0;
+        if FileExists(ThumbnailName) then
+        begin
+          Thumbnail := TJPEGImage.Create;
+          Thumbnail.LoadFromFile(ThumbnailName);
+          ImageIndex := ilMapIcons.Add(Thumbnail, nil);
+        end
+        else
+        begin
+          ToBeLoaded.AddObject(FileList[i], TObject(Pointer(i)));
+          ImageIndex := 0;
+        end;
         SubItems.Add(FileName);
       end;
     end;
   finally
-    //FileList.Free; // Moved to separate thread
     ContentList.Free;
+    FileList.Free;
+    // ToBeLoaded is freed by the thread
   end;
-  TPicLoaderThread.Create(False, FileList, ilMapIcons.Width, ilMapIcons.Height);
+  TPicLoaderThread.Create(False, ToBeLoaded, ilMapIcons.Width, ilMapIcons.Height);
 end;
 
 procedure TfmController.UpdateTokenList;
@@ -1908,6 +1924,12 @@ begin
   tmpItem.Data := Pointer(Num);
 end;
 
+function TfmController.GetThumbnailName(filename: string): string;
+begin
+  Result := FThumbnailDir + 't_' + ExtractFileName(filename);
+  Result := ChangeFileExt(Result, '.jpg');
+end;
+
 procedure TfmController.UpdateViewport;
 var
   DisplayMapWidth, DisplayMapHeight: Integer;
@@ -2118,40 +2140,22 @@ var
   i: Integer;
   FullPic, ScaledPic: TBGRABitmap;
   ThumbnailName: string;
-  HasThumb: Boolean;
 begin
   i := 0;
   FullPic := TBGRABitmap.Create(0, 0);
-  // This needs further optimization. Saving and loading thumbnails works well so far, but if one
-  // icon needs to be created, all icons behind that one in the list keep their "unknown"-status
-  // until the thumbnail is done. The loop should be moved to the Update-procedure, we should
-  // generate a thread for every thumbnail there.
   while (not Terminated) and (i < FFileList.Count) do
   begin
-    HasThumb := False;
     try
-      ThumbnailName := fmController.ThumbnailDir + 't_' + ExtractFileName(FFileList[i]);
-      ThumbnailName := ChangeFileExt(ThumbnailName, '.jpg');
-      HasThumb := FileExists(ThumbnailName);
-      if not HasThumb then
-        FullPic.LoadFromFile(FFileList[i]);
+      ThumbnailName := fmController.GetThumbnailName(FFileList[i]);
+      FullPic.LoadFromFile(FFileList[i]);
     except
 
     end;
     try
-      if HasThumb then
-      begin
-        // Load existing thumbnail
-        ScaledPic := TBGRABitmap.Create(ThumbnailName);
-        ScaledPic.Draw(Thumbnail.Canvas, Rect(0, 0, Thumbnail.Width, Thumbnail.Height));
-      end
-      else
-      begin
-        // Create thumbnail, save for next use
-        ScaledPic := FullPic.Resample(Thumbnail.Width, Thumbnail.Height, rmSimpleStretch);
-        ScaledPic.Draw(Thumbnail.Canvas, Rect(0, 0, Thumbnail.Width, Thumbnail.Height));
-        ScaledPic.SaveToFile(ThumbnailName);
-      end;
+      // Create thumbnail, save for next use
+      ScaledPic := FullPic.Resample(Thumbnail.Width, Thumbnail.Height, rmSimpleStretch);
+      ScaledPic.Draw(Thumbnail.Canvas, Rect(0, 0, Thumbnail.Width, Thumbnail.Height));
+      ScaledPic.SaveToFile(ThumbnailName);
     finally
       ScaledPic.Free;
     end;
