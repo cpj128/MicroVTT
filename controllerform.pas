@@ -1433,54 +1433,20 @@ begin
       i := 0;
       while saveFile.ValueExists(SAVESECTIONTOKENS, 'XPos' + IntToStr(i)) do
       begin
-        CurToken := nil;
-        path := saveFile.ReadString(SAVESECTIONTOKENS, 'Path' + IntToStr(i), '-');
-
-        if SameText(path, '::Range') then
-        begin
-          CurToken := TRangeIndicator.Create(saveFile.ReadInteger(SAVESECTIONTOKENS, 'XPos' + IntToStr(i), 0),
-                                             saveFile.ReadInteger(SAVESECTIONTOKENS, 'YPos' + IntToStr(i), 0),
-                                             saveFile.ReadInteger(SAVESECTIONTOKENS, 'Width' + IntToStr(i), 100),
-                                             saveFile.ReadInteger(SAVESECTIONTOKENS, 'Height' + IntToStr(i), 100));
-          TRangeIndicator(CurToken).Alpha := saveFile.ReadInteger(SAVESECTIONTOKENS, 'Alpha' + IntToStr(i), 32);
-          TRangeIndicator(CurToken).Color := saveFile.ReadInteger(SAVESECTIONTOKENS, 'Color' + IntToStr(i), clRed);
-          TRangeIndicator(CurToken).SectorAngle := saveFile.ReadFloat(SAVESECTIONTOKENS, 'Sector' + IntToStr(i), 90);
-          if saveFile.ValueExists(SAVESECTIONTOKENS, 'Attached' + IntToStr(i)) then
-            attachList.Add(CurToken);
-        end
-        else if SameText(path, '::Text') then
-        begin
-          CurToken := TTextToken.Create(saveFile.ReadInteger(SAVESECTIONTOKENS, 'XPos' + IntToStr(i), 0),
-                                             saveFile.ReadInteger(SAVESECTIONTOKENS, 'YPos' + IntToStr(i), 0),
-                                             saveFile.ReadInteger(SAVESECTIONTOKENS, 'Width' + IntToStr(i), 100),
-                                             saveFile.ReadInteger(SAVESECTIONTOKENS, 'Height' + IntToStr(i), 100),
-                                             saveFile.ReadString(SAVESECTIONTOKENS, 'Text' + IntToStr(i), ''));
-        end
-        else if FileExists(path) then
-        begin
-          CurToken := TToken.Create(path,
-                                    saveFile.ReadInteger(SAVESECTIONTOKENS, 'XPos' + IntToStr(i), 0),
-                                    saveFile.ReadInteger(SAVESECTIONTOKENS, 'YPos' + IntToStr(i), 0),
-                                    saveFile.ReadInteger(SAVESECTIONTOKENS, 'Width' + IntToStr(i), 100),
-                                    saveFile.ReadInteger(SAVESECTIONTOKENS, 'Height' + IntToStr(i), 100));
-          while attachList.Count > 0 do
-          begin
-            TAttachableToken(attachList[0]).AttachTo(CurToken);
-            attachList.Delete(0);
-          end;
-        end;
-
+        TTokenFactory.TokensStartInvisible := FTokensStartInvisible;
+        CurToken := TTokenFactory.CreateToken(SaveFile, i);
         if Assigned(CurToken) then
         begin
-
-          CurToken.Angle := saveFile.ReadFloat(SAVESECTIONTOKENS, 'Angle' + IntToStr(i), 0);
-          CurToken.OverlayIdx := saveFile.ReadInteger(SAVESECTIONTOKENS, 'Overlay' + IntToStr(i), -1);
-          CurToken.Visible := saveFile.ReadBool(SAVESECTIONTOKENS, 'Visible' + IntToStr(i), FTokensStartInvisible);
-          CurToken.GridSlotsX := saveFile.ReadInteger(SAVESECTIONTOKENS, 'XSlots' + IntToStr(i), 1);               
-          CurToken.GridSlotsY := saveFile.ReadInteger(SAVESECTIONTOKENS, 'YSlots' + IntToStr(i), 1);
-          CurToken.Name := saveFile.ReadString(SAVESECTIONTOKENS, 'Name' + IntToStr(i), '');
-          CurToken.Number:= saveFile.ReadInteger(SAVESECTIONTOKENS, 'No' + IntToStr(i), 0);
-
+          if SaveFile.ValueExists(SAVESECTIONTOKENS, 'Attached' + IntToStr(i)) then
+            attachList.Add(CurToken);
+          if not (CurToken is TAttachableToken) then
+          begin
+            while attachList.Count > 0 do
+            begin
+              TAttachableToken(attachList[0]).AttachTo(CurToken);
+              attachList.Delete(0);
+            end;
+          end;
           FTokenList.Add(CurToken);
         end;
         Inc(i);

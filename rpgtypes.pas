@@ -87,7 +87,7 @@ type
       function GetAngle: Double; virtual;
       function GetWidth: Integer; virtual;
       function GetHeight: Integer; virtual;
-      procedure SetAngle(val: Double);
+      procedure SetAngle(val: Double); virtual;
     public
       constructor Create(Path: string; X, Y, pWidth, pHeight: Integer);
       destructor Destroy; override;
@@ -121,6 +121,11 @@ type
       property BaseInitiative: Integer read FBaseInitiative write FBaseInitiative;
   end;
 
+  TTokenFactory = class
+    TokensStartInvisible: Boolean; static;
+    class function CreateToken(SaveFile: TIniFile; idx: Integer): TToken; static;
+  end;
+
   TAttachableToken = class(TToken)
   private
     FAttachedTo: TToken;
@@ -144,6 +149,7 @@ type
     procedure SetSectorAngle(Val: Double);
     procedure SetWidth(Val: Integer); override;
     procedure SetHeight(Val: Integer); override;
+    procedure SetAngle(val: Double); override;
     function GetXPos: Integer; override;
     function GetYPos: Integer; override;
     function GetXEndPos: Integer; override;
@@ -621,6 +627,52 @@ begin
   Result := Assigned(FAttachedTo);
 end;
 
+{ TTokenFactory }
+
+class function TTokenFactory.CreateToken(SaveFile: TIniFile; idx: Integer): TToken;
+var
+  path: string;
+begin
+  Result := nil;
+  path := SaveFile.ReadString(SAVESECTIONTOKENS, 'Path' + IntToStr(idx), '-');
+  if SameText(path, '::Range') then // Range indicator
+  begin
+    Result := TRangeIndicator.Create(saveFile.ReadInteger(SAVESECTIONTOKENS, 'XPos' + IntToStr(idx), 0),
+                                       saveFile.ReadInteger(SAVESECTIONTOKENS, 'YPos' + IntToStr(idx), 0),
+                                       saveFile.ReadInteger(SAVESECTIONTOKENS, 'Width' + IntToStr(idx), 100),
+                                       saveFile.ReadInteger(SAVESECTIONTOKENS, 'Height' + IntToStr(idx), 100));
+    TRangeIndicator(Result).Alpha := saveFile.ReadInteger(SAVESECTIONTOKENS, 'Alpha' + IntToStr(idx), 32);
+    TRangeIndicator(Result).Color := saveFile.ReadInteger(SAVESECTIONTOKENS, 'Color' + IntToStr(idx), clRed);
+    TRangeIndicator(Result).SectorAngle := saveFile.ReadFloat(SAVESECTIONTOKENS, 'Sector' + IntToStr(idx), 90);
+  end
+  else if SameText(path, '::Text') then // Text token
+  begin
+    Result := TTextToken.Create(saveFile.ReadInteger(SAVESECTIONTOKENS, 'XPos' + IntToStr(idx), 0),
+                                saveFile.ReadInteger(SAVESECTIONTOKENS, 'YPos' + IntToStr(idx), 0),
+                                saveFile.ReadInteger(SAVESECTIONTOKENS, 'Width' + IntToStr(idx), 100),
+                                saveFile.ReadInteger(SAVESECTIONTOKENS, 'Height' + IntToStr(idx), 100),
+                                saveFile.ReadString(SAVESECTIONTOKENS, 'Text' + IntToStr(idx), ''));
+  end
+  else if FileExists(path) then // Image token
+  begin
+    Result := TToken.Create(path,
+                            saveFile.ReadInteger(SAVESECTIONTOKENS, 'XPos' + IntToStr(idx), 0),
+                            saveFile.ReadInteger(SAVESECTIONTOKENS, 'YPos' + IntToStr(idx), 0),
+                            saveFile.ReadInteger(SAVESECTIONTOKENS, 'Width' + IntToStr(idx), 100),
+                            saveFile.ReadInteger(SAVESECTIONTOKENS, 'Height' + IntToStr(idx), 100));
+  end;
+
+  if Assigned(Result) then
+  begin
+    Result.Angle := saveFile.ReadFloat(SAVESECTIONTOKENS, 'Angle' + IntToStr(idx), 0);
+    Result.OverlayIdx := saveFile.ReadInteger(SAVESECTIONTOKENS, 'Overlay' + IntToStr(idx), -1);
+    Result.Visible := saveFile.ReadBool(SAVESECTIONTOKENS, 'Visible' + IntToStr(idx), TokensStartInvisible);
+    Result.GridSlotsX := saveFile.ReadInteger(SAVESECTIONTOKENS, 'XSlots' + IntToStr(idx), 1);
+    Result.GridSlotsY := saveFile.ReadInteger(SAVESECTIONTOKENS, 'YSlots' + IntToStr(idx), 1);
+    Result.Name := saveFile.ReadString(SAVESECTIONTOKENS, 'Name' + IntToStr(idx), '');
+    Result.Number:= saveFile.ReadInteger(SAVESECTIONTOKENS, 'No' + IntToStr(idx), 0);
+  end;
+end;
 
 { TRangeIndicator }
 
@@ -694,6 +746,11 @@ begin
   RedrawGlyph;
 end;
 
+procedure TRangeIndicator.SetAngle(val: Double);
+begin
+  FAngle := val;
+  RedrawGlyph;
+end;
 
 function TRangeIndicator.GetXPos: Integer;
 begin
