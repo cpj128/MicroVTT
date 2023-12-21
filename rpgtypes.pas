@@ -19,7 +19,7 @@ unit RPGTypes;
 interface
 
 uses
-  Classes, Graphics, SysUtils, BGRABitmap;
+  Classes, Graphics, SysUtils, BGRABitmap, IniFiles;
   
  const
   MAXTOKENANIMSTEPS = 20;
@@ -101,6 +101,7 @@ type
       function AttachedCount: Integer;
       procedure RemoveAttached(token: TToken);
       procedure UpdateAttached;
+      procedure SaveToIni(SaveFile: TIniFile; idx: Integer); virtual;
       property XPos: Integer read GetXPos write SetXPos;
       property YPos: Integer read GetYPos write SetYPos;
       property XEndPos: Integer read GetXEndPos;
@@ -129,7 +130,8 @@ type
     procedure Detach;
     function IsAttached: Boolean;
     constructor Create;
-    Destructor Destroy; override;
+    destructor Destroy; override;
+    procedure SaveToIni(SaveFile: TIniFile; idx: Integer); override;
   end;
 
   TRangeIndicator = class(TAttachableToken)
@@ -149,7 +151,8 @@ type
     function GetAngle: Double; override;
   public
     constructor Create(X, Y, pWidth, pHeight: Integer);
-    destructor Destroy; override;   
+    destructor Destroy; override;
+    procedure SaveToIni(SaveFile: TIniFile; idx: Integer); override;
     procedure RedrawGlyph; override;
     property Color: TColor read FColor write SetColor;
     property Alpha: Byte read FAlpha write SetAlpha;
@@ -165,6 +168,7 @@ type
   public
     constructor Create(X, Y, pWidth, pHeight: Integer; text: string);
     destructor Destroy; override;
+    procedure SaveToIni(SaveFile: TIniFile; idx: Integer); override;
     procedure RedrawGlyph;
     property Text: string read FText write SetText;
   end;
@@ -193,6 +197,7 @@ implementation
 uses
   Math,
   BGRABitmapTypes,
+  DisplayConst,
   RPGUtils;
 
 { TGridData }
@@ -315,6 +320,23 @@ begin
   FGlyph.Free;
   FAttached.Free;
   inherited;
+end;
+
+procedure TToken.SaveToIni(SaveFile: TIniFile; idx: Integer);
+begin
+  saveFile.WriteString(SAVESECTIONTOKENS, 'Path' + IntToStr(idx), Path);
+
+  saveFile.WriteString(SAVESECTIONTOKENS, 'Name' + IntToStr(idx), Name);
+  saveFile.WriteInteger(SAVESECTIONTOKENS, 'No' + IntToStr(idx), Number);
+  saveFile.WriteInteger(SAVESECTIONTOKENS, 'XPos' + IntToStr(idx), XEndPos);
+  saveFile.WriteInteger(SAVESECTIONTOKENS, 'YPos' + IntToStr(idx), YEndPos);
+  saveFile.WriteInteger(SAVESECTIONTOKENS, 'Width' + IntToStr(idx), Width);
+  saveFile.WriteInteger(SAVESECTIONTOKENS, 'Height' + IntToStr(idx), Height);
+  saveFile.WriteFloat(SAVESECTIONTOKENS, 'Angle' + IntToStr(idx), Angle);
+  saveFile.WriteInteger(SAVESECTIONTOKENS, 'Overlay' + IntToStr(idx), OverlayIdx);
+  saveFile.WriteBool(SAVESECTIONTOKENS, 'Visible' + IntToStr(idx), Visible);
+  saveFile.WriteInteger(SAVESECTIONTOKENS, 'XSlots' + IntToStr(idx), GridSlotsX);
+  saveFile.WriteInteger(SAVESECTIONTOKENS, 'YSlots' + IntToStr(idx), GridSlotsY);
 end;
 
 procedure TToken.SnapToGrid(GridSizeX, GridSizeY, XOffset, YOffset: Single; GridType: TGridType);
@@ -570,6 +592,13 @@ begin
   inherited;
 end;
 
+procedure TAttachableToken.SaveToIni(SaveFile: TIniFile; idx: Integer);
+begin
+  inherited SaveToIni(SaveFile, idx);
+  if IsAttached then
+    SaveFile.WriteString(SAVESECTIONTOKENS, 'Attached' + IntToStr(idx), '::Next');
+end;
+
 procedure TAttachableToken.AttachTo(token: TToken);
 begin
   FAttachedTo := token;
@@ -624,6 +653,15 @@ end;
 destructor TRangeIndicator.Destroy;
 begin
   inherited;
+end;
+
+procedure TRangeIndicator.SaveToIni(SaveFile: TIniFile; idx: Integer);
+begin
+  inherited SaveToIni(SaveFile, idx);
+  SaveFile.WriteString(SAVESECTIONTOKENS, 'Path' + IntToStr(idx), '::Range');
+  SaveFile.WriteInteger(SAVESECTIONTOKENS, 'Alpha' + IntToStr(idx), Alpha);
+  SaveFile.WriteInteger(SAVESECTIONTOKENS, 'Color' + IntToStr(idx), Color);
+  SaveFile.WriteFloat(SAVESECTIONTOKENS, 'Sector' + IntToStr(idx), SectorAngle);
 end;
 
 procedure TRangeIndicator.SetColor(val: TColor);
@@ -742,6 +780,13 @@ end;
 destructor TTextToken.Destroy;
 begin
   inherited;
+end;
+
+procedure TTextToken.SaveToIni(SaveFile: TIniFile; idx: Integer);
+begin
+  inherited SaveToIni(SaveFile, idx);
+  SaveFile.WriteString(SAVESECTIONTOKENS, 'Path' + IntToStr(idx), '::Text');
+  SaveFile.WriteString(SAVESECTIONTOKENS, 'Text' + IntToStr(idx), Text);
 end;
 
 procedure TTextToken.SetWidth(val: Integer);

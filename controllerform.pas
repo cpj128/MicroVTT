@@ -1306,7 +1306,6 @@ var
   saveFile: TIniFile;
   i: Integer;
   tmpItem: TListItem;
-  CurToken: TToken;
 begin
   if sdSaveSession.Execute then
   begin
@@ -1351,39 +1350,7 @@ begin
       saveFile.WriteBool(SAVESECTIONTOKENS, 'TokenVisible', FShowTokens);
       for i := 0 to FTokenList.Count - 1 do
       begin
-        CurToken := TToken(FTokenList[i]);
-
-        // Should this be moved to the tokens themselves?
-        if CurToken is TRangeIndicator then
-        begin                       
-          saveFile.WriteString(SAVESECTIONTOKENS, 'Path' + IntToStr(i), '::Range');
-          SaveFile.WriteInteger(SAVESECTIONTOKENS, 'Alpha' + IntToStr(i), TRangeIndicator(CurToken).Alpha);
-          SaveFile.WriteInteger(SAVESECTIONTOKENS, 'Color' + IntToStr(i), TRangeIndicator(CurToken).Color);
-          SaveFile.WriteFloat(SAVESECTIONTOKENS, 'Sector' + IntToStr(i), TRangeIndicator(CurToken).SectorAngle);
-          if TRangeIndicator(CurToken).IsAttached then
-            SaveFile.WriteString(SAVESECTIONTOKENS, 'Attached' + IntToStr(i), '::Next');
-        end
-        else if CurToken is TTextToken then
-        begin                                                                                      
-          saveFile.WriteString(SAVESECTIONTOKENS, 'Path' + IntToStr(i), '::Text');
-          saveFile.WriteString(SAVESECTIONTOKENS, 'Text' + IntToStr(i), TTextToken(CurToken).Text);
-        end
-        else
-        begin
-          saveFile.WriteString(SAVESECTIONTOKENS, 'Path' + IntToStr(i), CurToken.Path);
-        end;
-
-        saveFile.WriteString(SAVESECTIONTOKENS, 'Name' + IntToStr(i), CurToken.Name);
-        saveFile.WriteInteger(SAVESECTIONTOKENS, 'No' + IntToStr(i), CurToken.Number);
-        saveFile.WriteInteger(SAVESECTIONTOKENS, 'XPos' + IntToStr(i), CurToken.XEndPos);
-        saveFile.WriteInteger(SAVESECTIONTOKENS, 'YPos' + IntToStr(i), CurToken.YEndPos);
-        saveFile.WriteInteger(SAVESECTIONTOKENS, 'Width' + IntToStr(i), CurToken.Width);
-        saveFile.WriteInteger(SAVESECTIONTOKENS, 'Height' + IntToStr(i), CurToken.Height);
-        saveFile.WriteFloat(SAVESECTIONTOKENS, 'Angle' + IntToStr(i), CurToken.Angle);
-        saveFile.WriteInteger(SAVESECTIONTOKENS, 'Overlay' + IntToStr(i), CurToken.OverlayIdx);
-        saveFile.WriteBool(SAVESECTIONTOKENS, 'Visible' + IntToStr(i), CurToken.Visible);
-        saveFile.WriteInteger(SAVESECTIONTOKENS, 'XSlots' + IntToStr(i), CurToken.GridSlotsX);
-        saveFile.WriteInteger(SAVESECTIONTOKENS, 'YSlots' + IntToStr(i), CurToken.GridSlotsY);
+        TToken(FTokenList[i]).SaveToIni(SaveFile, i);
       end;
 
       saveFile.UpdateFile;
