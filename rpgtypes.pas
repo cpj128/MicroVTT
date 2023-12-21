@@ -120,12 +120,23 @@ type
       property BaseInitiative: Integer read FBaseInitiative write FBaseInitiative;
   end;
 
-  TRangeIndicator = class(TToken)
+  TAttachableToken = class(TToken)
+  private
+    FAttachedTo: TToken;
+  public
+    procedure RedrawGlyph; virtual; abstract;
+    procedure AttachTo(token: TToken);
+    procedure Detach;
+    function IsAttached: Boolean;
+    constructor Create;
+    Destructor Destroy; override;
+  end;
+
+  TRangeIndicator = class(TAttachableToken)
   private
     FSectorAngle: Double;
     FColor: TColor;
     FAlpha: Byte;
-    FAttachedTo: TToken;
     procedure SetColor(val: TColor);
     procedure SetAlpha(val: Byte);
     procedure SetSectorAngle(Val: Double);
@@ -139,14 +150,10 @@ type
   public
     constructor Create(X, Y, pWidth, pHeight: Integer);
     destructor Destroy; override;   
-    procedure RedrawGlyph;
-    procedure AttachTo(token: TToken);
-    procedure Detach;
-    function IsAttached: Boolean;
+    procedure RedrawGlyph; override;
     property Color: TColor read FColor write SetColor;
     property Alpha: Byte read FAlpha write SetAlpha;
     property SectorAngle: Double read FSectorAngle write SetSectorAngle;
-
   end;
 
   TTextToken = class(TToken)
@@ -162,7 +169,7 @@ type
     property Text: string read FText write SetText;
   end;
 
-  TLightToken = class(TToken)
+  TLightToken = class(TAttachableToken)
   private
     FColor: TColor;
     FRange: Integer;
@@ -302,8 +309,8 @@ begin
   for i := 0 to j do
   begin
     tmpToken := GetAttached(i);
-    if Assigned(tmpToken) and (tmpToken is TRangeIndicator) then
-      TRangeIndicator(tmpToken).Detach;
+    if Assigned(tmpToken) and (tmpToken is TAttachableToken) then
+      TAttachableToken(tmpToken).Detach;
   end;
   FGlyph.Free;
   FAttached.Free;
@@ -452,8 +459,8 @@ procedure TToken.UpdateAttached;
 var i: Integer;
 begin
   for i := 0 to AttachedCount - 1 do
-    if GetAttached(i) is TRangeIndicator then
-      TRangeIndicator(GetAttached(i)).RedrawGlyph;
+    if GetAttached(i) is TAttachableToken then
+      TAttachableToken(GetAttached(i)).RedrawGlyph;
 end;
 
 procedure TToken.Attach(token: TToken);
@@ -549,11 +556,48 @@ begin
   Result := Rect(Floor(MinX), Floor(MinY), Ceil(MaxX), Ceil(MaxY));
 end;
 
+{ TAttachableToken }
+
+constructor TAttachableToken.Create;
+begin
+  FAttachedTo := nil;
+end;
+
+destructor TAttachableToken.Destroy;
+begin
+  if IsAttached then
+    Detach;
+  inherited;
+end;
+
+procedure TAttachableToken.AttachTo(token: TToken);
+begin
+  FAttachedTo := token;
+  FAttachedTo.Attach(self);
+end;
+
+procedure TAttachableToken.Detach;
+begin
+  XPos := FAttachedTo.XPos;
+  YPos := FAttachedTo.YPos;
+  FXTargetPos := FAttachedTo.XEndPos;
+  FYTargetPos := FAttachedTo.YEndPos;
+  Angle := FAttachedTo.Angle;
+  FAttachedTo.RemoveAttached(self);
+  FAttachedTo := nil;
+end;
+
+function TAttachableToken.IsAttached: Boolean;
+begin
+  Result := Assigned(FAttachedTo);
+end;
+
+
 { TRangeIndicator }
 
 constructor TRangeIndicator.Create(X, Y, pWidth, pHeight: Integer);
 begin
-  //inherited Create;
+  inherited Create;
   FXPos := X;
   FYPos := Y;
   FXTargetPos := X;
@@ -569,7 +613,6 @@ begin
   FOverlayIdx := -1;
   FCurAnimationStep := 0;
   FPath := '';
-  FAttachedTo := nil;
   FColor := clRed;
   FAlpha := 128;
   FSectorAngle := 90;
@@ -670,28 +713,6 @@ begin
   FGlyph.EraseRect(0, 0, FWidth, FHeight, 255);
 
   FGlyph.DrawPolygonAntialias(pnts, ColorToBGRA(FColor, FAlpha), 1, ColorToBGRA(FColor, FAlpha));
-end;
-
-procedure TRangeIndicator.AttachTo(token: TToken);
-begin
-  FAttachedTo := token;
-  FAttachedTo.Attach(self);
-end;
-
-procedure TRangeIndicator.Detach;
-begin
-  XPos := FAttachedTo.XPos;
-  YPos := FAttachedTo.YPos;
-  FXTargetPos := FAttachedTo.XEndPos;
-  FYTargetPos := FAttachedTo.YEndPos;
-  Angle := FAttachedTo.Angle;
-  FAttachedTo.RemoveAttached(self);
-  FAttachedTo := nil;
-end;
-
-function TRangeIndicator.IsAttached: Boolean;
-begin
-  Result := Assigned(FAttachedTo);
 end;
 
 { TTextToken }

@@ -662,12 +662,12 @@ begin
       end
       else
       begin
-        if (FCurDraggedToken is TRangeIndicator) and (ssCtrl in Shift) then
+        if (FCurDraggedToken is TAttachableToken) and (ssCtrl in Shift) then
         begin
           AttachToken := GetTokenExRangeAtPos(X, Y);
           if Assigned(AttachToken) then
           begin
-            TRangeIndicator(FCurDraggedToken).AttachTo(AttachToken);
+            TAttachableToken(FCurDraggedToken).AttachTo(AttachToken);
             // sort directly before attached token in list
             AttachedIdx := FTokenList.IndexOf(AttachToken);
             CurIdx := FTokenList.IndexOf(FCurDraggedToken);
@@ -1498,7 +1498,7 @@ begin
                                     saveFile.ReadInteger(SAVESECTIONTOKENS, 'Height' + IntToStr(i), 100));
           while attachList.Count > 0 do
           begin
-            TRangeIndicator(attachList[0]).AttachTo(CurToken);
+            TAttachableToken(attachList[0]).AttachTo(CurToken);
             attachList.Delete(0);
           end;
         end;
