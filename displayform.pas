@@ -98,6 +98,7 @@ implementation
 uses
   ControllerForm,
   DisplayConst,
+  RPGUtils,
   LangStrings,
   LazLogger,
   Math,

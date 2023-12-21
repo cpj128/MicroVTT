@@ -24,8 +24,6 @@ uses
  const
   MAXTOKENANIMSTEPS = 20;
 
-function Map(Val, InValStart, InValEnd, OutValStart, OutValEnd: Double): Double;
-
 type
 
   TGridType = (gtRect, gtHexH, gtHexV, gtIsometric);
@@ -87,6 +85,8 @@ type
       function GetXEndPos: Integer; virtual;
       function GetYEndPos: Integer; virtual;
       function GetAngle: Double; virtual;
+      function GetWidth: Integer; virtual;
+      function GetHeight: Integer; virtual;
       procedure SetAngle(val: Double);
     public
       constructor Create(Path: string; X, Y, pWidth, pHeight: Integer);
@@ -105,8 +105,8 @@ type
       property YPos: Integer read GetYPos write SetYPos;
       property XEndPos: Integer read GetXEndPos;
       property YEndPos: Integer read GetYEndPos;
-      property Width: Integer read FWidth write SetWidth;
-      property Height: Integer read FHeight write SetHeight;
+      property Width: Integer read GetWidth write SetWidth;
+      property Height: Integer read GetHeight write SetHeight;
       property Visible: Boolean read FVisible write FVisible;
       property GridSlotsX: Integer read FGridSlotsX write FGridSlotsX;
       property GridSlotsY: Integer read FGridSlotsY write FGridSlotsY;
@@ -162,50 +162,31 @@ type
     property Text: string read FText write SetText;
   end;
 
-
-// Easings
-type TEasingType = (etLinear,
-                    etOutQuad,
-                    etInQuad,
-                    etInOutQuad,
-                    etInCubic,
-                    etOutCubic,
-                    etInOutCubic,
-                    etInQuart,
-                    etOutQuart,
-                    etInOutQuart,
-                    etInQuint,
-                    etOutQuint,
-                    etInOutQuint,
-                    etInSine,
-                    etOutSine,
-                    etInOutSine,
-                    etInExpo,
-                    etOutExpo,
-                    etInOutExpo,
-                    etInCirc,
-                    etOutCirc,
-                    etInOutCirc,
-                    etInElastic,
-                    etOutElastic,
-                    etInOutElastic,
-                    etInBack,
-                    etOutBack,
-                    etInOutBack,
-                    etInBounce,
-                    etOutBounce,
-                    etInOutBounce,
-                    etSmoothStep,
-                    etSmootherStep);
-
-function Ease(Time, StartVal, ChangeAmt, Duration: Double; eType: TEasingType): Double;
+  TLightToken = class(TToken)
+  private
+    FColor: TColor;
+    FRange: Integer;
+    FMaxStrength: Double;
+    procedure SetColor(val: TColor);
+    procedure SetRange(val: Integer);
+    procedure SetMaxStrength(val: Double);
+    function GetRange: Integer;
+    function GetWidth: Integer; override;
+    function GetHeight: Integer; override;
+  public
+    constructor Create(X, Y, pRange: Integer);
+    destructor Destroy; override;
+    procedure RedrawGlyph;
+    property Color: TColor read FColor write SetColor;
+  end;
 
 
 implementation
 
 uses
   Math,
-  BGRABitmapTypes;
+  BGRABitmapTypes,
+  RPGUtils;
 
 { TGridData }
 
@@ -447,6 +428,16 @@ begin
   Result := FAngle;
 end;
 
+function TToken.GetWidth: Integer;
+begin
+  Result := FWidth;
+end;
+
+function TToken.GetHeight: Integer;
+begin
+  Result := FHeight;
+end;
+
 procedure TToken.SetAngle(val: Double);
 begin
   FAngle := val;
@@ -556,11 +547,6 @@ begin
   end;
 
   Result := Rect(Floor(MinX), Floor(MinY), Ceil(MaxX), Ceil(MaxY));
-end;
-
-function Map(Val, InValStart, InValEnd, OutValStart, OutValEnd: Double): Double;
-begin
-  Result := OutValStart + (OutValEnd - OutValStart) * ((Val - InValStart) / (InValEnd - InValStart));
 end;
 
 { TRangeIndicator }
@@ -866,305 +852,76 @@ begin
   FGlyph.TextRect(Rect(3, 3, FWidth - 3, FHeight - 3), FText, taCenter, tlCenter, clBlack);
 end;
 
+{ TLightToken }
 
-{ Easing-Functions }
-
-// probably won't need all of these for this project, but wth, I ported them, I'm going to use them
-
-function EaseLinear(Time, StartVal, ChangeAmt, Duration: Double): Double;
+constructor TLightToken.Create(X, Y, pRange: Integer);
 begin
-  Result := ChangeAmt * (Time / Duration) + StartVal;
+  FXPos := X;
+  FYPos := Y;
+  FXTargetPos := X;
+  FYTargetPos := Y;
+  FXStartPos := X;
+  FYStartPos := Y;
+  FWidth := pRange * 2;
+  FHeight := pRange * 2;
+  FVisible := True;
+  FIsMoving := False;
+  FGridSlotsX := 1;
+  FGridSlotsY := 1;
+  FOverlayIdx := -1;
+  FCurAnimationStep := 0;
+  FPath := '';
+  FColor := BGRA(255, 245, 238);
+  FMaxStrength := 0.5;
+  FRange:= pRange;
+  RedrawGlyph;
 end;
 
-function EaseInQuad(Time, StartVal, ChangeAmt, Duration: Double): Double;
+destructor TLightToken.Destroy;
 begin
-  Result := ChangeAmt * Sqr(Time / Duration) + StartVal;
+  inherited;
 end;
 
-function EaseOutQuad(Time, StartVal, ChangeAmt, Duration: Double): Double;
+procedure TLightToken.RedrawGlyph;
 begin
-  Result := -ChangeAmt * (Time / Duration) * ((Time / Duration) - 2) + StartVal;
+  FGlyph.Free;
+  FGlyph := TBGRABitmap.Create(FWidth, FHeight);
+  // erstmal so
+  FGlyph.FillEllipseAntialias(FRange, FRange, FRange, FRange, MixPixel(clBlack, FColor, FMaxStrength));
 end;
 
-function EaseInOutQuad(Time, StartVal, ChangeAmt, Duration: Double): Double;
-var t: Double;
+procedure TLightToken.SetColor(val: TColor);
 begin
-  t := Time / Duration * 2;
-  if t < 1 then
-    Result := ChangeAmt * 0.5 * Sqr(t) + StartVal
-  else
-    Result := -ChangeAmt * 0.5 * ((t - 1) * (t - 3) - 1) + StartVal;
+  FColor := val;
+  RedrawGlyph;
 end;
 
-function EaseInCubic(Time, StartVal, ChangeAmt, Duration: Double): Double;
-var t: Double;
+procedure TLightToken.SetRange(val: Integer);
 begin
-  t := Time / Duration;
-  Result := ChangeAmt * t * t * t + StartVal;
+  FRange := val;
+  RedrawGlyph;
 end;
 
-function EaseOutCubic(Time, StartVal, ChangeAmt, Duration: Double): Double;
-var t: Double;
+procedure TLightToken.SetMaxStrength(val: Double);
 begin
-  t := Time / Duration - 1;
-  Result := ChangeAmt * (t * t * t + 1) + StartVal;
+  FMaxStrength := EnsureRange(val, 0, 1);
 end;
 
-function EaseInOutCubic(Time, StartVal, ChangeAmt, Duration: Double): Double;
-var t: Double;
+function TLightToken.GetRange: Integer;
 begin
-  t := Time / Duration * 2;
-  if t < 1 then
-    Result := ChangeAmt * 0.5 * t * t * t + StartVal
-  else
-    Result := ChangeAmt * 0.5 * ((t - 2) * (t - 2) * (t - 2) + 2) + StartVal;
+  Result := FRange;
 end;
 
-function EaseInQuart(Time, StartVal, ChangeAmt, Duration: Double): Double;
+function TLightToken.GetWidth: Integer;
 begin
-  Result := ChangeAmt * Sqr(Sqr(Time / Duration)) + StartVal;
+  Result := FRange * 2;
 end;
 
-function EaseOutQuart(Time, StartVal, ChangeAmt, Duration: Double): Double;
-var t: Double;
+function TLightToken.GetHeight: Integer;
 begin
-  t := Time / Duration - 1;
-  Result := -ChangeAmt * (Sqr(Sqr(t)) - 1) + StartVal;
+  Result := FRange * 2;
 end;
 
-function EaseInOutQuart(Time, StartVal, ChangeAmt, Duration: Double): Double;
-var t: Double;
-begin
-  t := Time / Duration * 2;
-  if t < 1 then
-    Result := ChangeAmt * 0.5 * Sqr(Sqr(t)) + StartVal
-  else
-    Result := -ChangeAmt * 0.5 * (Sqr(Sqr(t - 2)) - 2) + StartVal;
-end;
-
-function EaseInQuint(Time, StartVal, ChangeAmt, Duration: Double): Double;
-var t: Double;
-begin
-  t := Time / Duration;
-  Result := ChangeAmt * Sqr(Sqr(t)) * t + StartVal;
-end;
-
-function EaseOutQuint(Time, StartVal, ChangeAmt, Duration: Double): Double;
-var t: Double;
-begin
-  t := Time / Duration - 1;
-  Result := ChangeAmt * (Sqr(sqr(t)) * t + 1) + StartVal;
-end;
-
-function EaseInOutQuint(Time, StartVal, ChangeAmt, Duration: Double): Double;
-var t: Double;
-begin
-  t := Time / Duration * 2;
-  if t < 1 then
-    Result := ChangeAmt * 0.5 * Sqr(Sqr(t)) * t + StartVal
-  else
-    Result := ChangeAmt * 0.5 * (Sqr(Sqr(t - 2)) * (t - 2) + 2) + StartVal;
-end;
-
-function EaseInSine(Time, StartVal, ChangeAmt, Duration: Double): Double;
-begin
-  Result := -ChangeAmt * Cos(Time / Duration * (PI / 2)) + ChangeAmt + StartVal;
-end;
-
-function EaseOutSine(Time, StartVal, ChangeAmt, Duration: Double): Double;
-begin
-  Result := ChangeAmt * Sin(Time / Duration * (PI / 2)) + StartVal;
-end;
-
-function EaseInOutSine(Time, StartVal, ChangeAmt, Duration: Double): Double;
-begin
-  Result := -ChangeAmt * 0.5 * (Cos(PI * Time / Duration) - 1) + StartVal;
-end;
-
-function EaseInExpo(Time, StartVal, ChangeAmt, Duration: Double): Double;
-begin
-  if SameValue(Time, 0.0) then
-    Result := StartVal
-  else
-    Result := ChangeAmt * Power(2, 10 * (Time / Duration - 1)) + StartVal;
-end;
-
-function EaseOutExpo(Time, StartVal, ChangeAmt, Duration: Double): Double;
-begin
-  if SameValue(Time, Duration) then
-    Result := StartVal + ChangeAmt
-  else
-    Result := ChangeAmt * (-Power(2, -10 * Time / Duration) + 1) + StartVal;
-end;
-
-function EaseInOutExpo(Time, StartVal, ChangeAmt, Duration: Double): Double;
-var t: Double;
-begin
-  t := Time / Duration * 2;
-  if SameValue(Time, 0) then
-    Result := StartVal
-  else if SameValue(Time, Duration) then
-    Result := StartVal + ChangeAmt
-  else if (t / 2) < 1 then
-    Result := ChangeAmt * 0.5 * Power(2, 10 * (t - 1)) + StartVal
-  else
-    Result := ChangeAmt * 0.5 * (-Power(2, -10 * (t - 1)) + 2) + StartVal;
-end;
-
-function EaseInCirc(Time, StartVal, ChangeAmt, Duration: Double): Double;
-begin
-  Result := -ChangeAmt * (Sqrt(1 - Sqr(Time / Duration)) - 1) + StartVal;
-end;
-
-function EaseOutCirc(Time, StartVal, ChangeAmt, Duration: Double): Double;
-begin
-  Result := ChangeAmt * Sqrt(1 - Sqr(Time / Duration - 1)) + StartVal;
-end;
-
-function EaseInOutCirc(Time, StartVal, ChangeAmt, Duration: Double): Double;
-var t: Double;
-begin
-  t := Time / Duration * 2;
-  if t < 1 then
-    Result := -ChangeAmt * 0.5 * (Sqrt(1 - Sqr(t)) - 1) + StartVal
-  else
-    Result := ChangeAmt * 0.5 * (Sqrt(1 - Sqr(t - 2)) + 1) + StartVal;
-end;
-
-function EaseInElastic(Time, StartVal, ChangeAmt, Duration: Double): Double;
-var t: Double;
-begin
-  t := Time / Duration;
-  Result := ChangeAmt * Sin(13 * PI / 2 * t) * Power(2, 10 * (t - 1)) + StartVal;
-end;
-
-function EaseOutElastic(Time, StartVal, ChangeAmt, Duration: Double): Double;
-var t: Double;
-begin
-  t := Time / Duration;
-  Result := ChangeAmt * (Sin(-13 * PI / 2 * (t + 1)) * Power(2, -10 * t) + 1) + StartVal;
-end;
-
-function EaseInOutElastic(Time, StartVal, ChangeAmt, Duration: Double): Double;
-var t: Double;
-begin
-  t := Time / Duration;
-  if t < 0.5 then
-    Result := ChangeAmt * 0.5 * Sin(13 * PI * t) * Power(2, 10 * ((2 * t) - 1)) + StartVal
-  else
-    Result := ChangeAmt * 0.5 * (Sin(-13 * PI * t) * Power(2, -10 * (2 * t - 1)) + 2) + StartVal;
-end;
-
-function EaseInBack(Time, StartVal, ChangeAmt, Duration: Double): Double;
-var t: Double;
-begin
-  t := Time / Duration;
-  Result := ChangeAmt * (Sqr(t) * t - t * Sin(t * PI)) + StartVal;
-end;
-
-function EaseOutBack(Time, StartVal, ChangeAmt, Duration: Double): Double;
-var t: Double;
-begin
-  t := 1 - Time / Duration;
-  Result := ChangeAmt * (1 - (Sqr(t) * t - t * Sin(t * PI))) + StartVal;
-end;
-
-function EaseInOutBack(Time, StartVal, ChangeAmt, Duration: Double): Double;
-var t: Double;
-begin
-  if (Time / Duration) < 0.5 then
-  begin
-    t := 2 * Time / Duration;
-    Result := ChangeAmt * 0.5 * (Sqr(t) * t - t * Sin(t * PI)) + StartVal;
-  end
-  else
-  begin
-    t := 2 - 2 * Time / Duration;
-    Result := ChangeAmt * (0.5 * (1 - (Sqr(t) * t - t * Sin(t * PI))) + 0.5) + StartVal;
-  end;
-end;
-
-function EaseOutBounce(Time, StartVal, ChangeAmt, Duration: Double): Double;
-var t: Double;
-begin
-  t := Time / Duration;
-  if t < (1 / 2.75) then
-    Result := ChangeAmt * (7.5625 * Sqr(t)) + StartVal
-  else if t < (2 / 2.75) then
-    Result := ChangeAmt * (7.5625 * Sqr(t - (1.5 / 2.75)) + 0.75) + StartVal
-  else if t < (2.5 / 2.75) then
-    Result := ChangeAmt * (7.5625 * Sqr(t - (2.25 / 2.75)) + 0.9375) + StartVal
-  else
-    Result := ChangeAmt * (7.5625 * Sqr(t - (2.625 / 2.75)) + 0.984375) + StartVal;
-end;
-
-function EaseInBounce(Time, StartVal, ChangeAmt, Duration: Double): Double;
-begin
-  Result := ChangeAmt - EaseOutBounce(Duration - Time, 0, ChangeAmt, Duration) + StartVal;
-end;
-
-function EaseInOutBounce(Time, StartVal, ChangeAmt, Duration: Double): Double;
-begin
-  if Time < (Duration / 2) then
-    Result := EaseInBounce(Time * 2, 0, ChangeAmt, Duration) * 0.5 + StartVal
-  else
-    Result := EaseOutBounce(Time * 2 - Duration, 0, ChangeAmt, Duration) * 0.5 + ChangeAmt * 0.5 + StartVal;
-end;
-
-function EaseSmoothStep(Time, StartVal, ChangeAmt, Duration: Double): Double;
-var t: Double;
-begin
-  t := EnsureRange(Time / Duration, 0, 1);
-  Result := ChangeAmt * (t * t * (3 - 2 * t)) + StartVal;
-end;
-
-function EaseSmootherStep(Time, StartVal, ChangeAmt, Duration: Double): Double;
-var t: Double;
-begin
-  t := EnsureRange(Time / Duration, 0, 1);
-  Result := ChangeAmt * (t * t * t * (t * (t * 6 - 15) + 10)) + StartVal;
-end;
-
-function Ease(Time, StartVal, ChangeAmt, Duration: Double; eType: TEasingType): Double;
-begin
-  case eType of
-    etLinear      : Result := EaseLinear(Time, StartVal, ChangeAmt, Duration);
-    etOutQuad     : Result := EaseOutQuad(Time, StartVal, ChangeAmt, Duration);
-    etInQuad      : Result := EaseInQuad(Time, StartVal, ChangeAmt, Duration);
-    etInOutQuad   : Result := EaseInOutQuad(Time, StartVal, ChangeAmt, Duration);
-    etInCubic     : Result := EaseInCubic(Time, StartVal, ChangeAmt, Duration);
-    etOutCubic    : Result := EaseOutCubic(Time, StartVal, ChangeAmt, Duration);
-    etInOutCubic  : Result := EaseInOutCubic(Time, StartVal, ChangeAmt, Duration);
-    etInQuart     : Result := EaseInQuart(Time, StartVal, ChangeAmt, Duration);
-    etOutQuart    : Result := EaseOutQuart(Time, StartVal, ChangeAmt, Duration);
-    etInOutQuart  : Result := EaseInOutQuart(Time, StartVal, ChangeAmt, Duration);
-    etInQuint     : Result := EaseInQuint(Time, StartVal, ChangeAmt, Duration);
-    etOutQuint    : Result := EaseOutQuint(Time, StartVal, ChangeAmt, Duration);
-    etInOutQuint  : Result := EaseInOutQuint(Time, StartVal, ChangeAmt, Duration);
-    etInSine      : Result := EaseInSine(Time, StartVal, ChangeAmt, Duration);
-    etOutSine     : Result := EaseOutSine(Time, StartVal, ChangeAmt, Duration);
-    etInOutSine   : Result := EaseInOutSine(Time, StartVal, ChangeAmt, Duration);
-    etInExpo      : Result := EaseInExpo(Time, StartVal, ChangeAmt, Duration);
-    etOutExpo     : Result := EaseOutExpo(Time, StartVal, ChangeAmt, Duration);
-    etInOutExpo   : Result := EaseInOutExpo(Time, StartVal, ChangeAmt, Duration);
-    etInCirc      : Result := EaseInCirc(Time, StartVal, ChangeAmt, Duration);
-    etOutCirc     : Result := EaseOutCirc(Time, StartVal, ChangeAmt, Duration);
-    etInOutCirc   : Result := EaseInOutCirc(Time, StartVal, ChangeAmt, Duration);
-    etInElastic   : Result := EaseInElastic(Time, StartVal, ChangeAmt, Duration);
-    etOutElastic  : Result := EaseOutElastic(Time, StartVal, ChangeAmt, Duration);
-    etInOutElastic: Result := EaseInOutElastic(Time, StartVal, ChangeAmt, Duration);
-    etInBack      : Result := EaseInBack(Time, StartVal, ChangeAmt, Duration);
-    etOutBack     : Result := EaseOutBack(Time, StartVal, ChangeAmt, Duration);
-    etInOutBack   : Result := EaseInOutBack(Time, StartVal, ChangeAmt, Duration);
-    etInBounce    : Result := EaseInBounce(Time, StartVal, ChangeAmt, Duration);
-    etOutBounce   : Result := EaseOutBounce(Time, StartVal, ChangeAmt, Duration);
-    etInOutBounce : Result := EaseInOutBounce(Time, StartVal, ChangeAmt, Duration);
-    etSmoothStep  : Result := EaseSmoothStep(Time, StartVal, ChangeAmt, Duration);
-    etSmootherStep: Result := EaseSmootherStep(Time, StartVal, ChangeAmt, Duration);
-  else
-    Result := 0;
-  end;
-end;
 
 end.
 

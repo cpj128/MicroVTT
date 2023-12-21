@@ -9,7 +9,7 @@ uses
   Interfaces, // this includes the LCL widgetset
   Forms, lazcontrols, datetimectrls, ControllerForm, DisplayForm, DisplayConst,
   GridSettingsForm, TokenSettingsForm, SettingsForm, LangStrings, RPGTypes,
-  LibraryForm, InitiativeForm, Notes;
+  LibraryForm, InitiativeForm, Notes, RPGUtils;
 
 {$R *.res}
 
