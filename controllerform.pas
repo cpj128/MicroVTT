@@ -292,17 +292,6 @@ type
   end;
 
 
-  TTokenNodeData = class
-    public
-      FullPath: string;
-      Name: string;
-      DefaultWidth, DefaultHeight: Integer;
-      DefaultGridSlotsX, DefaultGridSlotsY: Integer;
-      DefaultAngle: Single;
-      BaseInitiative: Integer;
-      TokenType: TTokenType;
-  end;
-
   TPicLoaderThread = class(TThread)
     private
       FFileList: TStringList;
@@ -488,48 +477,11 @@ var
 begin
   if (Source is TTreeView) and Assigned(TTreeView(Source).Selected) and Assigned(TTreeView(Source).Selected.Data) then
   begin
-    if TTokenNodeData(TTreeView(Source).Selected.Data).TokenType = ttRange then
-    begin
-      tmpToken := TRangeIndicator.Create(ViewPortToMapX(X),
-                                         ViewPortToMapY(Y),
-                                         500,
-                                         500);
-      TRangeIndicator(tmpToken).SectorAngle := 90;
-      TRangeIndicator(tmpToken).Alpha := 32;
-      TRangeIndicator(tmpToken).Color := clRed;
-      tmpToken.GridSlotsX := 1;
-      tmpToken.GridSlotsY := 1;
-      tmpToken.Angle := 0;
-      tmpToken.Visible := FTokensStartInvisible;
-    end
-    else if TTokenNodeData(TTreeView(Source).Selected.Data).TokenType = ttText then
-    begin
-      tmpToken := TTextToken.Create(ViewPortToMapX(X),
-                                    ViewPortToMapY(Y),
-                                    200,
-                                    100,
-                                    '');
-      tmpToken.GridSlotsX := 1;
-      tmpToken.GridSlotsY := 1;
-      tmpToken.Angle := 0;
-      tmpToken.Visible := FTokensStartInvisible;
-    end
-    else
-    begin
-      tmpToken := TToken.Create(TTokenNodeData(TTreeView(Source).Selected.Data).FullPath,
-                                ViewPortToMapX(X),
-                                ViewPortToMapY(Y),
-                                TTokenNodeData(TTreeView(Source).Selected.Data).DefaultWidth,
-                                TTokenNodeData(TTreeView(Source).Selected.Data).DefaultHeight);
-      tmpToken.GridSlotsX := TTokenNodeData(TTreeView(Source).Selected.Data).DefaultGridSlotsX;
-      tmpToken.GridSlotsY := TTokenNodeData(TTreeView(Source).Selected.Data).DefaultGridSlotsY;
-      tmpToken.Angle := TTokenNodeData(TTreeView(Source).Selected.Data).DefaultAngle;
-      tmpToken.Name := TTokenNodeData(TTreeView(Source).Selected.Data).Name;
-      tmpToken.BaseInitiative := TTokenNodeData(TTreeView(Source).Selected.Data).BaseInitiative;
-      tmpToken.Visible := FTokensStartInvisible;
-      if FSnapTokensToGrid then
-        tmpToken.SnapToGrid(FGridData.GridSizeX, FGridData.GridSizeY, FGridData.GridOffsetX, FGridData.GridOffsetY, FGridData.GridType);
-    end;
+    TTokenFactory.GridData := FGridData;
+    TTokenFactory.TokensSnapToGrid := FSnapTokensToGrid;
+    TTokenFactory.TokensStartInvisible := FTokensStartInvisible;
+    tmpToken := TTokenFactory.CreateTokenFromNode(TTokenNodeData(TTreeView(Source).Selected.Data), ViewPortToMapX(X), ViewPortToMapY(Y));
+
     FTokenlist.Add(tmpToken);
     pbViewPort.Invalidate;
     fmDisplay.Invalidate;
@@ -1434,7 +1386,7 @@ begin
       while saveFile.ValueExists(SAVESECTIONTOKENS, 'XPos' + IntToStr(i)) do
       begin
         TTokenFactory.TokensStartInvisible := FTokensStartInvisible;
-        CurToken := TTokenFactory.CreateToken(SaveFile, i);
+        CurToken := TTokenFactory.CreateTokenFromIni(SaveFile, i);
         if Assigned(CurToken) then
         begin
           if SaveFile.ValueExists(SAVESECTIONTOKENS, 'Attached' + IntToStr(i)) then

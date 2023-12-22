@@ -58,6 +58,18 @@ type
 
   TTokenType = (ttDefault, ttRange, ttText);
 
+  TTokenNodeData = class
+    public
+      FullPath: string;
+      Name: string;
+      DefaultWidth, DefaultHeight: Integer;
+      DefaultGridSlotsX, DefaultGridSlotsY: Integer;
+      DefaultAngle: Single;
+      BaseInitiative: Integer;
+      TokenType: TTokenType;
+  end;
+
+
   TToken = class
     private
       FGlyph: TBGRABitmap;
@@ -123,7 +135,10 @@ type
 
   TTokenFactory = class
     TokensStartInvisible: Boolean; static;
-    class function CreateToken(SaveFile: TIniFile; idx: Integer): TToken; static;
+    TokensSnapToGrid: Boolean; static;
+    GridData: TGridData; static;
+    class function CreateTokenFromIni(SaveFile: TIniFile; idx: Integer): TToken; static;
+    class function CreateTokenFromNode(data: TTokenNodeData; X, Y: Integer): TToken; static;
   end;
 
   TAttachableToken = class(TToken)
@@ -629,7 +644,7 @@ end;
 
 { TTokenFactory }
 
-class function TTokenFactory.CreateToken(SaveFile: TIniFile; idx: Integer): TToken;
+class function TTokenFactory.CreateTokenFromIni(SaveFile: TIniFile; idx: Integer): TToken;
 var
   path: string;
 begin
@@ -671,6 +686,43 @@ begin
     Result.GridSlotsY := saveFile.ReadInteger(SAVESECTIONTOKENS, 'YSlots' + IntToStr(idx), 1);
     Result.Name := saveFile.ReadString(SAVESECTIONTOKENS, 'Name' + IntToStr(idx), '');
     Result.Number:= saveFile.ReadInteger(SAVESECTIONTOKENS, 'No' + IntToStr(idx), 0);
+  end;
+end;
+
+class function TTokenFactory.CreateTokenFromNode(data: TTokenNodeData; X, Y: Integer): TToken;
+begin
+  case data.TokenType of
+    ttDefault:
+    begin
+      Result := TToken.Create(data.FullPath, X, Y, data.DefaultWidth, data.DefaultHeight);
+      Result.GridSlotsX := Data.DefaultGridSlotsX;
+      Result.GridSlotsY := Data.DefaultGridSlotsY;
+      Result.Angle := Data.DefaultAngle;
+      Result.Name := Data.Name;
+      Result.BaseInitiative := Data.BaseInitiative;
+      Result.Visible := TokensStartInvisible;
+      if TokensSnapToGrid then
+        Result.SnapToGrid(GridData.GridSizeX, GridData.GridSizeY, GridData.GridOffsetX, GridData.GridOffsetY, GridData.GridType);
+    end;
+    ttRange:
+    begin
+      Result := TRangeIndicator.Create(X, Y, 500, 500);
+      TRangeIndicator(Result).SectorAngle := 90;
+      TRangeIndicator(Result).Alpha := 32;
+      TRangeIndicator(Result).Color := clRed;
+      Result.GridSlotsX := 1;
+      Result.GridSlotsY := 1;
+      Result.Angle := 0;
+      Result.Visible := TokensStartInvisible;
+    end;
+    ttText:
+    begin
+      Result := TTextToken.Create(X, Y, 200, 100, '');
+      Result.GridSlotsX := 1;
+      Result.GridSlotsY := 1;
+      Result.Angle := 0;
+      Result.Visible := TokensStartInvisible;
+    end;
   end;
 end;
 
