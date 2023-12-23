@@ -56,7 +56,7 @@ var
 type
   TTokenRotationStyle = (rsRotateToken, rsShowArrow);
 
-  TTokenType = (ttDefault, ttRange, ttText);
+  TTokenType = (ttDefault, ttRange, ttText, ttLight);
 
   TTokenNodeData = class
     public
@@ -208,8 +208,11 @@ type
   public
     constructor Create(X, Y, pRange: Integer);
     destructor Destroy; override;
+    procedure SaveToIni(SaveFile: TIniFile; idx: Integer); override;
     procedure RedrawGlyph;
+    property Range: Integer read GetRange write SetRange;
     property Color: TColor read FColor write SetColor;
+    property MaxStrength: Double read FMaxStrength write SetMaxStrength;
   end;
 
 
@@ -668,6 +671,14 @@ begin
                                 saveFile.ReadInteger(SAVESECTIONTOKENS, 'Height' + IntToStr(idx), 100),
                                 saveFile.ReadString(SAVESECTIONTOKENS, 'Text' + IntToStr(idx), ''));
   end
+  else if SameText(path, '::light') then // Light token
+  begin
+    Result := TLightToken.Create(saveFile.ReadInteger(SAVESECTIONTOKENS, 'XPos' + IntToStr(idx), 0),
+                                 saveFile.ReadInteger(SAVESECTIONTOKENS, 'YPos' + IntToStr(idx), 0),
+                                 saveFile.ReadInteger(SAVESECTIONTOKENS, 'Width' + IntToStr(idx), 100));
+   TLightToken(Result).Color := saveFile.ReadInteger(SAVESECTIONTOKENS, 'Color' + IntToStr(idx), BGRA(255, 245, 238));
+   TLightToken(Result).MaxStrength := saveFile.ReadFloat(SAVESECTIONTOKENS, 'MaxStrength' + IntToStr(idx), 0.5);
+  end
   else if FileExists(path) then // Image token
   begin
     Result := TToken.Create(path,
@@ -722,6 +733,12 @@ begin
       Result.GridSlotsY := 1;
       Result.Angle := 0;
       Result.Visible := TokensStartInvisible;
+    end;
+    ttLight:
+    begin
+      Result := TLightToken.Create(X, Y, 200);
+      Result.Visible := TokensStartInvisible;
+      // Other values should be set to defaults already
     end;
   end;
 end;
@@ -1055,6 +1072,14 @@ end;
 destructor TLightToken.Destroy;
 begin
   inherited;
+end;
+
+procedure TLightToken.SaveToIni(SaveFile: TIniFile; idx: Integer);
+begin
+  inherited SaveToIni(SaveFile, idx);
+  SaveFile.WriteString(SAVESECTIONTOKENS, 'Path' + IntToStr(idx), '::light');
+  SaveFile.WriteInteger(SAVESECTIONTOKENS, 'Color' + IntToStr(idx), FColor);
+  SaveFile.WriteFloat(SAVESECTIONTOKENS, 'MaxStrength' + IntToStr(idx), FMaxStrength);
 end;
 
 procedure TLightToken.RedrawGlyph;
