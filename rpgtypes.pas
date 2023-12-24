@@ -1067,6 +1067,7 @@ begin
   FMaxStrength := 0.5;
   FRange:= pRange;
   RedrawGlyph;
+  FAttached := TList.Create;
 end;
 
 destructor TLightToken.Destroy;
@@ -1086,7 +1087,8 @@ procedure TLightToken.RedrawGlyph;
 begin
   FGlyph.Free;
   FGlyph := TBGRABitmap.Create(FWidth, FHeight);
-  // erstmal so
+  FGlyph.FillRect(0, 0, FRange * 2, FRange * 2, clBlack);
+  // Just draw an ellipse for now
   FGlyph.FillEllipseAntialias(FRange, FRange, FRange, FRange, MixPixel(clBlack, FColor, FMaxStrength));
 end;
 

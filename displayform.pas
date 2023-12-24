@@ -580,7 +580,7 @@ begin
                     end;
 
                     // Add direction arrow
-                    if (fmController.TokenRotationStyle = rsShowArrow) and not ((CurToken is TRangeIndicator) or (CurToken is TTextToken)) then
+                    if (fmController.TokenRotationStyle = rsShowArrow) and not ((CurToken is TRangeIndicator) or (CurToken is TTextToken) or (CurToken is TLightToken)) then
                     begin
                       ArrowLen := Min(CurToken.Width, CurToken.Height) * 0.4 * FMapZoom;
                       ArrowWid := ArrowLen / 4;
@@ -595,9 +595,16 @@ begin
                       RotatedBmp.DrawPolygonAntialias(ArrowPntsTrans, clBlack, 2);
                     end;
 
-                    RotatedBmp.Draw(MapSegmentStretched.Canvas,
-                                    RotatedRect,
-                                    False);
+                    if CurToken is TLightToken then
+                    begin
+                      MapSegmentStretched.BlendImage(RotatedRect.Left, RotatedRect.Top, RotatedBmp, boAdditive);
+                    end
+                    else
+                    begin
+                      RotatedBmp.Draw(MapSegmentStretched.Canvas,
+                                      RotatedRect,
+                                      False);
+                    end;
                   finally
                     Rotation.Free;
                     RotatedBmp.Free;

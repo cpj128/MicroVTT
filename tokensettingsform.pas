@@ -153,6 +153,18 @@ begin
     mText.Text := TTextToken(token).Text;
     bAddToInitiative.Enabled := False;
   end
+  else if token is TLightToken then
+  begin
+    seNumber.Hide;
+    cbOverlay.Hide;
+    eGridSlotsX.Hide;
+    Label4.Hide;
+    eGridSlotsY.Hide;
+
+    Label6.Show;
+    pnColor.Show;
+    pnColor.Color := TLightToken(token).Color;
+  end
   else
   begin
     seNumber.Show;
@@ -259,8 +271,8 @@ end;
 
 procedure TfmTokenSettings.bDetachClick(Sender: TObject);
 begin
-  if Assigned(LinkedToken) and (LinkedToken is TRangeIndicator) then
-    TRangeIndicator(LinkedToken).Detach;
+  if Assigned(LinkedToken) and (LinkedToken is TAttachableToken) then
+    TAttachableToken(LinkedToken).Detach;
   bDetach.Enabled := False;
 end;
 

@@ -862,7 +862,7 @@ begin
               end;
 
               // Add direction arrow
-              if (FTokenRotationStyle = rsShowArrow) and not ((CurToken is TRangeIndicator) or (CurToken is TTextToken)) then
+              if (FTokenRotationStyle = rsShowArrow) and not ((CurToken is TRangeIndicator) or (CurToken is TTextToken) or (CurToken is TLightToken)) then
               begin
                 ArrowLen := Min(CurToken.Width, CurToken.Height) * 0.4 * FDisplayScale * FZoomFactor;
                 ArrowWid := ArrowLen / 4;
@@ -876,11 +876,19 @@ begin
                 RotatedBmp.FillPoly(ArrowPntsTrans, clWhite);               
                 RotatedBmp.DrawPolygonAntialias(ArrowPntsTrans, clBlack, 2);
               end;
-
-              RotatedBmp.Draw(DrawnMapSegment.Canvas,
-                              MapToViewPortX(CurToken.XEndPos) - RotatedBmp.Width div 2,
-                              MapToViewPortY(CurToken.YEndPos) - RotatedBmp.Height div 2,
-                              False);
+              if CurToken is TLightToken then
+              begin
+                DrawnMapSegment.BlendImage(MapToViewPortX(CurToken.XEndPos) - RotatedBmp.Width div 2,
+                                           MapToViewPortY(CurToken.YEndPos) - RotatedBmp.Height div 2,
+                                           RotatedBmp, boAdditive);
+              end
+              else
+              begin
+                RotatedBmp.Draw(DrawnMapSegment.Canvas,
+                                MapToViewPortX(CurToken.XEndPos) - RotatedBmp.Width div 2,
+                                MapToViewPortY(CurToken.YEndPos) - RotatedBmp.Height div 2,
+                                False);
+              end;
             finally
               Rotation.Free;
               RotatedBmp.Free;
@@ -1647,6 +1655,12 @@ begin
   begin
     NodeData := TTokenNodeData.Create;
     NodeData.TokenType := ttText;
+    Data := NodeData;
+  end;
+  with tvTokens.Items.AddChild(nil, 'Light') do
+  begin
+    NodeData := TTokenNodeData.Create;
+    NodeData.TokenType := ttLight;
     Data := NodeData;
   end;
   tvTokens.EndUpdate;
