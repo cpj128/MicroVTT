@@ -41,6 +41,7 @@ type
     eHeight: TEdit;
     eGridSlotsX: TEdit;
     fseRotation: TFloatSpinEdit;
+    fseMaxStrength: TFloatSpinEdit;
     Label1: TLabel;
     Label2: TLabel;
     Label3: TLabel;
@@ -113,12 +114,16 @@ begin
 
   if token is TRangeIndicator then
   begin
+    fseMaxStrength.Hide;
     seNumber.Hide;
     cbOverlay.Hide;
     eGridSlotsX.Hide;
     Label4.Hide;
     eGridSlotsY.Hide;
-
+                         
+    Label2.Show;
+    eHeight.Show;
+    Label7.Show;
     seSectorAngle.Show;
     seSectorAngle.Value := Round(TRangeIndicator(token).SectorAngle);
     Label3.Show;
@@ -136,6 +141,7 @@ begin
   end
   else if token is TTextToken then
   begin
+    fseMaxStrength.Hide;
     seSectorAngle.Hide;
     pnColor.Hide;
     seAlpha.Hide;
@@ -148,25 +154,41 @@ begin
     Label6.Hide;
     eGridSlotsX.Hide;
     Label4.Hide;
-    eGridSlotsY.Hide;
+    eGridSlotsY.Hide;  
+    Label2.Show;
+    eHeight.Show;  
+    Label7.Show;
     mText.Show;
     mText.Text := TTextToken(token).Text;
     bAddToInitiative.Enabled := False;
   end
   else if token is TLightToken then
   begin
+    Label2.Hide;
+    eHeight.Hide;
+    Label7.Hide;
     seNumber.Hide;
+    seSectorAngle.Hide;
+    mText.Hide;
     cbOverlay.Hide;
+    Label3.Hide;
     eGridSlotsX.Hide;
+    seAlpha.Hide;
     Label4.Hide;
     eGridSlotsY.Hide;
 
+    udWidth.Position := TLightToken(token).Range;
+    fseMaxStrength.Show;
+    fseMaxStrength.Value := TLightToken(token).MaxStrength;
     Label6.Show;
     pnColor.Show;
     pnColor.Color := TLightToken(token).Color;
   end
   else
-  begin
+  begin       
+    Label2.Show;
+    eHeight.Show; 
+    Label7.Show;
     seNumber.Show;
     cbOverlay.Show;
     Label3.Show;
@@ -174,7 +196,8 @@ begin
     eGridSlotsX.Show;
     Label4.Show;
     eGridSlotsY.Show;
-
+                      
+    fseMaxStrength.Hide;
     seSectorAngle.Hide;
     pnColor.Hide;
     seAlpha.Hide;
@@ -212,6 +235,12 @@ begin
     if LinkedToken is TTextToken then
     begin
       TTextToken(LinkedToken).Text := mText.Text;
+    end;
+    if LinkedToken is TLightToken then
+    begin
+      TLightToken(LinkedToken).Color := pnColor.Color;
+      TLightToken(LinkedToken).Range := udWidth.Position;
+      TLightToken(LinkedToken).MaxStrength := fseMaxStrength.Value;
     end;
     LinkedToken.UpdateAttached;
     LinkedToken := nil;
@@ -297,6 +326,12 @@ begin
   begin
     Label7.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsText');
   end
+  else if LinkedToken is TLightToken then
+  begin
+    Label1.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsRange');
+    Label5.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsMaxStrength');
+    Label6.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsColor');
+  end
   else
   begin
     Label3.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsSlotsX');
@@ -333,7 +368,7 @@ end;
 
 procedure TfmTokenSettings.pnColorClick(Sender: TObject);
 begin
-  if not (LinkedToken is TRangeIndicator) then
+  if not ((LinkedToken is TRangeIndicator) or (LinkedToken is TLightToken)) then
     Exit;
   cdIndicatorColor.Color := pnColor.Color;
   if cdIndicatorColor.Execute then

@@ -1657,7 +1657,7 @@ begin
     NodeData.TokenType := ttText;
     Data := NodeData;
   end;
-  with tvTokens.Items.AddChild(nil, 'Light') do
+  with tvTokens.Items.AddChild(nil, GetString(LangStrings.LanguageID, 'ControllerTokenLight')) do
   begin
     NodeData := TTokenNodeData.Create;
     NodeData.TokenType := ttLight;

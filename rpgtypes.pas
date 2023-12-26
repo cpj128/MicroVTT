@@ -202,6 +202,8 @@ type
     procedure SetColor(val: TColor);
     procedure SetRange(val: Integer);
     procedure SetMaxStrength(val: Double);
+    procedure SetWidth(Val: Integer); override;
+    procedure SetHeight(Val: Integer); override;
     function GetRange: Integer;
     function GetWidth: Integer; override;
     function GetHeight: Integer; override;
@@ -1086,7 +1088,7 @@ end;
 procedure TLightToken.RedrawGlyph;
 begin
   FGlyph.Free;
-  FGlyph := TBGRABitmap.Create(FWidth, FHeight);
+  FGlyph := TBGRABitmap.Create(Width, Height);
   FGlyph.FillRect(0, 0, FRange * 2, FRange * 2, clBlack);
   // Just draw an ellipse for now
   FGlyph.FillEllipseAntialias(FRange, FRange, FRange, FRange, MixPixel(clBlack, FColor, FMaxStrength));
@@ -1107,6 +1109,17 @@ end;
 procedure TLightToken.SetMaxStrength(val: Double);
 begin
   FMaxStrength := EnsureRange(val, 0, 1);
+  RedrawGlyph;
+end;
+
+procedure TLightToken.SetWidth(Val: Integer);
+begin
+  FRange := Val div 2;
+end;
+
+procedure TLightToken.SetHeight(Val: Integer);
+begin
+  FRange := Val div 2;
 end;
 
 function TLightToken.GetRange: Integer;

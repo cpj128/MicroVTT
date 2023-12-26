@@ -291,6 +291,15 @@ object fmTokenSettings: TfmTokenSettings
     OnClick = bDetachClick
     TabOrder = 21
   end
+  object fseMaxStrength: TFloatSpinEdit
+    Left = 86
+    Height = 23
+    Top = 91
+    Width = 96
+    Increment = 0.1
+    MinValue = 1
+    TabOrder = 23
+  end
   object cdIndicatorColor: TColorDialog
     Color = clBlack
     CustomColors.Strings = (
