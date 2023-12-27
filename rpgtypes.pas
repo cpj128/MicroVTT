@@ -56,7 +56,7 @@ var
 type
   TTokenRotationStyle = (rsRotateToken, rsShowArrow);
 
-  TTokenType = (ttDefault, ttRange, ttText, ttLight);
+  TTokenType = (ttCharacter, ttRange, ttText, ttLight);
 
   TTokenNodeData = class
     public
@@ -81,10 +81,8 @@ type
       FXTargetPos, FYTargetPos,
       FWidth, FHeight: Integer;
       FAngle: Double;
-      FOverlayIdx: Integer;
       FVisible: Boolean;
       FGridSlotsX, FGridSlotsY: Integer;
-      FNumber: Integer;
       FCurAnimationStep: Integer;
       FIsMoving: Boolean;
       FAttached: TList;
@@ -103,7 +101,8 @@ type
     public
       constructor Create(Path: string; X, Y, pWidth, pHeight: Integer);
       destructor Destroy; override;
-      procedure SnapToGrid(GridSizeX, GridSizeY, XOffset, YOffset: Single; GridType: TGridType);
+      procedure SnapToGrid(GridData: TGridData);
+      function GetCellsAtPosition(PosX, PosY: Integer; GridData: TGridData): TRect;
       procedure StartAnimation;
       procedure StopAnimation;
       procedure DoAnimationStep;
@@ -124,8 +123,6 @@ type
       property GridSlotsX: Integer read FGridSlotsX write FGridSlotsX;
       property GridSlotsY: Integer read FGridSlotsY write FGridSlotsY;
       property Angle: Double read GetAngle write SetAngle;
-      property OverlayIdx: Integer read FOverlayIdx write FOverlayIdx;
-      property Number: Integer read FNumber write FNumber;
       property Glyph: TBGRABitmap read FGlyph;
       property IsMoving: Boolean read FIsMoving;
       property Path: string read FPath;
@@ -139,6 +136,18 @@ type
     GridData: TGridData; static;
     class function CreateTokenFromIni(SaveFile: TIniFile; idx: Integer): TToken; static;
     class function CreateTokenFromNode(data: TTokenNodeData; X, Y: Integer): TToken; static;
+  end;
+
+  TCharacterToken = class(TToken)
+  private
+    FNumber: Integer;   
+    FOverlayIdx: Integer;
+  public                                                 
+    constructor Create(pPath: string; X, Y, pWidth, pHeight: Integer);
+    procedure SaveToIni(SaveFile: TIniFile; idx: Integer); override;
+    property Number: Integer read FNumber write FNumber;
+    property OverlayIdx: Integer read FOverlayIdx write FOverlayIdx;
+
   end;
 
   TAttachableToken = class(TToken)
@@ -211,7 +220,7 @@ type
     constructor Create(X, Y, pRange: Integer);
     destructor Destroy; override;
     procedure SaveToIni(SaveFile: TIniFile; idx: Integer); override;
-    procedure RedrawGlyph;
+    procedure RedrawGlyph; override;
     property Range: Integer read GetRange write SetRange;
     property Color: TColor read FColor write SetColor;
     property MaxStrength: Double read FMaxStrength write SetMaxStrength;
@@ -324,7 +333,6 @@ begin
   FIsMoving := False;
   FGridSlotsX := 1;
   FGridSlotsY := 1;
-  FOverlayIdx := -1;
   FCurAnimationStep := 0;
   FPath := Path;
   FGlyph := TBGRABitmap.Create(Path);
@@ -353,57 +361,72 @@ begin
   saveFile.WriteString(SAVESECTIONTOKENS, 'Path' + IntToStr(idx), Path);
 
   saveFile.WriteString(SAVESECTIONTOKENS, 'Name' + IntToStr(idx), Name);
-  saveFile.WriteInteger(SAVESECTIONTOKENS, 'No' + IntToStr(idx), Number);
   saveFile.WriteInteger(SAVESECTIONTOKENS, 'XPos' + IntToStr(idx), XEndPos);
   saveFile.WriteInteger(SAVESECTIONTOKENS, 'YPos' + IntToStr(idx), YEndPos);
   saveFile.WriteInteger(SAVESECTIONTOKENS, 'Width' + IntToStr(idx), Width);
   saveFile.WriteInteger(SAVESECTIONTOKENS, 'Height' + IntToStr(idx), Height);
   saveFile.WriteFloat(SAVESECTIONTOKENS, 'Angle' + IntToStr(idx), Angle);
-  saveFile.WriteInteger(SAVESECTIONTOKENS, 'Overlay' + IntToStr(idx), OverlayIdx);
   saveFile.WriteBool(SAVESECTIONTOKENS, 'Visible' + IntToStr(idx), Visible);
   saveFile.WriteInteger(SAVESECTIONTOKENS, 'XSlots' + IntToStr(idx), GridSlotsX);
   saveFile.WriteInteger(SAVESECTIONTOKENS, 'YSlots' + IntToStr(idx), GridSlotsY);
 end;
 
-procedure TToken.SnapToGrid(GridSizeX, GridSizeY, XOffset, YOffset: Single; GridType: TGridType);
+procedure TToken.SnapToGrid(GridData: TGridData);//GridSizeX, GridSizeY, XOffset, YOffset: Single; GridType: TGridType);
 var
   count: Integer;
-  tmpGridSize: Single;
+  tmpGridSize, tmpOffset: Single;
 begin
-  if GridType = gtRect then
+  if GridData.GridType = gtRect then
   begin
-    XPos := Round(Round((FXTargetPos - XOffset - FWidth / 2) / GridSizeX) * GridSizeX + XOffset + (FGridSlotsX * GridSizeX / 2));
-    YPos := Round(Round((FYTargetPos - YOffset - FHeight / 2) / GridSizeY) * GridSizeY + YOffset +(FGridSlotsY * GridSizeY / 2));
+    XPos := Round(Round((FXTargetPos - GridData.GridOffsetX - FWidth / 2) / GridData.GridSizeX) * GridData.GridSizeX + GridData.GridOffsetX + (FGridSlotsX * GridData.GridSizeX / 2));
+    YPos := Round(Round((FYTargetPos - GridData.GridOffsetY - FHeight / 2) / GridData.GridSizeY) * GridData.GridSizeY + GridData.GridOffsetY +(FGridSlotsY * GridData.GridSizeY / 2));
   end
-  else if GridType = gtHexH then
+  else if GridData.GridType = gtHexH then
   begin
-    tmpGridSize := GridSizeY * 3 / 4;
-    Count := Round((FYTargetPos - YOffset - FHeight / 2) / tmpGridSize);
-    YPos := Round(Count * tmpGridSize + YOffset +(FGridSlotsY * GridSizeY / 2));
+    tmpGridSize := GridData.GridSizeY * 3 / 4;
+    Count := Round((FYTargetPos - GridData.GridOffsetY - FHeight / 2) / tmpGridSize);
+    YPos := Round(Count * tmpGridSize + GridData.GridOffsetY +(FGridSlotsY * GridData.GridSizeY / 2));
+    tmpOffset := GridData.GridOffsetX;
     if Odd(Count) then
-      XOffset := XOffset + GridSizeX / 2;
-    XPos := Round(Round((FXTargetPos - XOffset - FWidth / 2) / GridSizeX) * GridSizeX + XOffset + (FGridSlotsX * GridSizeX / 2));
+      tmpOffset := tmpOffset + GridData.GridSizeX / 2;
+    XPos := Round(Round((FXTargetPos - tmpOffset - FWidth / 2) / GridData.GridSizeX) * GridData.GridSizeX + tmpOffset + (FGridSlotsX * GridData.GridSizeX / 2));
   end
-  else if GridType = gtHexV then
+  else if GridData.GridType = gtHexV then
   begin
-    tmpGridSize := GridSizeX * 3 / 4;
-    Count := Round((FXTargetPos - XOffset - FWidth / 2) / tmpGridSize);
-    XPos := Round(Count * tmpGridSize + XOffset + (FGridSlotsX * GridSizeX / 2));
+    tmpGridSize := GridData.GridSizeX * 3 / 4;
+    Count := Round((FXTargetPos - GridData.GridOffsetX - FWidth / 2) / tmpGridSize);
+    XPos := Round(Count * tmpGridSize + GridData.GridOffsetX + (FGridSlotsX * GridData.GridSizeX / 2));
+    tmpOffset := GridData.GridOffsetY;
     if Odd(Count) then
-      YOffset := YOffset + GridSizeY / 2;
-    YPos := Round(Round((FYTargetPos - YOffset - FHeight / 2) / GridSizeY) * GridSizeY + YOffset +(FGridSlotsY * GridSizeY / 2));
+      tmpOffset := tmpOffset + GridData.GridSizeY / 2;
+    YPos := Round(Round((FYTargetPos - tmpOffset - FHeight / 2) / GridData.GridSizeY) * GridData.GridSizeY + tmpOffset +(FGridSlotsY * GridData.GridSizeY / 2));
   end
-  else if GridType = gtIsometric then
+  else if GridData.GridType = gtIsometric then
   begin
-    tmpGridSize := GridSizeY / 2;
-    Count := Round((FYTargetPos - YOffset - FHeight / 2) / tmpGridSize);
-    YPos := Round(Count * tmpGridSize + YOffset +(FGridSlotsY * GridSizeY / 2));
+    tmpGridSize := GridData.GridSizeY / 2;
+    Count := Round((FYTargetPos - GridData.GridOffsetY - FHeight / 2) / tmpGridSize);
+    YPos := Round(Count * tmpGridSize + GridData.GridOffsetY +(FGridSlotsY * GridData.GridSizeY / 2));
+    tmpOffset := GridData.GridOffsetX;
     if Odd(Count) then
-      XOffset := XOffset + GridSizeX / 2;
-    XPos := Round(Round((FXTargetPos - XOffset - FWidth / 2) / GridSizeX) * GridSizeX + XOffset + (FGridSlotsX * GridSizeX / 2));
+      tmpOffset := tmpOffset + GridData.GridSizeX / 2;
+    XPos := Round(Round((FXTargetPos - tmpOffset - FWidth / 2) / GridData.GridSizeX) * GridData.GridSizeX + tmpOffset + (FGridSlotsX * GridData.GridSizeX / 2));
   end;
   if FVisible then
     StartAnimation;
+end;
+
+function TToken.GetCellsAtPosition(PosX, PosY: Integer; GridData: TGridData): TRect;
+begin
+  Result := Rect(-1, -1, -1, -1);
+  if GridData.GridType = gtRect then
+  begin
+    Result.Left := Round((PosX - GridData.GridOffsetX - FWidth / 2) / GridData.GridSizeX);
+    Result.Top := Round((PosY - GridData.GridOffsetY - FHeight / 2) / GridData.GridSizeY);
+    Result.Width := GridSlotsX;
+    Result.Height := GridSlotsY;
+    {XPos := Round(Round((FXTargetPos - GridData.GridOffsetX - FWidth / 2) / GridData.GridSizeX) * GridData.GridSizeX + GridData.GridOffsetX + (FGridSlotsX * GridData.GridSizeX / 2));
+    YPos := Round(Round((FYTargetPos - GridData.GridOffsetY - FHeight / 2) / GridData.GridSizeY) * GridData.GridSizeY + GridData.GridOffsetY +(FGridSlotsY * GridData.GridSizeY / 2));}
+  end;
 end;
 
 procedure TToken.SetXPos(val: Integer);
@@ -681,33 +704,33 @@ begin
    TLightToken(Result).Color := saveFile.ReadInteger(SAVESECTIONTOKENS, 'Color' + IntToStr(idx), BGRA(255, 245, 238));
    TLightToken(Result).MaxStrength := saveFile.ReadFloat(SAVESECTIONTOKENS, 'MaxStrength' + IntToStr(idx), 0.5);
   end
-  else if FileExists(path) then // Image token
+  else if FileExists(path) then // Character token
   begin
-    Result := TToken.Create(path,
-                            saveFile.ReadInteger(SAVESECTIONTOKENS, 'XPos' + IntToStr(idx), 0),
-                            saveFile.ReadInteger(SAVESECTIONTOKENS, 'YPos' + IntToStr(idx), 0),
-                            saveFile.ReadInteger(SAVESECTIONTOKENS, 'Width' + IntToStr(idx), 100),
-                            saveFile.ReadInteger(SAVESECTIONTOKENS, 'Height' + IntToStr(idx), 100));
+    Result := TCharacterToken.Create(path,
+                                     saveFile.ReadInteger(SAVESECTIONTOKENS, 'XPos' + IntToStr(idx), 0),
+                                     saveFile.ReadInteger(SAVESECTIONTOKENS, 'YPos' + IntToStr(idx), 0),
+                                     saveFile.ReadInteger(SAVESECTIONTOKENS, 'Width' + IntToStr(idx), 100),
+                                     saveFile.ReadInteger(SAVESECTIONTOKENS, 'Height' + IntToStr(idx), 100));
+    TCharacterToken(Result).Number:= saveFile.ReadInteger(SAVESECTIONTOKENS, 'No' + IntToStr(idx), 0); 
+    TCharacterToken(Result).OverlayIdx := saveFile.ReadInteger(SAVESECTIONTOKENS, 'Overlay' + IntToStr(idx), -1);
   end;
 
   if Assigned(Result) then
   begin
     Result.Angle := saveFile.ReadFloat(SAVESECTIONTOKENS, 'Angle' + IntToStr(idx), 0);
-    Result.OverlayIdx := saveFile.ReadInteger(SAVESECTIONTOKENS, 'Overlay' + IntToStr(idx), -1);
     Result.Visible := saveFile.ReadBool(SAVESECTIONTOKENS, 'Visible' + IntToStr(idx), TokensStartInvisible);
     Result.GridSlotsX := saveFile.ReadInteger(SAVESECTIONTOKENS, 'XSlots' + IntToStr(idx), 1);
     Result.GridSlotsY := saveFile.ReadInteger(SAVESECTIONTOKENS, 'YSlots' + IntToStr(idx), 1);
     Result.Name := saveFile.ReadString(SAVESECTIONTOKENS, 'Name' + IntToStr(idx), '');
-    Result.Number:= saveFile.ReadInteger(SAVESECTIONTOKENS, 'No' + IntToStr(idx), 0);
   end;
 end;
 
 class function TTokenFactory.CreateTokenFromNode(data: TTokenNodeData; X, Y: Integer): TToken;
 begin
   case data.TokenType of
-    ttDefault:
+    ttCharacter:
     begin
-      Result := TToken.Create(data.FullPath, X, Y, data.DefaultWidth, data.DefaultHeight);
+      Result := TCharacterToken.Create(data.FullPath, X, Y, data.DefaultWidth, data.DefaultHeight);
       Result.GridSlotsX := Data.DefaultGridSlotsX;
       Result.GridSlotsY := Data.DefaultGridSlotsY;
       Result.Angle := Data.DefaultAngle;
@@ -715,7 +738,7 @@ begin
       Result.BaseInitiative := Data.BaseInitiative;
       Result.Visible := TokensStartInvisible;
       if TokensSnapToGrid then
-        Result.SnapToGrid(GridData.GridSizeX, GridData.GridSizeY, GridData.GridOffsetX, GridData.GridOffsetY, GridData.GridType);
+        Result.SnapToGrid(GridData);
     end;
     ttRange:
     begin
@@ -745,6 +768,22 @@ begin
   end;
 end;
 
+{ TCharacterToken }
+
+constructor TCharacterToken.Create(pPath: string; X, Y, pWidth, pHeight: Integer);
+begin
+  inherited Create(pPath, X, Y, pWidth, pHeight);
+  FOverlayIdx := -1;
+  FNumber := 0;
+end;
+
+procedure TCharacterToken.SaveToIni(SaveFile: TIniFile; idx: Integer);
+begin
+  inherited SaveToIni(SaveFile, idx);
+  saveFile.WriteInteger(SAVESECTIONTOKENS, 'No' + IntToStr(idx), Number);
+  saveFile.WriteInteger(SAVESECTIONTOKENS, 'Overlay' + IntToStr(idx), OverlayIdx);
+end;
+
 { TRangeIndicator }
 
 constructor TRangeIndicator.Create(X, Y, pWidth, pHeight: Integer);
@@ -762,7 +801,6 @@ begin
   FIsMoving := False;
   FGridSlotsX := 1;
   FGridSlotsY := 1;
-  FOverlayIdx := -1;
   FCurAnimationStep := 0;
   FPath := '';
   FColor := clRed;
@@ -897,7 +935,6 @@ begin
   FIsMoving := False;
   FGridSlotsX := 1;
   FGridSlotsY := 1;
-  FOverlayIdx := -1;
   FCurAnimationStep := 0;
   FPath := '';
   FText := text;
@@ -1062,7 +1099,6 @@ begin
   FIsMoving := False;
   FGridSlotsX := 1;
   FGridSlotsY := 1;
-  FOverlayIdx := -1;
   FCurAnimationStep := 0;
   FPath := '';
   FColor := BGRA(255, 245, 238);

@@ -236,6 +236,7 @@ type
     FHistoryList: TStringList;
     FHistoryIdx: Integer;
     FNotesSaved: Boolean;
+    FCurTokenRect: TRect;
 
     procedure UpdateMapList;
     procedure UpdateTokenList;
@@ -249,6 +250,7 @@ type
     procedure SetCurInitiativeIndex(val: Integer);
     procedure LoadMap(FileName: string);
     procedure SetCombatMode(val: Boolean);
+    procedure SetCurTokenRect(val: TRect);
     // Notes module
     procedure UpdateHistoryButtons;
     //procedure WMAppCommand(var Msg: TMessage); message WM_APPCOMMAND;
@@ -289,6 +291,7 @@ type
     property ShowMarker: Boolean read FShowMarker;
     property ShowGrid: Boolean read FShowGrid;
     property ShowTokens: Boolean read FShowTokens;
+    property TokenSlotRect: TRect read FCurTokenRect write SetCurTokenRect;
   end;
 
 
@@ -443,12 +446,16 @@ begin
     ContentList.Free;
   end;
   if Length(GridSettings) > 0 then
+  begin
     FGridData.FromString(GridSettings);
+    fmDisplay.GridData := FGridData;
+  end;
   FMapFileName := FileName;
   fmDisplay.MapFileName := FMapFileName;
   FMapPic := TBGRABitmap.Create(FMapFileName, True);
   FViewRectXOffset := 0;
   FViewRectYOffset := 0;
+  TokenSlotRect := Bounds(-1, -1, 0, 0);
   UpdateViewport;
   pbViewport.Invalidate;
   tbMapZoom.Enabled := True;
@@ -567,18 +574,22 @@ begin
     begin
       if FIsRotatingToken then
       begin
-
+        // Rotate token
         FCurDraggedToken.Angle := ArcTan2((Y - FDragStartY), -(X - FDragStartX)) + PI/2;
       end
       else
       begin
+        // Move token
         FCurDraggedToken.XPos := Round(FStartDragXOffset + (X - FDragStartX) / FDisplayScale / FZoomFactor);
         FCurDraggedToken.YPos := Round(FStartDragYOffset + (Y - FDragStartY) / FDisplayScale / FZoomFactor);
+        TokenSlotRect := FCurDraggedToken.GetCellsAtPosition(FCurDraggedToken.XEndPos, FCurDraggedToken.YEndPos, FGridData);
+        fmDisplay.DraggedTokenPos := Point(FCurDraggedToken.XEndPos, FCurDraggedToken.YEndPos);
       end;
       //fmDisplay.Invalidate;
     end
     else
     begin
+      // Move map
       FViewRectXOffset := EnsureRange(FStartDragXOffset + FDragStartX - X, 0, FViewRectMaxXOffset);
       FViewRectYOffset := EnsureRange(FStartDragYOffset + FDragStartY - Y, 0, FViewRectMaxYOffset);
       //fmDisplay.MapOffsetX := Round(FViewRectXOffset / FDisplayScale);
@@ -627,8 +638,10 @@ begin
           end;
         end;
         if FSnapTokensToGrid then
-          FCurDraggedToken.SnapToGrid(FGridData.GridSizeX, FGridData.GridSizeY, FGridData.GridOffsetX, FGridData.GridOffsetY, FGridData.GridType);
+          FCurDraggedToken.SnapToGrid(FGridData);
         FCurDraggedToken.StartAnimation;
+        TokenSlotRect := Bounds(-1, -1, 0, 0);
+        fmDisplay.DraggedTokenPos := Point(-1, -1);
       end;
     end;
     if (Abs(Y - FDragStartY) < 2) and (Abs(X - FDragStartX) < 2) then
@@ -679,6 +692,7 @@ var
   i, j, CurGridPos: Integer;
   CurMarkerX, CurMarkerY: Integer;
   CurToken: TToken;
+  CurTokenNum: Integer;
   CellRect, BoundingRect: TRect;
   Hex: array[0..5] of TPoint;
   Iso: array[0..3] of TPoint;
@@ -732,7 +746,17 @@ begin
                                                     ColorToBGRA(FGridData.GridColor, FGridData.GridAlpha), 1);
                 end;
               end;
-
+              if FSnapTokensToGrid then
+              begin
+                for i := TokenSlotRect.Left to FCurTokenRect.Right - 1 do
+                  for j := TokenSlotRect.Top to FCurTokenRect.Bottom - 1 do
+                  begin
+                    DrawnMapSegment.EllipseAntialias(MapToViewPortX((i + 0.5) * FGridData.GridSizeX + FGridData.GridOffsetX),
+                                                     MapToViewPortY((j + 0.5) * FGridData.GridSizeY + FGridData.GridOffsetY),
+                                                     0.4 * FGridData.GridSizeX * FDisplayScale * FZoomFactor,
+                                                     0.4 * FGridData.GridSizeY * FDisplayScale * FZoomFactor, clGray, 2);
+                  end;
+              end;
             end;
             gtHexH:
             begin
@@ -836,29 +860,34 @@ begin
                                                Round(BoundingRect.Height * FDisplayScale * FZoomFactor));
               RotatedBmp.Fill(Rotation, dmDrawWithTransparencY);
 
-              // Add overlay
-              OverlayBmp := GetOverlay(CurToken.OverlayIdx);
-              if Assigned(OverlayBmp) then
-              begin
-                OverlayScaled := OverlayBmp.Resample(Round(OverlayBmp.Width * FDisplayScale * FZoomFactor), Round(OverlayBmp.Height  * FDisplayScale * FZoomFactor));
-                OverlayScaled.Draw(RotatedBmp.Canvas,
-                                   (RotatedBmp.Width - TokenBmp.Width) div 2,
-                                   (RotatedBmp.Height - TokenBmp.Height) div 2,
-                                   False);
-                OverlayScaled.Free;
-              end;
+              // This and other stuff like this should probably be done by the tokens themselves
+              if CurToken is TCharacterToken then
+              begin                              
+                // Add overlay
+                OverlayBmp := GetOverlay(TCharacterToken(CurToken).OverlayIdx);
+                if Assigned(OverlayBmp) then
+                begin
+                  OverlayScaled := OverlayBmp.Resample(Round(OverlayBmp.Width * FDisplayScale * FZoomFactor), Round(OverlayBmp.Height  * FDisplayScale * FZoomFactor));
+                  OverlayScaled.Draw(RotatedBmp.Canvas,
+                                     (RotatedBmp.Width - TokenBmp.Width) div 2,
+                                     (RotatedBmp.Height - TokenBmp.Height) div 2,
+                                     False);
+                  OverlayScaled.Free;
+                end;
 
-              // Add number
-              if CurToken.Number > 0 then
-              begin
-                TextRenderer := TBGRATextEffectFontRenderer.Create;
-                TextRenderer.OutlineVisible := True;
-                TextRenderer.OutlineColor := clBlack;
-                NumSize := RotatedBmp.TextSize(IntToStr(CurToken.Number));
-                RotatedBmp.FontStyle := [fsBold];
-                RotatedBmp.FontRenderer := TextRenderer;
-                // Should the text size change with the zoom factor?
-                RotatedBmp.TextOut((RotatedBmp.Width - NumSize.Width) div 2, (RotatedBmp.Height - NumSize.Height) div 2, IntToStr(CurToken.Number), clWhite, taLeftJustify);
+                // Add number
+                if (TCharacterToken(CurToken).Number > 0) then
+                begin
+                  CurTokenNum := TCharacterToken(CurToken).Number;
+                  TextRenderer := TBGRATextEffectFontRenderer.Create;
+                  TextRenderer.OutlineVisible := True;
+                  TextRenderer.OutlineColor := clBlack;
+                  NumSize := RotatedBmp.TextSize(IntToStr(CurTokenNum));
+                  RotatedBmp.FontStyle := [fsBold];
+                  RotatedBmp.FontRenderer := TextRenderer;
+                  // Should the text size change with the zoom factor?
+                  RotatedBmp.TextOut((RotatedBmp.Width - NumSize.Width) div 2, (RotatedBmp.Height - NumSize.Height) div 2, IntToStr(CurTokenNum), clWhite, taLeftJustify);
+                end;
               end;
 
               // Add direction arrow
@@ -978,7 +1007,7 @@ begin
   if (Source is TTreeView) and
      Assigned(TTreeView(Source).Selected) and
      Assigned(TTreeView(Source).Selected.Data) and
-     (TTokenNodeData(TTreeView(Source).Selected.Data).TokenType = ttDefault) then
+     (TTokenNodeData(TTreeView(Source).Selected.Data).TokenType = ttCharacter) then
     fmDisplay.PortraitFileName := TTokenNodeData(TTreeView(Source).Selected.Data).FullPath;
 end;
 
@@ -1058,6 +1087,13 @@ begin
       bmp.Free;
     end;
   end;
+end;
+
+procedure TfmController.SetCurTokenRect(val: TRect);
+begin
+  FCurTokenRect := val;
+  fmDisplay.TokenSlotRect := val;
+  fmDisplay.Invalidate;
 end;
 
 function TfmController.MapToViewPortX(MapX: Single): Integer;
@@ -1164,7 +1200,7 @@ begin
         CurToken := TToken(FTokenList[i]);
         CurToken.XPos := CurToken.XEndPos - Round(OldGridData.GridOffsetX + FGridData.GridOffsetX);
         CurToken.YPos := CurToken.YEndPos - Round(OldGridData.GridOffsetY + FGridData.GridOffsetY);
-        CurToken.SnapToGrid(FGridData.GridSizeX, FGridData.GridSizeY, FGridData.GridOffsetX, FGridData.GridOffsetY, FGridData.GridType);
+        CurToken.SnapToGrid(FGridData);
       end;
     end;
   end
@@ -1486,10 +1522,11 @@ procedure TfmController.tbSnapTokensToGridClick(Sender: TObject);
 var i: Integer;
 begin
   FSnapTokensToGrid := tbSnapTokensToGrid.Down;
+  fmDisplay.SnapTokensToGrid := FSnapTokensToGrid;
   if FSnapTokensToGrid then
   begin
     for i := 0 to FTokenList.Count - 1 do
-      TToken(FTokenList[i]).SnapToGrid(FGridData.GridSizeX, FGridData.GridSizeY, FGridData.GridOffsetX, FGridData.GridOffsetY, FGridData.GridType);
+      TToken(FTokenList[i]).SnapToGrid(FGridData);
     pbViewPort.Invalidate;
     fmDisplay.Invalidate;
   end;
@@ -1587,7 +1624,7 @@ var
       begin
         title := ExtractFilename(FileList[i]); 
         NodeData := TTokenNodeData.Create;
-        NodeData.TokenType := ttDefault;
+        NodeData.TokenType := ttCharacter;
         if FTokenLib.IndexOfName(FileList[i]) >= 0 then
         begin
           ContentList := TStringList.Create;
@@ -1797,7 +1834,7 @@ end;}
 procedure TfmController.SnapTokenToGrid(Token: TToken);
 begin
   if Assigned(Token) and FSnapTokensToGrid then
-    Token.SnapToGrid(FGridData.GridSizeX, FGridData.GridSizeY, FGridData.GridOffsetX, FGridData.GridOffsetY, FGridData.GridType);
+    Token.SnapToGrid(FGridData);
 end;
 
 procedure TfmController.SaveLibraryData;

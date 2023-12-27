@@ -55,7 +55,10 @@ type
     FMarkerX, FMarkerY: Integer;
     FGridData: TGridData;
     FCombatMode: Boolean;
+    FSnapTokensToGrid: Boolean;
     FPortraitFile: string;
+    FCurTokenRect: TRect;
+    FDraggedTokenPos: TPoint;
 
     procedure SetMapFile(FileName: string);
     procedure SetMapOffsetX(val: Integer);
@@ -75,6 +78,9 @@ type
     property MarkerX: Integer read FMarkerX write SetMarkerX;
     property MarkerY: Integer read FMarkerY write SetMarkerY;
     property CombatMode: Boolean read FCombatMode write SetCombatMode;
+    property SnapTokensToGrid: Boolean read FSnapTokensToGrid write FSnapTokensToGrid;
+    property TokenSlotRect: TRect read FCurTokenRect write FCurTokenRect;
+    property DraggedTokenPos: TPoint read FDraggedTokenPos write FDraggedTokenPos;
     property PortraitFileName: string read FPortraitFile write SetPortraitFile;
   end;
 
@@ -130,6 +136,7 @@ procedure TfmDisplay.FormCreate(Sender: TObject);
 begin        
   FMapZoom := 1;
   FCombatMode := False;
+  DraggedTokenPos := Point(-1, -1);
   FGridData.GridSizeX := 100;
   FGridData.GridSizeY := 100;
   FGridData.GridColor := clSilver;
@@ -277,6 +284,7 @@ var
   CurMarkerX, CurMarkerY: Single;
   CurToken: TToken;
   CurTokenPosX, CurTokenPosY: Integer;
+  CurTokenNum: Integer;
   TokenRect, ClipRect, RotatedRect, BoundingRect: TRect;
   MapRect: TRect;
   MaxPortraits: Integer;
@@ -422,7 +430,25 @@ begin
                                                           ColorToBGRA(FGridData.GridColor, FGridData.GridAlpha), 1);
                   end;
                 end;
-
+                if FSnapTokensToGrid then
+                begin
+                  for i := TokenSlotRect.Left to TokenSlotRect.Right - 1 do
+                    for j := TokenSlotRect.Top to TokenSlotRect.Bottom - 1 do
+                    begin
+                      MapSegmentStretched.EllipseAntialias(Round(((i + 0.5) * FGridData.GridSizeX + FGridData.GridOffsetX) * FMapZoom - FMapOffsetX),
+                                                           Round(((j + 0.5) * FGridData.GridSizeY + FGridData.GridOffsetY) * FMapZoom - FMapOffsetY),
+                                                           0.4 * FGridData.GridSizeX * FMapZoom,
+                                                           0.4 * FGridData.GridSizeY * FMapZoom, clGray, 2);
+                    end;
+                end
+                else
+                begin
+                  // Not too happy with the visual here...
+                  if (DraggedTokenPos.X >= 0) and (DraggedTokenPos.Y >= 0) then
+                    MapSegmentStretched.EllipseAntialias(Round(DraggedTokenPos.X * FMapZoom - FMapOffsetX {- (FMapZoom * CurToken.Width / 2)}),
+                                                         Round(DraggedTokenPos.Y * FMapZoom - FMapOffsetY {- (FMapZoom * CurToken.Height / 2)}),
+                                                         50, 50, clGray, 2);
+                end;
               end;
               gtHexH:
               begin
@@ -553,30 +579,36 @@ begin
                                           TokenRect.Top - RotatedBmp.Height div 2 + Round(TokenBmp.Height * FMapZoom / 2),
                                           RotatedBmp.Width,
                                           RotatedBmp.Height);
-                    // Add overlay
-                    OverlayBmp := fmController.GetOverlay(CurToken.OverlayIdx);
-                    if Assigned(OverlayBmp) then
+                    // Another reminder to refactor this into the tokens themselves
+                    if CurToken is TCharacterToken then
                     begin
-                      OverlayScaled := OverlayBmp.Resample(Round(OverlayBmp.Width * FMapZoom), Round(OverlayBmp.Height  * FMapZoom), rmSimpleStretch);
-                      OverlayScaled.Draw(RotatedBmp.Canvas,
-                                         Round(RotatedBmp.Width - TokenBmp.Width * FMapZoom) div 2,
-                                         Round(RotatedBmp.Height - TokenBmp.Height * FMapZoom) div 2,
-                                         False);
-                      OverlayScaled.Free;
-                      OverlayBmp.Free;
-                    end;
+                      // Add overlay
+                      OverlayBmp := fmController.GetOverlay(TCharacterToken(CurToken).OverlayIdx);
+                      if Assigned(OverlayBmp) then
+                      begin
+                        OverlayScaled := OverlayBmp.Resample(Round(OverlayBmp.Width * FMapZoom), Round(OverlayBmp.Height  * FMapZoom), rmSimpleStretch);
+                        OverlayScaled.Draw(RotatedBmp.Canvas,
+                                           Round(RotatedBmp.Width - TokenBmp.Width * FMapZoom) div 2,
+                                           Round(RotatedBmp.Height - TokenBmp.Height * FMapZoom) div 2,
+                                           False);
+                        OverlayScaled.Free;
+                        OverlayBmp.Free;
+                      end;
 
-                    // Add number
-                    if CurToken.Number > 0 then
-                    begin 
-                      TextRenderer := TBGRATextEffectFontRenderer.Create;
-                      TextRenderer.OutlineVisible := True;
-                      TextRenderer.OutlineColor := clBlack;
-                      NumSize := RotatedBmp.TextSize(IntToStr(CurToken.Number));
-                      RotatedBmp.FontStyle := [fsBold];
-                      RotatedBmp.FontRenderer := TextRenderer;
-                      // Should the text size change with the zoom factor?
-                      RotatedBmp.TextOut((RotatedBmp.Width - NumSize.Width) div 2, (RotatedBmp.Height - NumSize.Height) div 2, IntToStr(CurToken.Number), clWhite, taLeftJustify);
+                      // Add number
+                      if (TCharacterToken(CurToken).Number > 0) then
+                      begin
+                        CurTokenNum := TCharacterToken(CurToken).Number;
+                        TextRenderer := TBGRATextEffectFontRenderer.Create;
+                        TextRenderer.OutlineVisible := True;
+                        TextRenderer.OutlineColor := clBlack;
+                        NumSize := RotatedBmp.TextSize(IntToStr(CurTokenNum));
+                        RotatedBmp.FontStyle := [fsBold];
+                        RotatedBmp.FontRenderer := TextRenderer;
+                        // Should the text size change with the zoom factor?
+                        RotatedBmp.TextOut((RotatedBmp.Width - NumSize.Width) div 2, (RotatedBmp.Height - NumSize.Height) div 2, IntToStr(CurTokenNum), clWhite, taLeftJustify);
+                      end;
+
                     end;
 
                     // Add direction arrow

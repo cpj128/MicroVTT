@@ -109,8 +109,6 @@ begin
   fseRotation.Value := -RadToDeg(token.Angle);
   udGridSlotsX.Position := token.GridSlotsX;
   udGridSlotsY.Position := token.GridSlotsY;
-  seNumber.Value := token.Number;
-  cbOverlay.ItemIndex := token.OverlayIdx + 1;
 
   if token is TRangeIndicator then
   begin
@@ -184,13 +182,15 @@ begin
     pnColor.Show;
     pnColor.Color := TLightToken(token).Color;
   end
-  else
+  else if token is TCharacterToken then
   begin       
     Label2.Show;
     eHeight.Show; 
     Label7.Show;
-    seNumber.Show;
-    cbOverlay.Show;
+    seNumber.Show; 
+    seNumber.Value := TCharacterToken(token).Number;
+    cbOverlay.Show;  
+    cbOverlay.ItemIndex := TCharacterToken(token).OverlayIdx + 1;
     Label3.Show;
     Label6.Show;
     eGridSlotsX.Show;
@@ -223,9 +223,12 @@ begin
     LinkedToken.Angle   := -DegToRad(fseRotation.Value);
     LinkedToken.GridSlotsX := udGridSlotsX.Position;
     LinkedToken.GridSlotsY := udGridSlotsY.Position;
-    LinkedToken.OverlayIdx := cbOverlay.ItemIndex - 1;
-    LinkedToken.Number  := seNumber.Value;
     fmController.SnapTokenToGrid(LinkedToken);
+    if LinkedToken is TCharacterToken then
+    begin
+      TCharacterToken(LinkedToken).Number := seNumber.Value; 
+      TCharacterToken(LinkedToken).OverlayIdx := cbOverlay.ItemIndex - 1;
+    end;
     if LinkedToken is TRangeIndicator then
     begin 
       TRangeIndicator(LinkedToken).Color := pnColor.Color;
