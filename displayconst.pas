@@ -22,6 +22,7 @@ uses
 
 var
   PicFilterStr: string;
+  PicFilterStrAll: string;
 
 const
   HMARGIN = 16;
@@ -37,6 +38,7 @@ const
 
   PICFILEFILTER = '*.jpg;*.jpeg;*.png;*.bmp;*.webp';
   PICFILEFILTEREXWEBP = '*.jpg;*.jpeg;*.png;*.bmp';
+  PICFILTERUVTT = '*.uvtt;*.dd2vtt;*.df2vtt';
 
   SAVESECTIONMAP = 'Map';
   SAVESECTIONGRID = 'Grid';
@@ -59,6 +61,8 @@ initialization
     PicFilterStr := PICFILEFILTEREXWEBP
   else
     UnloadLibrary(WebpHandle);
+
+  PicFilterStrAll := PicFilterStr + ';' + PICFILTERUVTT;
 
 finalization
 

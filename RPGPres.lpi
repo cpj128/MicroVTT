@@ -145,7 +145,7 @@
         <PackageName Value="LCL"/>
       </Item8>
     </RequiredPackages>
-    <Units Count="13">
+    <Units Count="15">
       <Unit0>
         <Filename Value="RPGPres.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -231,6 +231,16 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="RPGUtils"/>
       </Unit12>
+      <Unit13>
+        <Filename Value="maploaders.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="MapLoaders"/>
+      </Unit13>
+      <Unit14>
+        <Filename Value="wallmanager.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="WallManager"/>
+      </Unit14>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

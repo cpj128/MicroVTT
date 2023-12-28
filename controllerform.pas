@@ -326,6 +326,7 @@ uses
   BGRATransform,
   DisplayConst,
   LangStrings,
+  MapLoaders,
   DisplayForm,
   GridSettingsForm,
   SettingsForm,
@@ -452,7 +453,10 @@ begin
   end;
   FMapFileName := FileName;
   fmDisplay.MapFileName := FMapFileName;
-  FMapPic := TBGRABitmap.Create(FMapFileName, True);
+  if Assigned(FMapPic) then
+    FMapPic.Free;
+  //FMapPic := TBGRABitmap.Create(FMapFileName, True);
+  FMapPic := GetMapImage(Filename);
   FViewRectXOffset := 0;
   FViewRectYOffset := 0;
   TokenSlotRect := Bounds(-1, -1, 0, 0);
@@ -690,6 +694,7 @@ procedure TfmController.pbViewportPaint(Sender: TObject);
 var
   ScaledBmp, DrawnMapSegment, TokenBmp: TBGRABitmap;
   i, j, CurGridPos: Integer;
+  SegmentWidth, SegmentHeight: Integer;
   CurMarkerX, CurMarkerY: Integer;
   CurToken: TToken;
   CurTokenNum: Integer;
@@ -711,13 +716,17 @@ begin
   // Draw Map
   if Assigned(FMapPic) then
   begin
+    // TODO: Resampling takes a lot of time, probably faster to save and just do when zoom or scale changes
     ScaledBmp := FMapPic.Resample(Round(FMapPic.Width * FDisplayScale * FZoomFactor), Round(FMapPic.Height * FDisplayScale * FZoomFactor), rmSimpleStretch);
     try
-      DrawnMapSegment := TBGRABitmap.Create(pbViewPort.Width, pbViewPort.Height);
+      DrawnMapSegment := TBGRABitmap.Create(pbViewPort.Width, pbViewPort.Height, clWhite);
       try
-        DrawnMapSegment.Canvas.CopyRect(Rect(0, 0, pbViewPort.Width, pbViewPort.Height),
+        SegmentWidth := Max(Min(pbViewport.Width, ScaledBmp.Width - FViewRectXOffset), 0);
+        SegmentHeight := Max(Min(pbViewport.Height, ScaledBmp.Height - FViewRectYOffset), 0);
+        DrawnMapSegment.Canvas.CopyRect(Rect(0, 0, SegmentWidth, SegmentHeight),
                                         ScaledBmp.Canvas,
-                                        Bounds(FViewRectXOffset, FViewRectYOffset, pbViewPort.Width, pbViewPort.Height));
+                                        Bounds(FViewRectXOffset, FViewRectYOffset, SegmentWidth, SegmentHeight));
+        //DrawnMapSegment.SaveToFile('testOutput.jpg');
         // Grid
         if FShowGrid then
         begin
@@ -1519,7 +1528,7 @@ end;
 procedure TfmController.tbShowGridClick(Sender: TObject);
 begin
   FShowGrid := tbShowGrid.Down;
-  //fmDisplay.ShowGrid := FShowGrid;
+  fmDisplay.Invalidate;;
   pbViewPort.Invalidate;
 end;
 
@@ -1574,7 +1583,7 @@ begin
   try
     ContentList.Delimiter := '|';
     ContentList.StrictDelimiter := True;
-    FindAllFiles(FileList, FMapDir, PicFilterStr, True);
+    FindAllFiles(FileList, FMapDir, PicFilterStrAll, True);
     for i := 0 to FileList.Count - 1 do
     begin
       FileName := FileList[i];                    
@@ -2090,12 +2099,16 @@ var
   ThumbnailName: string;
 begin
   i := 0;
-  FullPic := TBGRABitmap.Create(0, 0);
+  //FullPic := TBGRABitmap.Create(0, 0);
+  FullPic := nil;
   while (not Terminated) and (i < FFileList.Count) do
   begin
     try
       ThumbnailName := fmController.GetThumbnailName(FFileList[i]);
-      FullPic.LoadFromFile(FFileList[i]);
+      //FullPic.LoadFromFile(FFileList[i]);
+      if Assigned(FullPic) then
+        FreeAndNil(FullPic);
+      FullPic := GetMapImage(FFileList[i]);
     except
 
     end;
@@ -2112,7 +2125,8 @@ begin
 
     Inc(i);
   end;
-  FullPic.Free;
+  if Assigned(FullPic) then
+    FullPic.Free;
   Thumbnail.Free;
   FFileList.Free;
 end;

@@ -106,6 +106,7 @@ uses
   DisplayConst,
   RPGUtils,
   LangStrings,
+  MapLoaders,
   LazLogger,
   Math,
   StrUtils,
@@ -119,9 +120,12 @@ uses
 procedure TfmDisplay.SetMapFile(FileName: string);
 begin
   FMapFileName := FileName;
-  if FileExists(FileName) and MatchText(ExtractFileExt(FileName), ['.jpg', '.jpeg', '.png', '.bmp', '.webp']) then
+  if FileExists(FileName) and MatchText(ExtractFileExt(FileName), ['.jpg', '.jpeg', '.png', '.bmp', '.webp', '.uvtt', '.dd2vtt', '.df2vtt']) then
   try
-    FMapPic.LoadFromFile(FileName);
+    if Assigned(FMapPic) then
+      FMapPic.Free;
+    //FMapPic.LoadFromFile(FileName);
+    FMapPic := GetMapImage(FileName);
   finally
     Invalidate;
   end;
@@ -141,7 +145,8 @@ begin
   FGridData.GridSizeY := 100;
   FGridData.GridColor := clSilver;
   FGridData.GridAlpha := 255;
-  FMapPic := TBGRABitmap.Create(0, 0);
+  //FMapPic := TBGRABitmap.Create(0, 0);
+  FMapPic := nil;
   FPortrait := TBGRABitmap.Create(0, 0);
   FBgPic := TPicture.Create;
   FBgPic.LoadFromResourceName(HINSTANCE, 'PARCHMENT_TILE');
@@ -279,7 +284,8 @@ var
   MapSegment, MapSegmentStretched: TBGRABitmap;
   TokenBmp, RotatedBmp, OverlayBmp, OverlayScaled: TBGRABitmap;
   Rotation: TBGRAAffineBitmapTransform;
-  MapWidth, MapHeight: Integer;
+  MapWidth, MapHeight: Integer; 
+  SegmentWidth, SegmentHeight: Integer;
   i, j, CurGridPos: Integer;
   CurMarkerX, CurMarkerY: Single;
   CurToken: TToken;
@@ -376,7 +382,7 @@ begin
     FMapFrame.Draw(Canvas, ClipRect.Left - FRAMESIZE, ClipRect.Top - FRAMESIZE, False);
 
   // Map
-  if fmController.ShowMap then
+  if fmController.ShowMap and Assigned(FMapPic) then
   begin
     MapWidth := ClientWidth - VMARGIN - VMARGIN - PORTRAITHEIGHT - VMARGIN;
     MapHeight := ClientHeight - HMARGIN - HMARGIN;
@@ -390,10 +396,11 @@ begin
       MapSegment.Canvas.FillRect(0, 0, MapSegment.Width, MapSegment.Height);
       if Assigned(FMapPic) then
       begin
-
-        MapSegment.Canvas.CopyRect(Rect(0, 0, MapSegment.Width, MapSegment.Height),
+        SegmentWidth := Max(0, Min(MapSegment.Width, FMapPic.Width - Round(FMapOffsetX / FMapZoom)));
+        SegmentHeight := Max(0, Min(MapSegment.Height, FMapPic.Height - Round(FMapOffsetY / FMapZoom)));
+        MapSegment.Canvas.CopyRect(Rect(0, 0, SegmentWidth, SegmentHeight),
                                    FMapPic.Canvas,
-                                   Bounds(Round(FMapOffsetX / FMapZoom), Round(FMapOffsetY / FMapZoom), MapSegment.Width, MapSegment.Height));
+                                   Bounds(Round(FMapOffsetX / FMapZoom), Round(FMapOffsetY / FMapZoom), SegmentWidth, SegmentHeight));
 
         try
           if FMapZoom > 1 then
