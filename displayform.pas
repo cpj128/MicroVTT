@@ -440,14 +440,6 @@ begin
                                                            0.4 * FGridData.GridSizeX * FMapZoom,
                                                            0.4 * FGridData.GridSizeY * FMapZoom, clGray, 2);
                     end;
-                end
-                else
-                begin
-                  // Not too happy with the visual here...
-                  if (DraggedTokenPos.X >= 0) and (DraggedTokenPos.Y >= 0) then
-                    MapSegmentStretched.EllipseAntialias(Round(DraggedTokenPos.X * FMapZoom - FMapOffsetX {- (FMapZoom * CurToken.Width / 2)}),
-                                                         Round(DraggedTokenPos.Y * FMapZoom - FMapOffsetY {- (FMapZoom * CurToken.Height / 2)}),
-                                                         50, 50, clGray, 2);
                 end;
               end;
               gtHexH:
@@ -469,6 +461,10 @@ begin
                     Hex[4] := Point(CellRect.Right, CellRect.Bottom - CellRect.Height div 4);
                     Hex[5] := Point(CellRect.Left + CellRect.Width div 2, CellRect.Bottom);
                     MapSegmentStretched.DrawPolygonAntialias(Hex, ColorToBGRA(FGridData.GridColor, FGridData.GridAlpha), 1, BGRAPixelTransparent);
+                    if FSnapTokensToGrid and TokenSlotRect.Contains(Point(j, i)) then
+                      MapSegmentStretched.EllipseAntialias(CellRect.CenterPoint.X, CellRect.CenterPoint.Y,
+                                                       0.4 * FGridData.GridSizeX * FMapZoom,
+                                                       0.4 * FGridData.GridSizeY * FMapZoom, clGray, 2);
                   end;
               end;
               gtHexV:
@@ -490,6 +486,10 @@ begin
                     Hex[4] := Point(CellRect.Right - CellRect.Width div 4, CellRect.Bottom);
                     Hex[5] := Point(CellRect.Left + CellRect.Width div 4, CellRect.Bottom);
                     MapSegmentStretched.DrawPolygonAntialias(Hex, ColorToBGRA(FGridData.GridColor, FGridData.GridAlpha), 1, BGRAPixelTransparent);
+                    if FSnapTokensToGrid and TokenSlotRect.Contains(Point(j, i)) then
+                      MapSegmentStretched.EllipseAntialias(CellRect.CenterPoint.X, CellRect.CenterPoint.Y,
+                                                       0.4 * FGridData.GridSizeX * FMapZoom,
+                                                       0.4 * FGridData.GridSizeY * FMapZoom, clGray, 2);
                   end;
               end;
               gtIsometric:
@@ -511,11 +511,22 @@ begin
                     Iso[3] := Point((CellRect.Left + CellRect.Right) div 2, CellRect.Bottom);
 
                     MapSegmentStretched.DrawPolygonAntialias(Iso, ColorToBGRA(FGridData.GridColor, FGridData.GridAlpha), 1, BGRAPixelTransparent);
+                    if FSnapTokensToGrid and TokenSlotRect.Contains(Point(j, i)) then
+                      MapSegmentStretched.EllipseAntialias(CellRect.CenterPoint.X, CellRect.CenterPoint.Y,
+                                                       0.2 * FGridData.GridSizeX * FMapZoom,
+                                                       0.2 * FGridData.GridSizeY * FMapZoom, clGray, 2);
                   end;
                 end;
             end;
           end;
-
+          if not FSnapTokensToGrid then
+          begin
+            // Not too happy with the visual here...
+            if (DraggedTokenPos.X >= 0) and (DraggedTokenPos.Y >= 0) then
+              MapSegmentStretched.EllipseAntialias(Round(DraggedTokenPos.X * FMapZoom - FMapOffsetX),
+                                                   Round(DraggedTokenPos.Y * FMapZoom - FMapOffsetY),
+                                                   50, 50, clGray, 2);
+          end;
           // Marker
           if fmController.ShowMarker then
           begin

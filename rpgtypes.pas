@@ -101,6 +101,7 @@ type
     public
       constructor Create(Path: string; X, Y, pWidth, pHeight: Integer);
       destructor Destroy; override;
+      procedure RedrawGlyph; virtual; abstract;
       procedure SnapToGrid(GridData: TGridData);
       function GetCellsAtPosition(PosX, PosY: Integer; GridData: TGridData): TRect;
       procedure StartAnimation;
@@ -142,7 +143,8 @@ type
   private
     FNumber: Integer;   
     FOverlayIdx: Integer;
-  public                                                 
+  public
+    procedure RedrawGlyph; override;
     constructor Create(pPath: string; X, Y, pWidth, pHeight: Integer);
     procedure SaveToIni(SaveFile: TIniFile; idx: Integer); override;
     property Number: Integer read FNumber write FNumber;
@@ -154,7 +156,6 @@ type
   private
     FAttachedTo: TToken;
   public
-    procedure RedrawGlyph; virtual; abstract;
     procedure AttachTo(token: TToken);
     procedure Detach;
     function IsAttached: Boolean;
@@ -416,6 +417,9 @@ begin
 end;
 
 function TToken.GetCellsAtPosition(PosX, PosY: Integer; GridData: TGridData): TRect;
+var
+  count: Integer;
+  tmpGridSize, tmpOffset: Single;
 begin
   Result := Rect(-1, -1, -1, -1);
   if GridData.GridType = gtRect then
@@ -424,8 +428,60 @@ begin
     Result.Top := Round((PosY - GridData.GridOffsetY - FHeight / 2) / GridData.GridSizeY);
     Result.Width := GridSlotsX;
     Result.Height := GridSlotsY;
-    {XPos := Round(Round((FXTargetPos - GridData.GridOffsetX - FWidth / 2) / GridData.GridSizeX) * GridData.GridSizeX + GridData.GridOffsetX + (FGridSlotsX * GridData.GridSizeX / 2));
-    YPos := Round(Round((FYTargetPos - GridData.GridOffsetY - FHeight / 2) / GridData.GridSizeY) * GridData.GridSizeY + GridData.GridOffsetY +(FGridSlotsY * GridData.GridSizeY / 2));}
+  end
+  else if GridData.GridType = gtHexH then
+  begin
+    tmpGridSize := GridData.GridSizeY * 3 / 4;
+    Result.Top := Round((PosY - GridData.GridOffsetY - FHeight / 2) / tmpGridSize);
+    tmpOffset := GridData.GridOffsetX;
+    if Odd(Result.Top) then
+      tmpOffset := tmpOffset + GridData.GridSizeX / 2;
+    Result.Left := Round((PosX - tmpOffset - FWidth / 2) / GridData.GridSizeX);
+    Result.Width := GridSlotsX;
+    Result.Height := GridSlotsY;
+    {tmpGridSize := GridData.GridSizeY * 3 / 4;
+    Count := Round((FYTargetPos - GridData.GridOffsetY - FHeight / 2) / tmpGridSize);
+    YPos := Round(Count * tmpGridSize + GridData.GridOffsetY +(FGridSlotsY * GridData.GridSizeY / 2));
+    tmpOffset := GridData.GridOffsetX;
+    if Odd(Count) then
+      tmpOffset := tmpOffset + GridData.GridSizeX / 2;
+    XPos := Round(Round((FXTargetPos - tmpOffset - FWidth / 2) / GridData.GridSizeX) * GridData.GridSizeX + tmpOffset + (FGridSlotsX * GridData.GridSizeX / 2));}
+  end
+  else if GridData.GridType = gtHexV then
+  begin
+    tmpGridSize := GridData.GridSizeX * 3 / 4;
+    Result.Left := Round((PosX - GridData.GridOffsetX - FWidth / 2) / tmpGridSize);
+    tmpOffset := GridData.GridOffsetY;
+    if Odd(Result.Left) then
+      tmpOffset := tmpOffset + GridData.GridSizeY / 2;
+    Result.Top := Round((PosY - tmpOffset - FHeight / 2) / GridData.GridSizeY);
+    Result.Width := GridSlotsX;
+    Result.Height := GridSlotsY;
+    {tmpGridSize := GridData.GridSizeX * 3 / 4;
+    Count := Round((FXTargetPos - GridData.GridOffsetX - FWidth / 2) / tmpGridSize);
+    XPos := Round(Count * tmpGridSize + GridData.GridOffsetX + (FGridSlotsX * GridData.GridSizeX / 2));
+    tmpOffset := GridData.GridOffsetY;
+    if Odd(Count) then
+      tmpOffset := tmpOffset + GridData.GridSizeY / 2;
+    YPos := Round(Round((FYTargetPos - tmpOffset - FHeight / 2) / GridData.GridSizeY) * GridData.GridSizeY + tmpOffset +(FGridSlotsY * GridData.GridSizeY / 2));}
+  end
+  else if GridData.GridType = gtIsometric then
+  begin
+    tmpGridSize := GridData.GridSizeY / 2;
+    Result.Top := Round((PosY - GridData.GridOffsetY - FHeight / 2) / tmpGridSize);
+    tmpOffset := GridData.GridOffsetX;
+    if Odd(Result.Top) then
+      tmpOffset := tmpOffset + GridData.GridSizeX / 2;
+    Result.Left := Round((PosX - tmpOffset - FWidth / 2) / GridData.GridSizeX);
+    Result.Width := GridSlotsX;
+    Result.Height := GridSlotsY;
+    {tmpGridSize := GridData.GridSizeY / 2;
+    Count := Round((FYTargetPos - GridData.GridOffsetY - FHeight / 2) / tmpGridSize);
+    YPos := Round(Count * tmpGridSize + GridData.GridOffsetY +(FGridSlotsY * GridData.GridSizeY / 2));
+    tmpOffset := GridData.GridOffsetX;
+    if Odd(Count) then
+      tmpOffset := tmpOffset + GridData.GridSizeX / 2;
+    XPos := Round(Round((FXTargetPos - tmpOffset - FWidth / 2) / GridData.GridSizeX) * GridData.GridSizeX + tmpOffset + (FGridSlotsX * GridData.GridSizeX / 2));}
   end;
 end;
 
@@ -531,7 +587,7 @@ var i: Integer;
 begin
   for i := 0 to AttachedCount - 1 do
     if GetAttached(i) is TAttachableToken then
-      TAttachableToken(GetAttached(i)).RedrawGlyph;
+      GetAttached(i).RedrawGlyph;
 end;
 
 procedure TToken.Attach(token: TToken);
@@ -782,6 +838,12 @@ begin
   inherited SaveToIni(SaveFile, idx);
   saveFile.WriteInteger(SAVESECTIONTOKENS, 'No' + IntToStr(idx), Number);
   saveFile.WriteInteger(SAVESECTIONTOKENS, 'Overlay' + IntToStr(idx), OverlayIdx);
+end;
+
+procedure TCharacterToken.RedrawGlyph;
+begin
+  FGlyph.Free;
+  FGlyph := TBGRABitmap.Create(Path);
 end;
 
 { TRangeIndicator }

@@ -777,6 +777,10 @@ begin
                   Hex[4] := Point(CellRect.Right, CellRect.Bottom - CellRect.Height div 4);
                   Hex[5] := Point(CellRect.Left + CellRect.Width div 2, CellRect.Bottom);
                   DrawnMapSegment.DrawPolygonAntialias(Hex, ColorToBGRA(FGridData.GridColor, FGridData.GridAlpha), 1, BGRAPixelTransparent);
+                  if FSnapTokensToGrid and TokenSlotRect.Contains(Point(j, i)) then
+                    DrawnMapSegment.EllipseAntialias(CellRect.CenterPoint.X, CellRect.CenterPoint.Y,
+                                                     0.4 * FGridData.GridSizeX * FDisplayScale * FZoomFactor,
+                                                     0.4 * FGridData.GridSizeY * FDisplayScale * FZoomFactor, clGray, 2);
                 end;
             end;
             gtHexV:
@@ -798,6 +802,10 @@ begin
                   Hex[4] := Point(CellRect.Right - CellRect.Width div 4, CellRect.Bottom);
                   Hex[5] := Point(CellRect.Left + CellRect.Width div 4, CellRect.Bottom);
                   DrawnMapSegment.DrawPolygonAntialias(Hex, ColorToBGRA(FGridData.GridColor, FGridData.GridAlpha), 1, BGRAPixelTransparent);
+                  if FSnapTokensToGrid and TokenSlotRect.Contains(Point(j, i)) then
+                    DrawnMapSegment.EllipseAntialias(CellRect.CenterPoint.X, CellRect.CenterPoint.Y,
+                                                     0.4 * FGridData.GridSizeX * FDisplayScale * FZoomFactor,
+                                                     0.4 * FGridData.GridSizeY * FDisplayScale * FZoomFactor, clGray, 2);
                 end;
             end;
             gtIsometric:
@@ -819,6 +827,10 @@ begin
                   Iso[3] := Point((CellRect.Left + CellRect.Right) div 2, CellRect.Bottom);
 
                   DrawnMapSegment.DrawPolygonAntialias(Iso, ColorToBGRA(FGridData.GridColor, FGridData.GridAlpha), 1, BGRAPixelTransparent);
+                  if FSnapTokensToGrid and TokenSlotRect.Contains(Point(j, i)) then
+                    DrawnMapSegment.EllipseAntialias(CellRect.CenterPoint.X, CellRect.CenterPoint.Y,
+                                                     0.4 * FGridData.GridSizeX * FDisplayScale * FZoomFactor,
+                                                     0.4 * FGridData.GridSizeY * FDisplayScale * FZoomFactor, clGray, 2);
                 end;
             end;
           end;
@@ -842,7 +854,7 @@ begin
 
             // Rotation for range indicator: Redraw entirely
             if CurToken is TRangeIndicator then
-              TRangeIndicator(CurToken).RedrawGlyph;
+              CurToken.RedrawGlyph;
 
             Rotation := TBGRAAffineBitmapTransform.Create(TokenBmp);
             if ((FTokenRotationStyle = rsRotateToken) and not (CurToken is TRangeIndicator)) or
