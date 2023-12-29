@@ -29,9 +29,6 @@ public
   function IsNonBlockingCorner(PIdx: Integer; dx, dy: Double): Boolean;
 end;
 
-var
-  WallMgr: TWallManager;
-
 implementation
 
 uses
@@ -58,7 +55,7 @@ end;
 procedure TWallManager.Clear;
 begin
   FPoints.Clear;
-  FWalls.Free;
+  FWalls.Clear;
   //FIdcs.Clear;
 end;
 
@@ -140,7 +137,7 @@ begin
       for i := 1 to pnts.Count - 1 do
       begin
         pC := GetPoint(pnts[i]);
-        Result := Result or (Sign0 = Sign(dx * (pC.Y - pA.Y) - dy * (pC.X - pA.X)));
+        Result := Result and (Sign0 = Sign(dx * (pC.Y - pA.Y) - dy * (pC.X - pA.X)));
       end;
     end;
   finally

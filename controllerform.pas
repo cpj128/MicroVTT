@@ -20,7 +20,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ComCtrls,
   ExtCtrls, Menus, DateTimePicker, IniFiles, BGRABitmap, RPGTypes, HtmlView,
-  Notes, HtmlGlobals, HTMLUn2, LCLType;
+  Notes, HtmlGlobals, HTMLUn2, LCLType, WallManager;
 
 const
   MAPLIBFILE = 'Maps.txt';
@@ -237,6 +237,7 @@ type
     FHistoryIdx: Integer;
     FNotesSaved: Boolean;
     FCurTokenRect: TRect;
+    FWallManager: TWallManager;
 
     procedure UpdateMapList;
     procedure UpdateTokenList;
@@ -429,6 +430,7 @@ procedure TfmController.LoadMap(FileName: string);
 var
   ContentList: TStringList;
   GridSettings: string;
+  Loader: TMapLoader;
 begin
   if not FileExists(FileName) then
     Exit;
@@ -456,7 +458,13 @@ begin
   if Assigned(FMapPic) then
     FMapPic.Free;
   //FMapPic := TBGRABitmap.Create(FMapFileName, True);
-  FMapPic := GetMapImage(Filename);
+  Loader := GetMapLoader(Filename);
+  try
+    FMapPic := loader.LoadFromFile(Filename);
+    loader.LoadWalls(Filename, FWallManager);
+  finally
+    loader.Free;
+  end;
   FViewRectXOffset := 0;
   FViewRectYOffset := 0;
   TokenSlotRect := Bounds(-1, -1, 0, 0);
@@ -701,6 +709,7 @@ var
   CellRect, BoundingRect: TRect;
   Hex: array[0..5] of TPoint;
   Iso: array[0..3] of TPoint;
+  Wall, WallP1, WallP2: TPoint;
   tmpGridSize: Single;
   Rotation: TBGRAAffineBitmapTransform;
   RotatedBmp, OverlayBmp, OverlayScaled: TBGRABitmap;
@@ -843,6 +852,15 @@ begin
                 end;
             end;
           end;
+        end;
+        // Draw walls
+        for i := 0 to FWallManager.GetWallCount - 1 do
+        begin
+          Wall := FWallManager.GetWall(i);
+          WallP1 := FWallManager.GetPoint(Wall.X);
+          WallP2 := FWallManager.GetPoint(Wall.Y);
+          DrawnMapSegment.DrawLineAntialias(MapToViewPortX(WallP1.X), MapToViewPortY(WallP1.Y),
+                                            MapToViewPortX(WallP2.X), MapToViewPortY(WallP2.Y), clGreen, 1);
         end;
         // Draw Tokens
         // TODO: Draw Tokens on the map before downsampling?
@@ -998,6 +1016,10 @@ begin
                                        AngleText, clYellow);
         end;
 
+        // Draw marker if player's view is disabled
+        if not FShowMap then
+          DrawnMapSegment.DrawLineAntialias(0, 0, FViewRectWidth, FViewRectHeight, clRed, 3);
+
         DrawnMapSegment.Draw(pbViewPort.Canvas, 0, 0, False);
       finally
         DrawnMapSegment.Free;
@@ -1013,9 +1035,9 @@ begin
   pbViewPort.Canvas.Pen.Width := 3;
   pbViewPort.Canvas.Pen.Color := clBlack;
   pbViewPort.Canvas.Rectangle(0, 0, FViewRectWidth, FViewRectHeight);
-  if not FShowMap then
+  if not (FShowMap and Assigned(FMapPic)) then
   begin
-    // Draw marker, if player's view is disabled
+    // Draw marker here, if player's view is disabled and no map is loaded
     pbViewPort.Canvas.Pen.Color := clRed;
     pbViewPort.Canvas.MoveTo(0, 0);
     pbViewPort.Canvas.LineTo(FViewRectWidth, FViewRectHeight);
@@ -1959,6 +1981,7 @@ begin
   pcMain.ActivePage := tsController;
   FLastClicked := Point(-1, -1);
   FLastLastClicked := Point(-1, -1);
+  FWallManager := TWallManager.Create;
 
   // Load settings
   FMapDir := FAppSettings.ReadString('Settings', 'MapDir', 'Content\Maps\');
@@ -2042,6 +2065,7 @@ begin
   FAppSettings.WriteInteger('Settings', 'TokenRotationStyle', Ord(FTokenRotatioNStyle));
   FAppSettings.UpdateFile;
   FAppSettings.Free;
+  FWallManager.Free;
   FMapLib.Free;
   FTokenLib.Free;
   FOverlayLib.Free;

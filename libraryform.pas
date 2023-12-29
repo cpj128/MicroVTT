@@ -106,7 +106,6 @@ begin
   Close;
 end;
 
-
 procedure TfmLibrary.ShowMaps;
 var
   FileList, HeaderList, ContentList: TStringList;
@@ -136,7 +135,7 @@ begin
   sgItemData.Columns.Items[3].ButtonStyle := cbsButtonColumn;
   sgItemData.Columns.Items[4].ButtonStyle := cbsButtonColumn;
   try
-    FindAllFiles(FileList, fmController.MapDir, PicFilterStr, True);
+    FindAllFiles(FileList, fmController.MapDir, PicFilterStrAll, True);
     sgItemData.RowCount := FileList.Count + 1;
     for i := 0 to FileList.Count - 1 do
     begin
