@@ -20,11 +20,11 @@ As of version 0.2.1, MicroVTT supports jpg, png (including transparency), bmp, a
 
 ### Can it add grids to my maps?
 
-Yes it can! Rectangular as well as hex grids (in both orientations), cell size and offsets can be set independently for both directions, non-integer sizes are possible. Tokens can snap to the grid whether it is visible or not.
+Yes it can! Rectangular as well as hex grids (in both orientations) and isometric, cell size and offsets can be set independently for both directions, non-integer sizes are possible. Tokens can snap to the grid whether it is visible or not.
 
 ### Does it have any fancy map effects? Lighting, Fog of War, particle generators?
 
-Not at this point. Lighting and FoW in particular would require walls on the maps to be marked by the DM, which is an entire thing in itself. It might happen, but not within the next few minor versions. For now, things the players are not meant to see can be blocked with solid black tokens as quasi-FoW.
+Not at this point. Lighting and FoW in particular would require walls on the maps to be marked by the DM, which is an entire thing in itself. I am working on it, it might be ready for version 0.4. For now, things the players are not meant to see can be blocked with solid black tokens as quasi-FoW.
 
 ### Does it have any tools to create my own maps or tokens, then?
 
@@ -34,6 +34,14 @@ Also no, it provides no content whatsoever. This is not likely to change either.
 
 Yes to all of them. Direction can be shown by rotation or a small arrow, and is not restricted to grid directions. Status effects can be shown via overlay icons (again, Bring Your Own).
 
+### I want to show the range of my archer / the area of effect of my fireball / the field of view of a guard...
+
+You can, as of version 0.3. Add a Range Indicator-Token onto the playing field. Hold Ctrl + drag it onto another token in order to attach it and have it move and rotate with that token.
+
+### How about a way to show short bits of text on the map?
+
+Also possible as of 0.3. Just drag a Text Token onto the map.
+
 ### Does it track Health, Mana or whatever else my character has?
 
 No. Remember, we assume that everyone is at the same table. This is the player's responsibility.
@@ -42,20 +50,20 @@ No. Remember, we assume that everyone is at the same table. This is the player's
 
 I said "almost no rules". The rules in this case are "Tokens have a base value, add a dice roll to that, highest go first". Simple. If initiative in your system goes lowest-to-highest, there is a setting for that, too. Want someone in the initiative order who is not on the map, or have tokens on the map not in the initiative list? Both are possible.
 
+### How about that campaign planning system you mentioned?
+Version 0.3 strikes again. We now have a wiki-style tool that can keep track of characters, places, objects, events or whatever else you feel like taking notes about. Articles or parts of it can be marked as master only-information. If you have a bit of webspace, you can export the entire database (or the player information only) to static html and make it available to others.
+
 ### What does the future hold? Any interesting new features in development?
 
 Well, here are a few things that I will probably add within the next few minor versions:
 
 - More options for the initiative list, like changing order or adding new fighters while in combat
 - A dice tray (again, we expect players to bring their own, but if the table is getting crowded... not exactly a far-fetched feature.)
-- A way to add text as tokens to the map
-- Range- and AoE-indicators, as well as measuring features
-- Isometric grids (not standard in other VTTs as far as I can tell, but I have seen a few isometric maps lately, so why not)
 - Other themes, for games outside of the standard fantasy setting
 
 And a few things that might happen, but are most likely going to take some time:
 
-- Some kind of campaign planning- and note keeping system (still in the concept stage, as you can tell from that description)
+- Lighting- and Fog of War-effects. At least for uvtt-maps.
 - Ambient sound generation (because I have a procedural sound-project that I would really like to revisit)
 - Random generators for Names, NPCs, Taverns, whatever (There are already more than enough online, but... No, I have no justification other than "Would like to do it".)
 
