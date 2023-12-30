@@ -14,6 +14,9 @@ function Bias(Time, pBias: Double): Double;
 
 function Gain(Time, pGain: Double): Double;
 
+function QuadFalloff(Val, MaxVal: Double): Double;
+
+function CubicPulse(Val, PulseCenter, PulseWidth: Double): Double;
 
 // Easings
 type TEasingType = (etLinear,
@@ -61,6 +64,9 @@ function MixByte(b1, b2: Byte; s: Single): Byte;
 
 function MixPixel(p1, p2: TBGRAPixel; s: Single): TBGRAPixel;
 
+function GetIntersection_RaySegment(rO, rD, s1, s2: TPointF; var int: TPointF): Boolean;
+
+function GetPointSideOfLine(L1, L2, pnt: TPoint): Integer;
 
 implementation
 
@@ -86,6 +92,23 @@ begin
     Result := Bias(time * 2 - 1, 1 - pGain) / 2 + 0.5;
 end;
 
+function QuadFalloff(Val, MaxVal: Double): Double;
+begin
+  // Val >= 0; MaxVal > 0
+  Val := 1 / Sqr(Val + 1);
+  MaxVal := 1 / Sqr(MaxVal + 1);
+  Result := (Val - MaxVal) / (1 - MaxVal);
+end;
+
+function CubicPulse(Val, PulseCenter, PulseWidth: Double): Double;
+begin
+  Val := Abs(Val - PulseCenter);
+  if Val > PulseWidth then
+    Exit(0);
+  Val := Val / PulseWidth;
+  Result := Ease(Val, 1, -1, 1, etSmoothStep);
+end;
+
 function MixByte(b1, b2: Byte; s: Single): Byte;
 begin
   Result := EnsureRange(Round(b1 + s * (b2 - b1)), 0, 255);
@@ -104,6 +127,35 @@ begin
   Result := Min(v1, v2) - Sqr(Max(k - Abs(v1 - v2), 0) / k) * k / 4;
 end;
 
+function GetIntersection_RaySegment(rO, rD, s1, s2: TPointF; var int: TPointF): Boolean;
+var d, s, t: Double;
+  function Cross2(p1, p2: TPointF): Double;
+  begin
+    Result := (p1.X * p2.Y) - (p1.Y * p2.X);
+  end;
+begin
+  d := Cross2(s2 - s1, rD);
+  if not SameValue(d, 0) then
+  begin
+    s := Cross2(rO - s1, rD) / d;
+    t := Cross2(rO - s1, s2 - s1) / d;
+    int := rO + rD * t;
+    Result := (t >= 0) and (s >= 0) and (s <= 1);
+  end
+  else
+  begin
+    // d = 0 => Ray and Segment are parallel
+    int := rO;
+    Result := False;
+  end;
+
+end;
+
+function GetPointSideOfLine(L1, L2, pnt: TPoint): Integer;
+begin
+  // -1: Left of the line; 0: On the line; +1: Right of the line
+  Result := Sign((Pnt.Y - L1.Y) * (L2.X - L1.X) - (L2.Y - L1.Y) * (Pnt.X - L1.X));
+end;
 
 { Easing-Functions }
 
