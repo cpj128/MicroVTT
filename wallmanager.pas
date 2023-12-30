@@ -119,7 +119,7 @@ var
   CurSide: Integer;
   TotalPnts: Integer;
 
-  function AddPnt(pnt: TPoint): Integer;
+  function AddTmpPnt(pnt: TPoint): Integer;
   var idx, pntNo: Integer;
   begin
     pntNo := -1;
@@ -188,10 +188,10 @@ begin
     tmpWalls.AddList(FWalls);
 
     // Add walls for bounding box
-    boundingPnts[0] := AddPnt(BoundingBox.TopLeft);
-    boundingPnts[1] := AddPnt(Point(BoundingBox.Top, BoundingBox.Right));
-    boundingPnts[2] := AddPnt(BoundingBox.BottomRight);
-    boundingPnts[3] := AddPnt(Point(BoundingBox.Bottom, BoundingBox.Left));
+    boundingPnts[0] := AddTmpPnt(BoundingBox.TopLeft);
+    boundingPnts[1] := AddTmpPnt(Point(BoundingBox.Top, BoundingBox.Right));
+    boundingPnts[2] := AddTmpPnt(BoundingBox.BottomRight);
+    boundingPnts[3] := AddTmpPnt(Point(BoundingBox.Bottom, BoundingBox.Left));
 
     tmpWalls.Add(Point(boundingPnts[0], boundingPnts[1]));
     tmpWalls.Add(Point(boundingPnts[1], boundingPnts[2]));
@@ -225,20 +225,20 @@ begin
     end;
 
     // Now trace list of points...
-    CurWall := -1;
+
     // First, check all walls for intersections with ray to first point, add to open list
-    rD := tmpPnts[sortList[0]] - centerPnt;
+    rD := TPointF.Create(tmpPnts[sortList[0]] - centerPnt);
     LowestIdx := -1;
     ClosestDist := MAXDOUBLE;
     for i := 0 to tmpWalls.Count - 1 do
     begin
       CurWall := tmpWalls[i];
-      if GetIntersection_RaySegment(centerPnt, rD, tmpPnts[CurWall.X], tmpPnts[CurWall.Y], IntPnt) then
+      if GetIntersection_RaySegment(TPointF.Create(centerPnt), rD, TPointF.Create(tmpPnts[CurWall.X]), TPointF.Create(tmpPnts[CurWall.Y]), IntPnt) then
       begin
-        OpenWalls.Add(tmpWalls[i]);
-        if IntPnt.Distance(centerPnt) < ClosestDist then
+        OpenWalls.Add(i);
+        if IntPnt.Distance(TPointF.Create(centerPnt)) < ClosestDist then
         begin
-          ClosestDist := IntPnt.Distance(CenterPnt);
+          ClosestDist := IntPnt.Distance(TPointF.Create(CenterPnt));
           LowestIdx := i;
         end;
       end;
@@ -255,20 +255,20 @@ begin
         begin
           CurSide := GetPointSideOfLine(centerPnt, tmpPnts[tmpWalls[j].x], tmpPnts[tmpWalls[j].y]);
           if CurSide <= 0 then // wall ended at this point - also wall parallel to the ray begins and ends here
-            OpenWalls.Remove(tmpWalls[j])
+            OpenWalls.Remove(j)
           else //if CurSide > 1 then
           begin
-            OpenWalls.Add(tmpWalls[j]);
+            OpenWalls.Add(j);
           end;
         end
         else if (sortList[i] = tmpWalls[j].y) then
         begin
           CurSide := GetPointSideOfLine(centerPnt, tmpPnts[tmpWalls[j].y], tmpPnts[tmpWalls[j].x]);
           if CurSide <= 0 then // wall ended at this point - also wall parallel to the ray begins and ends here
-            OpenWalls.Remove(tmpWalls[j])
+            OpenWalls.Remove(j)
           else //if CurSide > 1 then
           begin
-            OpenWalls.Add(tmpWalls[j]);
+            OpenWalls.Add(j);
           end;
         end;
       end;
@@ -279,12 +279,12 @@ begin
       ClosestDist := MAXDOUBLE;
       for j := 0 to OpenWalls.Count - 1 do
       begin
-        CurWall := OpenWalls[j];
-        if GetIntersection_RaySegment(centerPnt, rD, tmpPnts[CurWall.X], tmpPnts[CurWall.Y], IntPnt) then
+        CurWall := tmpWalls[OpenWalls[j]];
+        if GetIntersection_RaySegment(TPointF.Create(centerPnt), rD, TPointF.Create(tmpPnts[CurWall.X]), TPointF.Create(tmpPnts[CurWall.Y]), IntPnt) then
         begin
-          if IntPnt.Distance(centerPnt) < ClosestDist then // TODO: In case of a tie, select wall where the other end is closer
+          if IntPnt.Distance(TPointF.Create(centerPnt)) < ClosestDist then // TODO: In case of a tie, select wall where the other end is closer
           begin
-            ClosestDist := IntPnt.Distance(CenterPnt);
+            ClosestDist := IntPnt.Distance(TPointF.Create(CenterPnt));
             LowestIdx := j;
           end;
         end;
@@ -297,7 +297,7 @@ begin
         if Length(Result) <= TotalPnts + 2 then
           SetLength(Result, Length(Result) * 2);
 
-        rD := tmpPnts[sortList[i]] - centerPnt;
+        rD := TPointF.Create(tmpPnts[sortList[i]] - centerPnt);
         rD.Normalize;
         // Check if ray needs to continue past the point
         if IsNonBlockingCorner(sortList[i], rD.x, rD.y, CurSide) then
@@ -309,12 +309,12 @@ begin
           begin
             if OpenWalls[j] <> CurClosestWall then
             begin
-              CurWall := OpenWalls[j];
-              if GetIntersection_RaySegment(tmpPnts[sortList[i]], rD, tmpPnts[CurWall.X], tmpPnts[CurWall.Y], IntPnt) then
+              CurWall := tmpWalls[OpenWalls[j]];
+              if GetIntersection_RaySegment(TPointF.Create(tmpPnts[sortList[i]]), rD, TPointF.Create(tmpPnts[CurWall.X]), TPointF.Create(tmpPnts[CurWall.Y]), IntPnt) then
               begin
-                if IntPnt.Distance(tmpPnts[sortList[i]]) < ClosestDist then
+                if IntPnt.Distance(TPointF.Create(tmpPnts[sortList[i]])) < ClosestDist then
                 begin
-                  ClosestDist := IntPnt.Distance(tmpPnts[sortList[i]]);
+                  ClosestDist := IntPnt.Distance(TPointF.Create(tmpPnts[sortList[i]]));
                   LowestIdx := j;
                   AddPnt := IntPnt;
                 end;
@@ -326,12 +326,12 @@ begin
           begin
             Result[TotalPnts] := AddPnt;
             Inc(TotalPnts);
-            Result[TotalPnts] := tmpPnts[sortList[i]];
+            Result[TotalPnts] := TPointF.Create(tmpPnts[sortList[i]]);
             Inc(TotalPnts);
           end
           else
           begin
-            Result[TotalPnts] := tmpPnts[sortList[i]];
+            Result[TotalPnts] := TPointF.Create(tmpPnts[sortList[i]]);
             Inc(TotalPnts);
             Result[TotalPnts] := AddPnt;
             Inc(TotalPnts);
@@ -340,7 +340,7 @@ begin
         else
         begin
           // Just add current point to list
-          Result[TotalPnts] := tmpPnts[sortList[i]];
+          Result[TotalPnts] := TPointF.Create(tmpPnts[sortList[i]]);
           Inc(TotalPnts);
         end;
       end;
