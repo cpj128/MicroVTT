@@ -112,15 +112,13 @@ var
   tmpPnts, tmpWalls: TPointList;
   sortList, OpenWalls: TIdxList;
   i, j, tmp, LowestIdx, CurClosestWall, PrevWall: Integer;
-  CurAngle, LowestAngle, ClosestDist: Double;
+  CurAngle, LowestAngle, ClosestDist, CurDist: Double;
   boundingPnts: array[0..3] of Integer;
   rD, IntPnt, AddPnt, NewPnt: TPointF;
   CurWall, CurPnt: TPoint;
   CurSide: Integer;
-  CurDist: Double;
   TotalPnts: Integer;
   tmpAng: Double;
-  tmpWall: TPoint;
   InPnt, OutPnt: TPoint;
   OutIdx: Integer;
   Liststr: string;
@@ -179,6 +177,40 @@ var
     finally
       pnts.Free;
     end;
+  end;
+
+  function GetCloserWallToPnt(CurPnt, Wall1, Wall2: Integer): Integer;
+  var
+    P1Idx, P2Idx: Integer;
+    tmpWall: TPoint;
+  begin
+    tmpWall := tmpWalls[Wall1];
+    if tmpWall.X = CurPnt then
+      P1Idx := tmpWall.Y
+    else
+      P1Idx := tmpWall.X;
+    tmpWall := tmpWalls[Wall2];
+    if tmpWall.X = CurPnt then
+      P2Idx := tmpWall.Y
+    else
+      P2Idx := tmpWall.X;
+    if TPointF.Create(CenterPnt).Distance(TPointF.Create(tmpPnts[P1Idx])) < TPointF.Create(CenterPnt).Distance(TPointF.Create(tmpPnts[P2Idx])) then
+      Result := Wall1
+    else
+      Result := Wall2;
+  end;
+
+  function DoesWallBegin(pWall: TPoint; pPnt: Integer): Boolean;
+  var otherPnt: Integer;
+  begin
+    if pWall.X = pPnt then
+      otherPnt := pWall.Y
+    else if pWall.Y = pPnt then
+      otherPnt := pWall.X
+    else // Wall doea not contain the point? Obviously it cannot start there
+      Exit(False);
+
+    Result := GetPointSideOfLine(centerPnt, tmpPnts[pPnt], tmpPnts[otherPnt]) > 0;
   end;
 
 begin
@@ -284,11 +316,15 @@ begin
       CurWall := tmpWalls[i];
       if GetIntersection_RaySegment(TPointF.Create(centerPnt), rD, TPointF.Create(tmpPnts[CurWall.X]), TPointF.Create(tmpPnts[CurWall.Y]), IntPnt) then
       begin
-        OpenWalls.Add(i);
-        if IntPnt.Distance(TPointF.Create(centerPnt)) < ClosestDist then
+        // Do not add walls that begin in this point!
+        if not DoesWallBegin(CurWall, sortList[0]) then
         begin
-          ClosestDist := IntPnt.Distance(TPointF.Create(CenterPnt));
-          LowestIdx := i;
+          OpenWalls.Add(i);
+          if IntPnt.Distance(TPointF.Create(centerPnt)) < ClosestDist then
+          begin
+            ClosestDist := IntPnt.Distance(TPointF.Create(CenterPnt));
+            LowestIdx := i;
+          end;
         end;
       end;
     end;
@@ -335,13 +371,17 @@ begin
         if GetIntersection_RaySegment(TPointF.Create(centerPnt), rD, TPointF.Create(tmpPnts[CurWall.X]), TPointF.Create(tmpPnts[CurWall.Y]), IntPnt) then
         begin
           CurDist := IntPnt.Distance(TPointF.Create(centerPnt));
-          if SameValue(CurDist, ClosestDist) then
+          if SameValue(CurDist, ClosestDist, 1E-4) then
           begin
             if LowestIdx >= tmpWalls.Count - 4 then
-              LowestIdx := OpenWalls[j];
+              LowestIdx := OpenWalls[j]
+            else
+            begin
+              LowestIdx := GetCloserWallToPnt(sortList[i], LowestIdx, OpenWalls[j]);
+            end;
             // When in doubt, change walls away from the bounding box - this is the only way we should have intersecting walls
             // TODO: In case of a tie, select wall where the other end is closer
-            //tmpWall := tmpWalls[LowestIdx];
+
 
           end
           else if CurDist < ClosestDist then
@@ -374,9 +414,10 @@ begin
               CurWall := tmpWalls[OpenWalls[j]];
               if GetIntersection_RaySegment(TPointF.Create(tmpPnts[sortList[i]]), rD, TPointF.Create(tmpPnts[CurWall.X]), TPointF.Create(tmpPnts[CurWall.Y]), IntPnt) then
               begin
-                if IntPnt.Distance(TPointF.Create(tmpPnts[sortList[i]])) < ClosestDist then
+                CurDist := IntPnt.Distance(TPointF.Create(tmpPnts[sortList[i]]));
+                if (CurDist < ClosestDist) and (CurDist > 0) then
                 begin
-                  ClosestDist := IntPnt.Distance(TPointF.Create(tmpPnts[sortList[i]]));
+                  ClosestDist := CurDist;
                   LowestIdx := j;
                   AddPnt := IntPnt;
                 end;
@@ -402,10 +443,10 @@ begin
         else
         begin
           // Just add current point to list// Can we see the current point from the center?
-        GetIntersection_RaySegment(TPointF.Create(centerPnt), rD,
-                                   TPointF.Create(tmpPnts[tmpWalls[CurClosestWall].X]),
-                                   TPointF.Create(tmpPnts[tmpWalls[CurClosestWall].Y]),
-                                   NewPnt);
+          {GetIntersection_RaySegment(TPointF.Create(centerPnt), rD,
+                                     TPointF.Create(tmpPnts[tmpWalls[CurClosestWall].X]),
+                                     TPointF.Create(tmpPnts[tmpWalls[CurClosestWall].Y]),
+                                     NewPnt);}
           Result[TotalPnts] := NewPnt;
           Inc(TotalPnts);
         end;

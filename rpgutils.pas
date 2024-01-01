@@ -140,7 +140,7 @@ begin
     s := Cross2(rO - s1, rD) / d;
     t := Cross2(rO - s1, s2 - s1) / d;
     int := rO + rD * t;
-    Result := (t >= 0) and (s >= 0) and (s <= 1);
+    Result := (t >= 0) and (CompareValue(s, 0, 1E-5) >= 0) and (CompareValue(s, 1, 1E-5) <= 0);
   end
   else
   begin
