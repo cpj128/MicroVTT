@@ -196,6 +196,7 @@ var
   var
     P1Idx, P2Idx: Integer;
     tmpWall: TPoint;
+    ip: TPointF;
   begin
     tmpWall := tmpWalls[Wall1];
     if tmpWall.X = CurPnt then
@@ -207,10 +208,17 @@ var
       P2Idx := tmpWall.Y
     else
       P2Idx := tmpWall.X;
-    if TPointF.Create(CenterPnt).Distance(TPointF.Create(tmpPnts[P1Idx])) < TPointF.Create(CenterPnt).Distance(TPointF.Create(tmpPnts[P2Idx])) then
-      Result := Wall1
-    else
+    // Test if ray to end of one wall intersects the other
+    if GetIntersection_RaySegment(TPointF.Create(CenterPnt), TPointF.Create(tmpPnts[P1Idx] - CenterPnt),
+                                  TPointF.Create(tmpPnts[tmpWalls[Wall2].X]),
+                                  TPointF.Create(tmpPnts[tmpWalls[Wall2].Y]), ip) then
+    begin
       Result := Wall2;
+    end
+    else
+    begin
+      Result := Wall1;
+    end;
   end;
 
   function DoesWallBegin(pWall: TPoint; pPnt: Integer): Boolean;
