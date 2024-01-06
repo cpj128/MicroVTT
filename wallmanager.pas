@@ -155,7 +155,7 @@ var
     k: Integer;
     CWall: TPoint;
     pA, pC: TPoint;
-    Sign0: Integer;
+    Sign0, CurSign: Integer;
   begin
     Result := False;
     dir := 0;
@@ -182,7 +182,14 @@ var
         for k := 1 to pnts.Count - 1 do
         begin
           pC := tmpPnts[pnts[k]];
-          Result := Result and (Sign0 = Sign(dx * (pC.Y - pA.Y) - dy * (pC.X - pA.X)));
+          CurSign := Sign(dx * (pC.Y - pA.Y) - dy * (pC.X - pA.X));
+          if CurSign <> 0 then
+          begin
+            if Sign0 = 0 then
+              Sign0 := CurSign
+            else
+              Result := Result and (Sign0 = CurSign);
+          end;
         end;
         if Result then
           dir := Sign0;
@@ -208,8 +215,16 @@ var
       P2Idx := tmpWall.Y
     else
       P2Idx := tmpWall.X;
+
+    // Test if P2 and Center are on the same side of P0-P1
+    if GetPointSideOfLine(tmpPnts[CurPnt], tmpPnts[P1Idx], CenterPnt) = GetPointSideOfLine(tmpPnts[CurPnt], tmpPnts[P1Idx], tmpPnts[P2Idx]) then
+      Result := Wall2
+    else
+      Result := Wall1;
+
+
     // Test if ray to end of one wall intersects the other
-    if GetIntersection_RaySegment(TPointF.Create(CenterPnt), TPointF.Create(tmpPnts[P1Idx] - CenterPnt),
+    {if GetIntersection_RaySegment(TPointF.Create(CenterPnt), TPointF.Create(tmpPnts[P1Idx] - CenterPnt),
                                   TPointF.Create(tmpPnts[tmpWalls[Wall2].X]),
                                   TPointF.Create(tmpPnts[tmpWalls[Wall2].Y]), ip) then
     begin
@@ -218,7 +233,7 @@ var
     else
     begin
       Result := Wall1;
-    end;
+    end;}
   end;
 
   function DoesWallBegin(pWall: TPoint; pPnt: Integer): Boolean;
@@ -464,10 +479,12 @@ begin
         else
         begin
           // Just add current point to list// Can we see the current point from the center?
-          {GetIntersection_RaySegment(TPointF.Create(centerPnt), rD,
+          GetIntersection_RaySegment(TPointF.Create(centerPnt), rD,
                                      TPointF.Create(tmpPnts[tmpWalls[CurClosestWall].X]),
                                      TPointF.Create(tmpPnts[tmpWalls[CurClosestWall].Y]),
-                                     NewPnt);}
+                                     IntPnt);
+          if NewPnt.Distance(TPointF.Create(CenterPnt)) > IntPnt.Distance(TPointF.Create(CenterPnt)) then
+            NewPnt := IntPnt;
           Result[TotalPnts] := NewPnt;
           Inc(TotalPnts);
         end;
