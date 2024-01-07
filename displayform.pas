@@ -290,7 +290,6 @@ var
   CurMarkerX, CurMarkerY: Single;
   CurToken: TToken;
   CurTokenPosX, CurTokenPosY: Integer;
-  CurTokenNum: Integer;
   TokenRect, ClipRect, RotatedRect, BoundingRect: TRect;
   MapRect: TRect;
   MaxPortraits: Integer;
@@ -298,13 +297,9 @@ var
   CellRect: TRect;
   Hex: array[0..5] of TPoint;
   Iso: array[0..3] of TPoint;
-  tmpGridSize: Single; 
-  ArrowLen, ArrowWid: Double;
-  ArrowPnt: TPointF;
-  ArrowPntsTrans: array[0..3] of TPointF;
-  NumSize: TSize;
+  tmpGridSize: Single;
+  TextSize: TSize;
   PortraitText: string;
-  TextRenderer: TBGRATextEffectFontRenderer;
   {$IFDEF DEBUG}StartTime: Int64;{$ENDIF}
 
 procedure Draw3DFrame(pRect: TRect);
@@ -697,12 +692,12 @@ begin
           Canvas.Font.Color := clBlack;
           Canvas.Font.Size := 30;
 
-          NumSize := Canvas.TextExtent(PortraitText);
+          TextSize := Canvas.TextExtent(PortraitText);
 
-          Canvas.TextOut(TokenRect.Left + (TokenRect.Width - NumSize.Width) div 2, TokenRect.Top + (TokenRect.Height - NumSize.Height) div 2, PortraitText);
+          Canvas.TextOut(TokenRect.Left + (TokenRect.Width - TextSize.Width) div 2, TokenRect.Top + (TokenRect.Height - TextSize.Height) div 2, PortraitText);
           Canvas.Font.Style := [];
           Canvas.Font.Color := clWhite;
-          Canvas.TextOut(TokenRect.Left + (TokenRect.Width - NumSize.Width) div 2, TokenRect.Top + (TokenRect.Height - NumSize.Height) div 2, PortraitText);
+          Canvas.TextOut(TokenRect.Left + (TokenRect.Width - TextSize.Width) div 2, TokenRect.Top + (TokenRect.Height - TextSize.Height) div 2, PortraitText);
         end;
       end;
     end;

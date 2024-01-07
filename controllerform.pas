@@ -707,7 +707,6 @@ var
   SegmentWidth, SegmentHeight: Integer;
   CurMarkerX, CurMarkerY: Integer;
   CurToken: TToken;
-  CurTokenNum: Integer;
   CellRect, BoundingRect: TRect;
   Hex: array[0..5] of TPoint;
   Iso: array[0..3] of TPoint;
@@ -715,11 +714,6 @@ var
   tmpGridSize: Single;
   Rotation: TBGRAAffineBitmapTransform;
   RotatedBmp, OverlayBmp, OverlayScaled: TBGRABitmap;
-  ArrowLen, ArrowWid: Double;
-  ArrowPnt: TPointF;
-  ArrowPntsTrans: array[0..3] of TPointF;
-  NumSize: TSize;
-  TextRenderer: TBGRATextEffectFontRenderer;
   AngleText: string;
   TextAngle: Integer;
   TextSize: TSize;
@@ -1412,7 +1406,6 @@ var
   i: Integer;
   tmpItem: TListItem;
   CurToken: TToken;
-  path: string;
   attachList: TList;
 begin
   if odLoadSession.Execute then
@@ -1427,6 +1420,8 @@ begin
       FShowMarker := saveFile.ReadBool(SAVESECTIONMAP, 'MarkerVisible', False);
       FMarkerPosX := saveFile.ReadInteger(SAVESECTIONMAP, 'MarkerX', -1);      
       FMarkerPosy := saveFile.ReadInteger(SAVESECTIONMAP, 'MarkerY', -1);
+      // This also sets the label and the zoom for player's view
+      tbMapZoom.Position := 100 + Round(100 * Ln(FZoomFactor) / Ln(5));
 
       // Grid data
       FGridData.GridType := TGridType(saveFile.ReadInteger(SAVESECTIONGRID, 'Type', 0));
@@ -1463,7 +1458,6 @@ begin
           lvInitiative.Items[i].Caption := IfThen(i = FCurInitiativeIndex, '>', '');
 
       // Tokens
-
       for i := FTokenList.Count - 1 downto 0 do
       begin
         CurToken := TToken(FTokenList[i]);
@@ -1771,8 +1765,8 @@ var
   i: Integer;
   FilePath: string;
   ContentList: TStringList;
-  FullPic, ScaledPic: TBGRABitmap;
-  vWidth, vHeight: Integer;
+  {FullPic, ScaledPic: TBGRABitmap;
+  vWidth, vHeight: Integer;}
 begin
   ContentList := TStringList.Create;
   try
