@@ -134,6 +134,7 @@ type
   TTokenFactory = class
     TokensStartInvisible: Boolean; static;
     TokensSnapToGrid: Boolean; static;
+    ShowDirectionArrow: Boolean; static;
     GridData: TGridData; static;
     class function CreateTokenFromIni(SaveFile: TIniFile; idx: Integer): TToken; static;
     class function CreateTokenFromNode(data: TTokenNodeData; X, Y: Integer): TToken; static;
@@ -143,13 +144,17 @@ type
   private
     FNumber: Integer;   
     FOverlayIdx: Integer;
+    FShowArrow: Boolean;
+    procedure SetOverlayIdx(val: Integer);
+    procedure SetNumber(val: Integer);
+    procedure SetAngle(val: Double); override;
   public
     procedure RedrawGlyph; override;
     constructor Create(pPath: string; X, Y, pWidth, pHeight: Integer);
     procedure SaveToIni(SaveFile: TIniFile; idx: Integer); override;
-    property Number: Integer read FNumber write FNumber;
-    property OverlayIdx: Integer read FOverlayIdx write FOverlayIdx;
-
+    property Number: Integer read FNumber write SetNumber;
+    property OverlayIdx: Integer read FOverlayIdx write SetOverlayIdx;
+    property ShowArrow: Boolean read FShowArrow write FShowArrow;
   end;
 
   TAttachableToken = class(TToken)
@@ -233,6 +238,7 @@ implementation
 uses
   Math,
   BGRABitmapTypes,
+  BGRATextFX,
   DisplayConst,
   RPGUtils;
 
@@ -338,6 +344,7 @@ begin
   FPath := Path;
   FGlyph := TBGRABitmap.Create(Path);
   FAttached := TList.Create;
+  RedrawGlyph;
 end;
 
 destructor TToken.Destroy;
@@ -769,6 +776,7 @@ begin
                                      saveFile.ReadInteger(SAVESECTIONTOKENS, 'Height' + IntToStr(idx), 100));
     TCharacterToken(Result).Number:= saveFile.ReadInteger(SAVESECTIONTOKENS, 'No' + IntToStr(idx), 0); 
     TCharacterToken(Result).OverlayIdx := saveFile.ReadInteger(SAVESECTIONTOKENS, 'Overlay' + IntToStr(idx), -1);
+    TCharacterToken(Result).ShowArrow := ShowDirectionArrow;
   end;
 
   if Assigned(Result) then
@@ -793,6 +801,8 @@ begin
       Result.Name := Data.Name;
       Result.BaseInitiative := Data.BaseInitiative;
       Result.Visible := TokensStartInvisible;
+      TCharacterToken(Result).ShowArrow := ShowDirectionArrow;
+      Result.RedrawGlyph;
       if TokensSnapToGrid then
         Result.SnapToGrid(GridData);
     end;
@@ -840,10 +850,60 @@ begin
   saveFile.WriteInteger(SAVESECTIONTOKENS, 'Overlay' + IntToStr(idx), OverlayIdx);
 end;
 
+procedure TCharacterToken.SetOverlayIdx(val: Integer);
+begin
+  FOverlayIdx := val;
+  RedrawGlyph;
+end;
+
+procedure TCharacterToken.SetNumber(val: Integer);
+begin
+  FNumber := val;
+  RedrawGlyph;
+end;
+
+procedure TCharacterToken.SetAngle(val: Double);
+begin
+  inherited SetAngle(val);
+  RedrawGlyph;
+end;
+
 procedure TCharacterToken.RedrawGlyph;
+var
+  TextRenderer: TBGRATextEffectFontRenderer;
+  NumSize: TSize;
+  ArrowLen, ArrowWid: Double; 
+  ArrowPnt: TPointF;
+  ArrowPntsTrans: array[0..3] of TPointF;
+  j: Integer;
 begin
   FGlyph.Free;
   FGlyph := TBGRABitmap.Create(Path);
+  if FNumber > 0 then
+  begin
+    TextRenderer := TBGRATextEffectFontRenderer.Create;
+    TextRenderer.OutlineVisible := True;
+    TextRenderer.OutlineColor := clBlack;
+    NumSize := FGlyph.TextSize(IntToStr(FNumber));
+    FGlyph.FontStyle := [fsBold];
+    FGlyph.FontRenderer := TextRenderer;
+    // Should the text size change with the zoom factor?
+    FGlyph.TextOut((FGlyph.Width - NumSize.Width) div 2, (FGlyph.Height - NumSize.Height) div 2, IntToStr(FNumber), clWhite, taLeftJustify);
+  end;
+  if ShowArrow then
+  begin
+    ArrowLen := Min(Width, Height) * 0.4;// * FDisplayScale * FZoomFactor;
+    ArrowWid := ArrowLen / 4;
+    for j := 0 to 3 do
+    begin
+      ArrowPnt.x := ARROW[j].x * ArrowWid;
+      ArrowPnt.y := ARROW[j].y * ArrowLen;
+      ArrowPntsTrans[j].x := FGlyph.Width div 2  + ArrowPnt.x * Cos(-Angle) - ArrowPnt.y * Sin(-Angle);
+      ArrowPntsTrans[j].y := FGlyph.Height div 2 + ArrowPnt.x * Sin(-Angle) + ArrowPnt.y * Cos(Angle);
+    end;
+    FGlyph.FillPoly(ArrowPntsTrans, clWhite);
+    FGlyph.DrawPolygonAntialias(ArrowPntsTrans, clBlack, 2);
+  end;
 end;
 
 { TRangeIndicator }
@@ -1149,6 +1209,7 @@ end;
 
 constructor TLightToken.Create(X, Y, pRange: Integer);
 begin
+  inherited Create;
   FXPos := X;
   FYPos := Y;
   FXTargetPos := X;

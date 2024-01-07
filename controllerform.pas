@@ -499,6 +499,7 @@ begin
     TTokenFactory.GridData := FGridData;
     TTokenFactory.TokensSnapToGrid := FSnapTokensToGrid;
     TTokenFactory.TokensStartInvisible := FTokensStartInvisible;
+    TTokenFactory.ShowDirectionArrow := FTokenRotationStyle = rsShowArrow;
     tmpToken := TTokenFactory.CreateTokenFromNode(TTokenNodeData(TTreeView(Source).Selected.Data), ViewPortToMapX(X), ViewPortToMapY(Y));
 
     FTokenlist.Add(tmpToken);
@@ -701,7 +702,8 @@ end;
 procedure TfmController.pbViewportPaint(Sender: TObject);
 var
   ScaledBmp, DrawnMapSegment, TokenBmp: TBGRABitmap;
-  i, j, CurGridPos: Integer;
+  LoSMap: TBGRABitmap;
+  i, j, k, CurGridPos: Integer;
   SegmentWidth, SegmentHeight: Integer;
   CurMarkerX, CurMarkerY: Integer;
   CurToken: TToken;
@@ -721,10 +723,13 @@ var
   AngleText: string;
   TextAngle: Integer;
   TextSize: TSize;
+  LoSPoly: ArrayOfTPointF;
 begin
   // Draw Map
   if Assigned(FMapPic) then
   begin
+    LoSMap := TBGRABitmap.Create(FMapPic.Width, FMapPic.Height, clBlack);
+
     // TODO: Resampling takes a lot of time, probably faster to save and just do when zoom or scale changes
     ScaledBmp := FMapPic.Resample(Round(FMapPic.Width * FDisplayScale * FZoomFactor), Round(FMapPic.Height * FDisplayScale * FZoomFactor), rmSimpleStretch);
     try
@@ -914,36 +919,8 @@ begin
                   OverlayScaled.Free;
                 end;
 
-                // Add number
-                if (TCharacterToken(CurToken).Number > 0) then
-                begin
-                  CurTokenNum := TCharacterToken(CurToken).Number;
-                  TextRenderer := TBGRATextEffectFontRenderer.Create;
-                  TextRenderer.OutlineVisible := True;
-                  TextRenderer.OutlineColor := clBlack;
-                  NumSize := RotatedBmp.TextSize(IntToStr(CurTokenNum));
-                  RotatedBmp.FontStyle := [fsBold];
-                  RotatedBmp.FontRenderer := TextRenderer;
-                  // Should the text size change with the zoom factor?
-                  RotatedBmp.TextOut((RotatedBmp.Width - NumSize.Width) div 2, (RotatedBmp.Height - NumSize.Height) div 2, IntToStr(CurTokenNum), clWhite, taLeftJustify);
-                end;
               end;
 
-              // Add direction arrow
-              if (FTokenRotationStyle = rsShowArrow) and not ((CurToken is TRangeIndicator) or (CurToken is TTextToken) or (CurToken is TLightToken)) then
-              begin
-                ArrowLen := Min(CurToken.Width, CurToken.Height) * 0.4 * FDisplayScale * FZoomFactor;
-                ArrowWid := ArrowLen / 4;
-                for j := 0 to 3 do
-                begin
-                  ArrowPnt.x := ARROW[j].x * ArrowWid;
-                  ArrowPnt.y := ARROW[j].y * ArrowLen;
-                  ArrowPntsTrans[j].x := RotatedBmp.Width div 2  + ArrowPnt.x * Cos(-CurToken.Angle) - ArrowPnt.y * Sin(-CurToken.Angle);
-                  ArrowPntsTrans[j].y := RotatedBmp.Height div 2 + ArrowPnt.x * Sin(-CurToken.Angle) + ArrowPnt.y * Cos(CurToken.Angle);
-                end;
-                RotatedBmp.FillPoly(ArrowPntsTrans, clWhite);               
-                RotatedBmp.DrawPolygonAntialias(ArrowPntsTrans, clBlack, 2);
-              end;
               if CurToken is TLightToken then
               begin
                 DrawnMapSegment.BlendImage(MapToViewPortX(CurToken.XEndPos) - RotatedBmp.Width div 2,
@@ -956,6 +933,25 @@ begin
                                 MapToViewPortX(CurToken.XEndPos) - RotatedBmp.Width div 2,
                                 MapToViewPortY(CurToken.YEndPos) - RotatedBmp.Height div 2,
                                 False);
+                if CurToken is TCharacterToken then
+                begin
+                  {for j := 0 to 8 - 1 do
+                  begin
+                    LoSPoly := FWallManager.GetLoSPolygon(Point(Round(CurToken.XEndPos + 0.5 * CurToken.Width * Sin(2 * PI / 8 * j)),
+                                                                Round(CurToken.YEndPos + 0.5 * CurToken.Width * Cos(2 * PI / 8 * j))),
+                                                          Bounds(0, 0, FMapPic.Width, FMapPic.Height));
+                                                          //Bounds(FViewRectXOffset, FViewRectYOffset, SegmentWidth, SegmentHeight));
+                    for k := 0 to Length(LoSPoly) - 1 do
+                      LoSPoly[k] := TPointF.Create(MapToViewPortX(LoSPoly[k].X), MapToViewPortY(LoSPoly[k].Y));
+                    LoSMap.FillPolyAntialias(LoSPoly, BGRA(255, 255, 255, 85));
+                    //DrawnMapSegment.DrawPolygonAntialias(LoSPoly, clRed, 4);
+                  end;}
+                  LoSPoly := FWallManager.GetLoSPolygon(Point(CurToken.XEndPos, CurToken.YEndPos),
+                                                        Bounds(0, 0, FMapPic.Width, FMapPic.Height));
+                  for k := 0 to Length(LoSPoly) - 1 do
+                    LoSPoly[k] := TPointF.Create(MapToViewPortX(LoSPoly[k].X), MapToViewPortY(LoSPoly[k].Y));
+                  LoSMap.FillPolyAntialias(LoSPoly, BGRA(255, 255, 255));
+                end;
               end;
             finally
               Rotation.Free;
@@ -965,6 +961,12 @@ begin
             TokenBmp.Free;
           end;
         end;
+
+        if FTokenList.Count > 0 then
+          DrawnMapSegment.BlendImage(Bounds(0, 0, DrawnMapSegment.Width, DrawnMapSegment.Height), LoSMap,
+                                     0, 0, boMultiply);
+        LoSMap.Free;
+
         // Draw Marker
         if FShowMarker then
         begin
@@ -1111,9 +1113,13 @@ begin
     for i := 0 to lvInitiative.Items.Count - 1 do
     begin
       bmp := TPicture.Create;
-      bmp.LoadFromFile(lvInitiative.Items[i].SubItems[2]);
-      FInitiativePicList.Add(bmp);
-      FInitiativeNumList.Add(lvInitiative.Items[i].Data); // TODO
+      try
+        bmp.LoadFromFile(lvInitiative.Items[i].SubItems[2]);
+        FInitiativePicList.Add(bmp);
+        FInitiativeNumList.Add(lvInitiative.Items[i].Data); // TODO
+      except
+        bmp.Free;
+      end;
     end;
     // Mark first item
     lvInitiative.Items[0].Caption := '>';
@@ -1473,6 +1479,7 @@ begin
       while saveFile.ValueExists(SAVESECTIONTOKENS, 'XPos' + IntToStr(i)) do
       begin
         TTokenFactory.TokensStartInvisible := FTokensStartInvisible;
+        TTokenFactory.ShowDirectionArrow := FTokenRotationStyle = rsShowArrow;
         CurToken := TTokenFactory.CreateTokenFromIni(SaveFile, i);
         if Assigned(CurToken) then
         begin
@@ -1503,6 +1510,9 @@ begin
 end;
 
 procedure TfmController.tbSettingsClick(Sender: TObject);
+var
+  i: Integer;
+  CurToken: TToken;
 begin
   fmSettings.eMapDirectory.Text := FMapDir;
   fmSettings.eTokenDirectory.Text := FTokenDir;
@@ -1533,6 +1543,15 @@ begin
     FInitiativeDesc := fmSettings.cbInitiativeOrder.ItemIndex = 0;
     FTokenRotationStyle := TTokenRotationStyle(fmSettings.cbTokenRotation.ItemIndex);
     LanguageID := fmSettings.cbLanguage.Items[fmSettings.cbLanguage.ItemIndex];
+    for i := 0 to FTokenList.Count - 1 do
+    begin
+      CurToken := TToken(FTokenList[i]);
+      if CurToken is TCharacterToken then
+      begin
+        TCharacterToken(CurToken).ShowArrow := FTokenRotationStyle = rsShowArrow;
+        CurToken.RedrawGlyph;
+      end;
+    end;
     // Save changes to ini
     FAppSettings.WriteString('Settings', 'MapDir', FMapDir);
     FAppSettings.WriteString('Settings', 'TokenDir', FTokenDir);
@@ -1544,6 +1563,7 @@ begin
     FAppSettings.UpdateFile;
 
     pbViewPort.Invalidate;
+    fmDisplay.Invalidate;
   end;
 end;
 

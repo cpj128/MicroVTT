@@ -613,36 +613,6 @@ begin
                         OverlayBmp.Free;
                       end;
 
-                      // Add number
-                      if (TCharacterToken(CurToken).Number > 0) then
-                      begin
-                        CurTokenNum := TCharacterToken(CurToken).Number;
-                        TextRenderer := TBGRATextEffectFontRenderer.Create;
-                        TextRenderer.OutlineVisible := True;
-                        TextRenderer.OutlineColor := clBlack;
-                        NumSize := RotatedBmp.TextSize(IntToStr(CurTokenNum));
-                        RotatedBmp.FontStyle := [fsBold];
-                        RotatedBmp.FontRenderer := TextRenderer;
-                        // Should the text size change with the zoom factor?
-                        RotatedBmp.TextOut((RotatedBmp.Width - NumSize.Width) div 2, (RotatedBmp.Height - NumSize.Height) div 2, IntToStr(CurTokenNum), clWhite, taLeftJustify);
-                      end;
-
-                    end;
-
-                    // Add direction arrow
-                    if (fmController.TokenRotationStyle = rsShowArrow) and not ((CurToken is TRangeIndicator) or (CurToken is TTextToken) or (CurToken is TLightToken)) then
-                    begin
-                      ArrowLen := Min(CurToken.Width, CurToken.Height) * 0.4 * FMapZoom;
-                      ArrowWid := ArrowLen / 4;
-                      for j := 0 to 3 do
-                      begin
-                        ArrowPnt.x := ARROW[j].x * ArrowWid;
-                        ArrowPnt.y := ARROW[j].y * ArrowLen;
-                        ArrowPntsTrans[j].x := RotatedBmp.Width div 2  + ArrowPnt.x * Cos(-CurToken.Angle) - ArrowPnt.y * Sin(-CurToken.Angle);
-                        ArrowPntsTrans[j].y := RotatedBmp.Height div 2 + ArrowPnt.x * Sin(-CurToken.Angle) + ArrowPnt.y * Cos(CurToken.Angle);
-                      end;
-                      RotatedBmp.FillPoly(ArrowPntsTrans, clWhite);
-                      RotatedBmp.DrawPolygonAntialias(ArrowPntsTrans, clBlack, 2);
                     end;
 
                     if CurToken is TLightToken then
