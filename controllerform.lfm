@@ -3,6 +3,7 @@ object fmController: TfmController
   Height = 900
   Top = 103
   Width = 1597
+  AllowDropFiles = True
   Caption = 'MicroVTT'
   ClientHeight = 880
   ClientWidth = 1597
@@ -11,6 +12,7 @@ object fmController: TfmController
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnDropFiles = FormDropFiles
   OnKeyUp = FormKeyUp
   OnResize = FormResize
   OnShow = FormShow

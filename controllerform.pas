@@ -136,6 +136,7 @@ type
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure FormDropFiles(Sender: TObject; const FileNames: array of string);
     procedure FormKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormResize(Sender: TObject);
     procedure FormShow(Sender: TObject);
@@ -1782,9 +1783,9 @@ begin
         ContentList.DelimitedText := FOverlayLib.Values[FilePath];
         if ContentList.Count = 3 then
         begin
-          vWidth := StrToIntDef(ContentList[1], 32);
+          {vWidth := StrToIntDef(ContentList[1], 32);
           vHeight := StrToIntDef(ContentList[2], 32);
-          {FullPic := TBGRABitmap.Create(FilePath, True);
+          FullPic := TBGRABitmap.Create(FilePath, True);
           try
             ScaledPic := FullPic.Resample(vWidth, vHeight);
             FOverlayLib.Objects[i] := ScaledPic;
@@ -2086,6 +2087,33 @@ begin
   // Notes module
   FNotesList.Free;
   FHistoryList.Free;
+end;
+
+procedure TfmController.FormDropFiles(Sender: TObject;
+  const FileNames: array of string);
+var
+  i: Integer;
+  CurFile: string;
+begin
+  for i := 0 to Length(FileNames) - 1 do
+  begin
+    CurFile := FileNames[i];
+    if FileExists(CurFile) then
+    begin
+      if AnsiContainsText(PicFilterStr, ExtractFileExt(CurFile)) and
+         PtInRect(ScreenToClient(Mouse.CursorPos), pPortrait.BoundsRect) then
+      begin
+        fmDisplay.PortraitFileName := CurFile;
+        Break;
+      end
+      else if AnsiContainsText(PicFilterStrAll, ExtractFileExt(CurFile)) and
+              PtInRect(ScreenToClient(Mouse.CursorPos), pbViewport.BoundsRect) then
+      begin
+        LoadMap(CurFile);
+        Break;
+      end;
+    end;
+  end;
 end;
 
 procedure TfmController.FormKeyUp(Sender: TObject; var Key: Word;

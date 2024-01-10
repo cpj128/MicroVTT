@@ -120,7 +120,7 @@ uses
 procedure TfmDisplay.SetMapFile(FileName: string);
 begin
   FMapFileName := FileName;
-  if FileExists(FileName) and MatchText(ExtractFileExt(FileName), ['.jpg', '.jpeg', '.png', '.bmp', '.webp', '.uvtt', '.dd2vtt', '.df2vtt']) then
+  if FileExists(FileName) and AnsiContainsText(PicFilterStrAll, ExtractFileExt(FileName)) then
   try
     if Assigned(FMapPic) then
       FMapPic.Free;
@@ -264,7 +264,7 @@ end;
 procedure TfmDisplay.SetPortraitFile(FileName: string);
 begin
   FPortraitFile := FileName;
-  if FileExists(FileName) and MatchText(ExtractFileExt(FileName), ['.jpg', '.jpeg', '.png', '.bmp', '.webp']) then
+  if FileExists(FileName) and AnsiContainsText(PicFilterStr, ExtractFileExt(FileName)) then
   begin
     try
       FPortrait.LoadFromFile(FileName);

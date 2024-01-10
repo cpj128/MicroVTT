@@ -91,6 +91,7 @@ end;
 
 function TMapLoaderImg.LoadWalls(filename: string; WallMgr: TWallManager): Integer;
 begin
+  WallMgr.Clear;
   Result := 0;
 end;
 
