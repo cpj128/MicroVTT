@@ -579,7 +579,7 @@ end;
 
 procedure TfmController.pbViewportMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
-begin 
+begin
   FLastMouseX := X;
   FLastMouseY := Y;
   if FIsDragging then
@@ -708,7 +708,7 @@ var
   SegmentWidth, SegmentHeight: Integer;
   CurMarkerX, CurMarkerY: Integer;
   CurToken: TToken;
-  CellRect, BoundingRect: TRect;
+  CellRect, BoundingRect, MapBounds: TRect;
   Hex: array[0..5] of TPoint;
   Iso: array[0..3] of TPoint;
   Wall, WallP1, WallP2: TPoint;
@@ -724,6 +724,7 @@ begin
   if Assigned(FMapPic) then
   begin
     LoSMap := TBGRABitmap.Create(FMapPic.Width, FMapPic.Height, clBlack);
+    MapBounds := Bounds(0, 0, FMapPic.Width, FMapPic.Height);
 
     // TODO: Resampling takes a lot of time, probably faster to save and just do when zoom or scale changes
     ScaledBmp := FMapPic.Resample(Round(FMapPic.Width * FDisplayScale * FZoomFactor), Round(FMapPic.Height * FDisplayScale * FZoomFactor), rmSimpleStretch);
@@ -928,21 +929,10 @@ begin
                                 MapToViewPortX(CurToken.XEndPos) - RotatedBmp.Width div 2,
                                 MapToViewPortY(CurToken.YEndPos) - RotatedBmp.Height div 2,
                                 False);
-                if CurToken is TCharacterToken then
+                if (CurToken is TCharacterToken) and MapBounds.Contains(Point(CurToken.XEndPos, CurToken.YEndPos)) then
                 begin
-                  {for j := 0 to 8 - 1 do
-                  begin
-                    LoSPoly := FWallManager.GetLoSPolygon(Point(Round(CurToken.XEndPos + 0.5 * CurToken.Width * Sin(2 * PI / 8 * j)),
-                                                                Round(CurToken.YEndPos + 0.5 * CurToken.Width * Cos(2 * PI / 8 * j))),
-                                                          Bounds(0, 0, FMapPic.Width, FMapPic.Height));
-                                                          //Bounds(FViewRectXOffset, FViewRectYOffset, SegmentWidth, SegmentHeight));
-                    for k := 0 to Length(LoSPoly) - 1 do
-                      LoSPoly[k] := TPointF.Create(MapToViewPortX(LoSPoly[k].X), MapToViewPortY(LoSPoly[k].Y));
-                    LoSMap.FillPolyAntialias(LoSPoly, BGRA(255, 255, 255, 85));
-                    //DrawnMapSegment.DrawPolygonAntialias(LoSPoly, clRed, 4);
-                  end;}
                   LoSPoly := FWallManager.GetLoSPolygon(Point(CurToken.XEndPos, CurToken.YEndPos),
-                                                        Bounds(0, 0, FMapPic.Width, FMapPic.Height));
+                                                        MapBounds);
                   for k := 0 to Length(LoSPoly) - 1 do
                     LoSPoly[k] := TPointF.Create(MapToViewPortX(LoSPoly[k].X), MapToViewPortY(LoSPoly[k].Y));
                   LoSMap.FillPolyAntialias(LoSPoly, BGRA(255, 255, 255));
