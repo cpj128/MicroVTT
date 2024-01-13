@@ -114,7 +114,7 @@ object fmController: TfmController
           Style = tbsCheck
         end
         object tbShowGrid: TToolButton
-          Left = 485
+          Left = 549
           Hint = 'Show Grid'
           Top = 2
           Caption = 'tbShowGrid'
@@ -124,7 +124,7 @@ object fmController: TfmController
           Style = tbsCheck
         end
         object tbGridSettings: TToolButton
-          Left = 553
+          Left = 617
           Hint = 'Grid Settings'
           Top = 2
           Caption = 'tbGridSettings'
@@ -139,7 +139,7 @@ object fmController: TfmController
           Style = tbsSeparator
         end
         object tbHideMarker: TToolButton
-          Left = 833
+          Left = 897
           Hint = 'Hide Marker'
           Top = 2
           Caption = 'tbHideMarker'
@@ -147,7 +147,7 @@ object fmController: TfmController
           OnClick = tbHideMarkerClick
         end
         object tbHidePortrait: TToolButton
-          Left = 901
+          Left = 965
           Hint = 'Hide portrait'
           Top = 2
           Caption = 'tbHidePortrait'
@@ -155,7 +155,7 @@ object fmController: TfmController
           OnClick = tbHidePortraitClick
         end
         object tbSnapTokensToGrid: TToolButton
-          Left = 621
+          Left = 685
           Hint = 'Snap tokens to grid'
           Top = 2
           Caption = 'tbSnapTokensToGrid'
@@ -164,7 +164,7 @@ object fmController: TfmController
           Style = tbsCheck
         end
         object tbHideTokens: TToolButton
-          Left = 689
+          Left = 753
           Hint = 'Show / Hide all tokens'
           Top = 2
           Caption = 'tbHideTokens'
@@ -174,14 +174,14 @@ object fmController: TfmController
           Style = tbsCheck
         end
         object ToolButton2: TToolButton
-          Left = 1037
+          Left = 1101
           Height = 64
           Top = 2
           Caption = 'ToolButton2'
           Style = tbsSeparator
         end
         object tbCombatMode: TToolButton
-          Left = 1045
+          Left = 1109
           Hint = 'Toggle Combat'
           Top = 2
           Caption = 'tbCombatMode'
@@ -190,7 +190,7 @@ object fmController: TfmController
           Style = tbsCheck
         end
         object tbNextCombatant: TToolButton
-          Left = 1113
+          Left = 1177
           Hint = 'Next combattant'
           Top = 2
           Caption = 'tbNextCombatant'
@@ -199,7 +199,7 @@ object fmController: TfmController
           OnClick = tbNextCombatantClick
         end
         object tbClearTokens: TToolButton
-          Left = 969
+          Left = 1033
           Hint = 'Remove all tokens'
           Top = 2
           Caption = 'tbClearTokens'
@@ -207,7 +207,7 @@ object fmController: TfmController
           OnClick = tbClearTokensClick
         end
         object ToolButton3: TToolButton
-          Left = 825
+          Left = 889
           Height = 64
           Top = 2
           Caption = 'ToolButton3'
@@ -230,7 +230,7 @@ object fmController: TfmController
           OnClick = tbRefreshTokensClick
         end
         object tbClearInitiative: TToolButton
-          Left = 1249
+          Left = 1313
           Hint = 'Clear initiative list'
           Top = 2
           Caption = 'tbClearInitiative'
@@ -238,7 +238,7 @@ object fmController: TfmController
           OnClick = tbClearInitiativeClick
         end
         object tbRemoveFromInitiative: TToolButton
-          Left = 1181
+          Left = 1245
           Hint = 'Remove from initiative list'
           Top = 2
           Caption = 'tbRemoveFromInitiative'
@@ -278,11 +278,19 @@ object fmController: TfmController
           Style = tbsCheck
         end
         object tbMeasure: TToolButton
-          Left = 757
+          Left = 821
           Top = 2
           Caption = 'tbMeasure'
           ImageIndex = 24
           OnClick = tbMeasureClick
+          Style = tbsCheck
+        end
+        object tbShowLoSMaster: TToolButton
+          Left = 485
+          Hint = 'Show / Hide LoS in master''s view'
+          Top = 2
+          Caption = 'tbShowLoSMaster'
+          OnClick = tbShowLoSMasterClick
           Style = tbsCheck
         end
       end

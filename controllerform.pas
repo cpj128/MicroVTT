@@ -86,6 +86,7 @@ type
     tbExportForDM: TToolButton;
     tbExportForPlayers: TToolButton;
     tbMeasure: TToolButton;
+    tbShowLoSMaster: TToolButton;
     tsCategoryEditor: TTabSheet;
     tsEntryListEditor: TTabSheet;
     tsEntryEditor: TTabSheet;
@@ -191,6 +192,7 @@ type
     procedure tbSaveSessionClick(Sender: TObject);
     procedure tbSettingsClick(Sender: TObject);
     procedure tbShowGridClick(Sender: TObject);
+    procedure tbShowLoSMasterClick(Sender: TObject);
     procedure tbShowMapClick(Sender: TObject);
     procedure tbSnapTokensToGridClick(Sender: TObject);
     procedure tvTokensDeletion(Sender: TObject; Node: TTreeNode);
@@ -198,6 +200,7 @@ type
       State: TDragState; var Accept: Boolean);
   private
     FMapPic: TBGRABitmap;
+    FLoSMap: TBGRABitmap;
     FMapFileName: string;
     FViewRectWidth, FViewRectHeight: Integer;
     FViewRectXOffset, FViewRectYOffset: Integer;
@@ -220,6 +223,7 @@ type
     FShowMap: Boolean;
     FShowMarker: Boolean;
     FShowTokens: Boolean;
+    FShowLoS: Boolean;
     FCombatMode: Boolean;
     FInitiativePicList: TList;
     FInitiativeNumList: TList;
@@ -243,6 +247,7 @@ type
     procedure UpdateMapList;
     procedure UpdateTokenList;
     procedure UpdateOverlayList;
+    procedure CalcLoSMap;
     function MapToViewPortX(MapX: Single): Integer;
     function MapToViewPortY(MapY: Single): Integer;
     function ViewPortToMapX(ViewPortX: Integer): Integer;
@@ -294,6 +299,7 @@ type
     property ShowGrid: Boolean read FShowGrid;
     property ShowTokens: Boolean read FShowTokens;
     property TokenSlotRect: TRect read FCurTokenRect write SetCurTokenRect;
+    property LoSMap: TBGRABitmap read FLoSMap;
   end;
 
 
@@ -466,6 +472,10 @@ begin
   finally
     loader.Free;
   end;
+  if Assigned(FLoSMap) then
+    FreeAndNil(FLoSMap);
+  if Assigned(FMapPic) then
+    FLoSMap := TBGRABitmap.Create(FMapPic.Width, FMapPic.Height, clBlack);
   FViewRectXOffset := 0;
   FViewRectYOffset := 0;
   TokenSlotRect := Bounds(-1, -1, 0, 0);
@@ -703,12 +713,12 @@ end;
 procedure TfmController.pbViewportPaint(Sender: TObject);
 var
   ScaledBmp, DrawnMapSegment, TokenBmp: TBGRABitmap;
-  LoSMap: TBGRABitmap;
+  //LoSMap: TBGRABitmap;
   i, j, k, CurGridPos: Integer;
   SegmentWidth, SegmentHeight: Integer;
   CurMarkerX, CurMarkerY: Integer;
   CurToken: TToken;
-  CellRect, BoundingRect, MapBounds: TRect;
+  CellRect, BoundingRect{, MapBounds}: TRect;
   Hex: array[0..5] of TPoint;
   Iso: array[0..3] of TPoint;
   Wall, WallP1, WallP2: TPoint;
@@ -723,8 +733,9 @@ begin
   // Draw Map
   if Assigned(FMapPic) then
   begin
-    LoSMap := TBGRABitmap.Create(FMapPic.Width, FMapPic.Height, clBlack);
-    MapBounds := Bounds(0, 0, FMapPic.Width, FMapPic.Height);
+    //LoSMap := TBGRABitmap.Create(FMapPic.Width, FMapPic.Height, clBlack);
+    //MapBounds := Bounds(0, 0, FMapPic.Width, FMapPic.Height);
+    CalcLoSMap;
 
     // TODO: Resampling takes a lot of time, probably faster to save and just do when zoom or scale changes
     ScaledBmp := FMapPic.Resample(Round(FMapPic.Width * FDisplayScale * FZoomFactor), Round(FMapPic.Height * FDisplayScale * FZoomFactor), rmSimpleStretch);
@@ -929,14 +940,14 @@ begin
                                 MapToViewPortX(CurToken.XEndPos) - RotatedBmp.Width div 2,
                                 MapToViewPortY(CurToken.YEndPos) - RotatedBmp.Height div 2,
                                 False);
-                if (CurToken is TCharacterToken) and MapBounds.Contains(Point(CurToken.XEndPos, CurToken.YEndPos)) then
+                {if FShowLoS and (CurToken is TCharacterToken) and MapBounds.Contains(Point(CurToken.XEndPos, CurToken.YEndPos)) then
                 begin
                   LoSPoly := FWallManager.GetLoSPolygon(Point(CurToken.XEndPos, CurToken.YEndPos),
                                                         MapBounds);
                   for k := 0 to Length(LoSPoly) - 1 do
                     LoSPoly[k] := TPointF.Create(MapToViewPortX(LoSPoly[k].X), MapToViewPortY(LoSPoly[k].Y));
                   LoSMap.FillPolyAntialias(LoSPoly, BGRA(255, 255, 255));
-                end;
+                end;}
               end;
             finally
               Rotation.Free;
@@ -947,10 +958,10 @@ begin
           end;
         end;
 
-        if FTokenList.Count > 0 then
-          DrawnMapSegment.BlendImage(Bounds(0, 0, DrawnMapSegment.Width, DrawnMapSegment.Height), LoSMap,
+        if FShowLoS and (FTokenList.Count > 0) then
+          DrawnMapSegment.BlendImage(Bounds(0, 0, DrawnMapSegment.Width, DrawnMapSegment.Height), FLoSMap,
                                      0, 0, boMultiply);
-        LoSMap.Free;
+        //LoSMap.Free;
 
         // Draw Marker
         if FShowMarker then
@@ -1559,6 +1570,12 @@ begin
   pbViewPort.Invalidate;
 end;
 
+procedure TfmController.tbShowLoSMasterClick(Sender: TObject);
+begin
+  FShowLoS := tbShowLoSMaster.Down;
+  pbViewPort.Invalidate;
+end;
+
 procedure TfmController.tbShowMapClick(Sender: TObject);
 begin
   FShowMap := tbShowMap.Down;
@@ -1791,6 +1808,32 @@ begin
   end;
 end;
 
+procedure TfmController.CalcLoSMap;
+var
+  i, j, PolyCount: Integer;
+  LoSPoly: ArrayOfTPointF;
+  CurToken: TToken;
+  MapBounds: TRect;
+begin
+  FLoSMap.Fill(clBlack);
+  PolyCount := 0;
+  MapBounds := Bounds(0, 0, FMapPic.Width, FMapPic.Height);
+  for i := 0 to FTokenList.Count - 1 do
+  begin
+    CurToken := TToken(FTokenList[i]);
+    if (CurToken is TCharacterToken) and MapBounds.Contains(Point(CurToken.XEndPos, CurToken.YEndPos)) then
+    begin
+      LoSPoly := FWallManager.GetLoSPolygon(Point(CurToken.XEndPos, CurToken.YEndPos), MapBounds);
+      for j := 0 to Length(LoSPoly) - 1 do
+        LoSPoly[j] := TPointF.Create(MapToViewPortX(LoSPoly[j].X), MapToViewPortY(LoSPoly[j].Y));
+      FLoSMap.FillPolyAntialias(LoSPoly, BGRA(255, 255, 255));
+      Inc(PolyCount);
+    end;
+  end;
+  if PolyCount = 0 then
+    FLoSMap.Fill(clWhite);
+end;
+
 function TfmController.GetToken(idx: Integer): TToken;
 begin
   Result := nil;
@@ -1979,6 +2022,7 @@ var
   LangID, FallbackLangID, LangName: string;
 begin
   FMapPic := nil;
+  FLoSMap := nil;
   FTokenList := TList.Create;
   FInitiativePicList := TList.Create;
   FInitiativeNumList := TList.Create;
