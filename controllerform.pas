@@ -299,7 +299,7 @@ type
     property ShowGrid: Boolean read FShowGrid;
     property ShowTokens: Boolean read FShowTokens;
     property TokenSlotRect: TRect read FCurTokenRect write SetCurTokenRect;
-    property LoSMap: TBGRABitmap read FLoSMap;
+    property WallManager: TWallManager read FWallManager;
   end;
 
 
@@ -340,6 +340,7 @@ uses
   SettingsForm,
   LibraryForm,
   TokenSettingsForm,
+  LazLogger,
   InitiativeForm;
 
 { TfmController }
@@ -472,10 +473,6 @@ begin
   finally
     loader.Free;
   end;
-  if Assigned(FLoSMap) then
-    FreeAndNil(FLoSMap);
-  if Assigned(FMapPic) then
-    FLoSMap := TBGRABitmap.Create(FMapPic.Width, FMapPic.Height, clBlack);
   FViewRectXOffset := 0;
   FViewRectYOffset := 0;
   TokenSlotRect := Bounds(-1, -1, 0, 0);
@@ -728,15 +725,19 @@ var
   AngleText: string;
   TextAngle: Integer;
   TextSize: TSize;
-  LoSPoly: ArrayOfTPointF;
+  //LoSPoly: ArrayOfTPointF;
+  time: DWORD;
 begin
   // Draw Map
   if Assigned(FMapPic) then
   begin
     //LoSMap := TBGRABitmap.Create(FMapPic.Width, FMapPic.Height, clBlack);
     //MapBounds := Bounds(0, 0, FMapPic.Width, FMapPic.Height);
-    CalcLoSMap;
-
+    time := GetTickCount;
+    //for i := 0 to 99 do
+      CalcLoSMap;
+    time := GetTickCount - time;
+    //DbgStr(IntToStr(time));
     // TODO: Resampling takes a lot of time, probably faster to save and just do when zoom or scale changes
     ScaledBmp := FMapPic.Resample(Round(FMapPic.Width * FDisplayScale * FZoomFactor), Round(FMapPic.Height * FDisplayScale * FZoomFactor), rmSimpleStretch);
     try
@@ -1814,9 +1815,22 @@ var
   LoSPoly: ArrayOfTPointF;
   CurToken: TToken;
   MapBounds: TRect;
+  tmpMap: TBGRABitmap;
 begin
   FLoSMap.Fill(clBlack);
   PolyCount := 0;
+  {MapBounds := Bounds(0, 0, FMapPic.Width, FMapPic.Height);
+  for i := 0 to FTokenList.Count - 1 do
+  begin
+    CurToken := TToken(FTokenList[i]);
+    if (CurToken is TCharacterToken) then
+    begin
+      tmpMap := FWallManager.GetLoSMap(Point(CurToken.XEndPos, CurToken.YEndPos), Bounds(FViewRectXOffset, FViewRectYOffset, pbViewport.Width, pbViewPort.Height), FDisplayScale * FZoomFactor);
+      FLoSMap.BlendImage(0, 0, tmpMap, boAdditive);
+      tmpMap.Free;
+      Inc(PolyCount);
+    end;
+  end;//}
   MapBounds := Bounds(0, 0, FMapPic.Width, FMapPic.Height);
   for i := 0 to FTokenList.Count - 1 do
   begin
@@ -1829,7 +1843,7 @@ begin
       FLoSMap.FillPolyAntialias(LoSPoly, BGRA(255, 255, 255));
       Inc(PolyCount);
     end;
-  end;
+  end;//}
   if PolyCount = 0 then
     FLoSMap.Fill(clWhite);
 end;
@@ -1983,6 +1997,9 @@ begin
   begin
     FViewRectMaxXOffset := Max(0, Round(FMapPic.Width * FDisplayScale * FZoomFactor) - FViewRectWidth);
     FViewRectMaxYOffset := Max(0, Round(FMapPic.Height * FDisplayScale * FZoomFactor) - FViewRectHeight);
+    if Assigned(FLoSMap) then
+      FreeAndNil(FLoSMap);
+    FLoSMap := TBGRABitmap.Create(pbViewPort.Width, pbViewPort.Height);
   end;
   FViewRectXOffset := EnsureRange(FViewRectXOffset, 0, FViewRectMaxXOffset);
   FViewRectYOffset := EnsureRange(FViewRectYOffset, 0, FViewRectMaxYOffset);

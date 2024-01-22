@@ -59,6 +59,7 @@ type
     FPortraitFile: string;
     FCurTokenRect: TRect;
     FDraggedTokenPos: TPoint;
+    FLoSMap: TBGRABitmap;
 
     procedure SetMapFile(FileName: string);
     procedure SetMapOffsetX(val: Integer);
@@ -69,6 +70,7 @@ type
     procedure SetMarkerY(val: Integer);
     procedure SetCombatMode(val: Boolean);
     procedure SetPortraitFile(FileName: string);
+    procedure CalcLoSMap;
   public
     property MapFileName: string read FMapFileName write SetMapFile;
     property MapOffsetX: Integer read FMapOffsetX write SetMapOffsetX;
@@ -107,7 +109,6 @@ uses
   RPGUtils,
   LangStrings,
   MapLoaders,
-  LazLogger,
   Math,
   StrUtils,
   bgrabitmappack,
@@ -150,6 +151,7 @@ begin
   FPortrait := TBGRABitmap.Create(0, 0);
   FBgPic := TPicture.Create;
   FBgPic.LoadFromResourceName(HINSTANCE, 'PARCHMENT_TILE');
+  FLoSMap := nil;
   FPortraitFrame := TBGRABitmap.Create(FRAMESIZE + PORTRAITWIDTH + FRAMESIZE, FRAMESIZE + PORTRAITHEIGHT + FRAMESIZE);
   FInitiativeFrame := TBGRABitmap.Create(FRAMESIZE + INITIATIVEWIDTH + FRAMESIZE, FRAMESIZE + INITIATIVEHEIGHT + FRAMESIZE);
   DrawPhongFrame(FPortraitFrame);
@@ -279,6 +281,33 @@ begin
   Invalidate;
 end;
 
+procedure TfmDisplay.CalcLoSMap;
+var
+  i, j, PolyCount: Integer;
+  LoSPoly: ArrayOfTPointF;
+  CurToken: TToken;
+  MapBounds: TRect;
+  tmpMap: TBGRABitmap;
+begin
+  FLoSMap.Fill(clBlack);
+  PolyCount := 0;
+  MapBounds := Bounds(0, 0, FMapPic.Width, FMapPic.Height);
+  for i := 0 to fmController.GetTokenCount - 1 do
+  begin
+    CurToken := fmController.GetToken(i);
+    if (CurToken is TCharacterToken) and MapBounds.Contains(Point(CurToken.XEndPos, CurToken.YEndPos)) then
+    begin
+      LoSPoly := fmController.WallManager.GetLoSPolygon(Point(CurToken.XPos, CurToken.YPos), MapBounds);
+      for j := 0 to Length(LoSPoly) - 1 do
+        LoSPoly[j] := TPointF.Create(LoSPoly[j].X * FMapZoom - FMapOffsetX, LoSPoly[j].Y * FMapZoom - FMapOffsetY);
+      FLoSMap.FillPolyAntialias(LoSPoly, BGRA(255, 255, 255));
+      Inc(PolyCount);
+    end;
+  end;//}
+  if PolyCount = 0 then
+    FLoSMap.Fill(clWhite);
+end;
+
 procedure TfmDisplay.FormPaint(Sender: TObject);
 var
   MapSegment, MapSegmentStretched: TBGRABitmap;
@@ -379,6 +408,7 @@ begin
   // Map
   if fmController.ShowMap and Assigned(FMapPic) then
   begin
+    CalcLoSMap;
     MapWidth := ClientWidth - VMARGIN - VMARGIN - PORTRAITHEIGHT - VMARGIN;
     MapHeight := ClientHeight - HMARGIN - HMARGIN;
     // MapRect: Rectangle we want to fill with our map, might be smaller than MapWidth * MapHeight
@@ -630,7 +660,10 @@ begin
               end;
             end;
           end;
-
+          
+          if True then
+            MapSegmentStretched.BlendImage(Bounds(0, 0, MapSegmentStretched.Width, MapSegmentStretched.Height), FLoSMap,
+                                           {FMapOffsetX - FTargetMapOffsetX, FMapOffsetY - FTargetMapOffsetY}0, 0, boMultiply);
           MapSegmentStretched.Draw(Canvas, MapRect);
 
         finally
@@ -706,13 +739,25 @@ begin
 end;
 
 procedure TfmDisplay.FormResize(Sender: TObject);
+var
+  MapWidth, MapHeight: Integer;
 begin
   fmController.UpdateViewport;
   if Assigned(FMapFrame) then
     FMapFrame.Free;
-  FMapFrame := TBGRABitmap.Create(FRAMESIZE + ClientWidth - VMARGIN - VMARGIN - PORTRAITHEIGHT - VMARGIN + FRAMESIZE,
-                                  FRAMESIZE + ClientHeight - HMARGIN - HMARGIN + FRAMESIZE);
+  MapWidth := ClientWidth - VMARGIN - VMARGIN - PORTRAITHEIGHT - VMARGIN;
+  MapHeight := ClientHeight - HMARGIN - HMARGIN;
+  if Assigned(FMapPic) then
+  begin
+    MapWidth := Round(Min(MapWidth, FMapPic.Width * FMapZoom));
+    MapHeight := Round(Min(MapHeight, FMapPic.Height * FMapZoom));
+  end;
+
+  FMapFrame := TBGRABitmap.Create(FRAMESIZE + MapWidth + FRAMESIZE, FRAMESIZE + MapHeight + FRAMESIZE);
   DrawPhongFrame(FMapFrame);
+  if Assigned(FLoSMap) then
+    FreeAndNil(FLoSMap);
+  FLoSMap := TBGRABitmap.Create(MapWidth, MapHeight);
 end;
 
 procedure TfmDisplay.FormShow(Sender: TObject);

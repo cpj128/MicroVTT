@@ -18,7 +18,7 @@ unit WallManager;
 interface
 
 uses
-  Classes, SysUtils, fgl, BgraBitmapTypes;
+  Classes, SysUtils, fgl, BGRABitmap, BgraBitmapTypes;
 
 type
 
@@ -41,13 +41,14 @@ public
   function GetWall(idx: Integer): TPoint;
   function GetWallCount: Integer;
   function GetLoSPolygon(centerPnt: TPoint; BoundingBox: TRect): ArrayOfTPointF;
+  function GetLoSMap(centerPnt: TPoint; BoundingBox: TRect; scale: Double): TBGRABitmap;
 end;
 
 implementation
 
 uses
   Math,
-  RPGUtils;
+  RPGUtils, RPGTypes;
 
 { TWallManager }
 
@@ -118,6 +119,141 @@ end;
 function TWallManager.GetWallCount: Integer;
 begin
   Result := FWalls.Count;
+end;
+
+// Failed attempt to simplify. This is several orders of magnitude slower than the last version.
+(*function TWallManager.GetLoSMap(centerPnt: TPoint; BoundingBox: TRect; scale: Double): TBGRABitmap;
+var
+  i, j, k: Integer;
+  p: PBGRAPixel;
+  CurPx, CurWall: TPoint;
+  pW1, pW2, pWC: TPoint;
+  sgnW1, sgnW2, sgnW0: Integer;
+  CurVal: integer;
+begin
+  // Soft Shadow-Function: z = x / (x + y); catch 0/0
+  Result := TBGRABitmap.Create(BoundingBox.Width, BoundingBox.Height, BGRA(255, 255, 255));
+  for i := 0 to Result.Height - 1 do
+  begin
+    p := Result.ScanLine[i];
+    for j := 0 to Result.Width - 1 do
+    begin
+      CurPx := Point(Round((BoundingBox.Left + j) / scale), Round((BoundingBox.Top + i) / scale));
+      CurVal := 1;
+      k := 0;
+      while (CurVal > 0) and (k < GetWallCount) do
+      begin
+        CurWall := GetWall(k);
+        pW1 := GetPoint(CurWall.X);
+        pW2 := GetPoint(CurWall.Y);
+        pWC := Point((pW1.X + pW2.X) div 2, (pW1.Y + pW2.Y) div 2);
+        sgnW1 := GetPointSideOfLine(centerPnt, pW1, pWC);
+        sgnW2 := GetPointSideOfLine(centerPnt, pW2, pWC);
+        sgnW0 := GetPointSideOfLine(pW1, pW2, centerPnt);
+        CurVal := CurVal * Ord(not ((sgnW1 = GetPointSideOfLine(centerPnt, pW1, CurPx)) and (sgnW2 = GetPointSideOfLine(centerPnt, pW2, CurPx)) and (sgnW0 <> GetPointSideOfLine(pW1, pW2, CurPx))));
+
+        Inc(k);
+      end;
+      p^.red := 255 * CurVal;
+      p^.green := p^.red;
+      p^.blue := p^.red;
+
+      Inc(p);
+    end;
+  end;
+end; *)
+
+// Second attempt to simplify.
+// This _works_, and is reasonably fast (still slower than the long solution below),
+// but produces a lot of artifacts.
+// I am not going to use it in its current state, but this might be a better base
+// for a soft shadow-solution.
+function TWallManager.GetLoSMap(centerPnt: TPoint; BoundingBox: TRect; scale: Double): TBGRABitmap;
+var
+  i, j: Integer;
+  CurWall: TPoint;
+  pW1, pW2, pWc: TPoint;
+  pWLeft, pWRight: TPoint;
+  pOffset: TPoint;
+  ClipRect: TRect; // map-coordinates
+  ClipLinePnts: array[0..3, 0..1] of TPointF;
+  StartLineIdx: Integer;
+  int: TPointF;
+  PolyPnts: ArrayofTPointF;
+  PntCount: Integer;
+begin
+  Result := TBGRABitmap.Create(BoundingBox.Width, BoundingBox.Height, BGRA(255, 255, 255));
+  pOffset := Point(-BoundingBox.Left, -BoundingBox.Top);
+  ClipRect := Bounds(Boundingbox.Left, BoundingBox.Top, Round(BoundingBox.Width / scale), Round(BoundingBox.Height / scale));
+  ClipLinePnts[0][0] := TPointF.Create(ClipRect.TopLeft);
+  ClipLinePnts[0][1] := TPointF.Create(ClipRect.Right, ClipRect.Top);
+  ClipLinePnts[1][0] := ClipLinePnts[0][1];
+  ClipLinePnts[1][1] := TPointF.Create(ClipRect.BottomRight);
+  ClipLinePnts[2][0] := ClipLinePnts[1][1];
+  ClipLinePnts[2][1] := TPointF.Create(ClipRect.Left, ClipRect.Bottom);
+  ClipLinePnts[3][0] := ClipLinePnts[2][1];
+  ClipLinePnts[3][1] := TPointF.Create(ClipRect.TopLeft);
+  for i := 0 to GetWallCount - 1 do
+  begin
+    CurWall := GetWall(i);
+    pW1 := GetPoint(CurWall.X);
+    pW2 := GetPoint(CurWall.Y);
+    pWc := Point((pW1.X + pW2.X) div 2, (pW1.Y + pW2.Y) div 2);
+    if GetPointSideOfLine(centerPnt, pWc, pW1) < 0 then
+    begin
+      pWLeft := pW1;
+      pWRight := pW2;
+    end
+    else
+    begin
+      pWLeft := pW2;
+      pWRight := pW1;
+    end;
+    SetLength(PolyPnts, 7); // Cannot have more points in a rect
+    PntCount := 0;
+    // Store points that belong to the view shadow polygon, convert straight to viewport-coordinates
+    PolyPnts[PntCount] := TPointF.Create(pWLeft) * scale;
+    PolyPnts[PntCount].Offset(pOffset);
+    Inc(PntCount);
+
+    StartLineIdx := -1;
+    for j := 0 to Length(ClipLinePnts) - 1 do
+    begin
+      if GetIntersection_RaySegment(TPointF.Create(centerPnt), TPointF.Create(pWLeft - centerPnt), ClipLinePnts[j][0], ClipLinePnts[j][1], int) then
+      begin
+        StartLineIdx := j;
+        PolyPnts[PntCount] := int * scale;
+        PolyPnts[PntCount].Offset(pOffset);
+        Inc(PntCount);
+        Break;
+      end;
+    end;
+
+    for j := 0 to Length(ClipLinePnts) - 1 do
+    begin
+      if GetIntersection_RaySegment(TPointF.Create(centerPnt), TPointF.Create(pWRight - centerPnt), ClipLinePnts[(j + StartLineIdx) mod 4][0], ClipLinePnts[(j + StartLineIdx) mod 4][1], int) then
+      begin
+        PolyPnts[PntCount] := int * scale;
+        PolyPnts[PntCount].Offset(pOffset);
+        Inc(PntCount);
+        Break;
+      end
+      else
+      begin
+        PolyPnts[PntCount] := ClipLinePnts[(j + StartLineIdx) mod 4][1] * scale;
+        PolyPnts[PntCount].Offset(pOffset);
+        Inc(PntCount);
+      end;
+    end;
+
+    // Add other side of wall
+    PolyPnts[PntCount] := TPointF.Create(pWRight) * scale;
+    PolyPnts[PntCount].Offset(pOffset);
+    Inc(PntCount);
+
+    SetLength(PolyPnts, PntCount);
+    Result.FillPolyAntialias(PolyPnts, BGRA(0, 0, 0));
+  end;
 end;
 
 function TWallManager.GetLoSPolygon(centerPnt: TPoint; BoundingBox: TRect): ArrayOfTPointF;
@@ -221,19 +357,6 @@ var
       Result := Wall2
     else
       Result := Wall1;
-
-
-    // Test if ray to end of one wall intersects the other
-    {if GetIntersection_RaySegment(TPointF.Create(CenterPnt), TPointF.Create(tmpPnts[P1Idx] - CenterPnt),
-                                  TPointF.Create(tmpPnts[tmpWalls[Wall2].X]),
-                                  TPointF.Create(tmpPnts[tmpWalls[Wall2].Y]), ip) then
-    begin
-      Result := Wall2;
-    end
-    else
-    begin
-      Result := Wall1;
-    end;}
   end;
 
   function DoesWallBegin(pWall: TPoint; pPnt: Integer): Boolean;
@@ -243,7 +366,7 @@ var
       otherPnt := pWall.Y
     else if pWall.Y = pPnt then
       otherPnt := pWall.X
-    else // Wall doea not contain the point? Obviously it cannot start there
+    else // Wall does not contain the point? Obviously it cannot start there
       Exit(False);
 
     Result := GetPointSideOfLine(centerPnt, tmpPnts[pPnt], tmpPnts[otherPnt]) > 0;
@@ -415,9 +538,6 @@ begin
             begin
               LowestIdx := GetCloserWallToPnt(sortList[i], LowestIdx, OpenWalls[j]);
             end;
-            // When in doubt, change walls away from the bounding box - this is the only way we should have intersecting walls
-            // TODO: In case of a tie, select wall where the other end is closer
-
 
           end
           else if CurDist < ClosestDist then

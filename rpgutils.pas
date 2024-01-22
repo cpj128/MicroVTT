@@ -140,12 +140,13 @@ begin
   Result := Min(v1, v2) - Sqr(Max(k - Abs(v1 - v2), 0) / k) * k / 4;
 end;
 
+function Cross2(p1, p2: TPointF): Double;
+begin
+  Result := (p1.X * p2.Y) - (p1.Y * p2.X);
+end;
+
 function GetIntersection_RaySegment(rO, rD, s1, s2: TPointF; var int: TPointF): Boolean;
 var d, s, t: Double;
-  function Cross2(p1, p2: TPointF): Double;
-  begin
-    Result := (p1.X * p2.Y) - (p1.Y * p2.X);
-  end;
 begin
   d := Cross2(s2 - s1, rD);
   if not SameValue(d, 0) then
@@ -153,7 +154,7 @@ begin
     s := Cross2(rO - s1, rD) / d;
     t := Cross2(rO - s1, s2 - s1) / d;
     int := rO + rD * t;
-    Result := (t >= 0) and (CompareValue(s, 0, 1E-5) >= 0) and (CompareValue(s, 1, 1E-5) <= 0);
+    Result := (CompareValue(t, 0) >= 0) and (CompareValue(s, 0, 1E-5) >= 0) and (CompareValue(s, 1, 1E-5) <= 0);
   end
   else
   begin
@@ -161,7 +162,6 @@ begin
     int := rO;
     Result := False;
   end;
-
 end;
 
 function GetPointSideOfLine(L1, L2, pnt: TPoint): Integer;
