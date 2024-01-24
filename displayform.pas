@@ -295,7 +295,7 @@ begin
   for i := 0 to fmController.GetTokenCount - 1 do
   begin
     CurToken := fmController.GetToken(i);
-    if (CurToken is TCharacterToken) and MapBounds.Contains(Point(CurToken.XEndPos, CurToken.YEndPos)) then
+    if (CurToken is TCharacterToken) and (TCharacterToken(CurToken).ShowLoS) and MapBounds.Contains(Point(CurToken.XEndPos, CurToken.YEndPos)) then
     begin
       LoSPoly := fmController.WallManager.GetLoSPolygon(Point(CurToken.XPos, CurToken.YPos), MapBounds);
       for j := 0 to Length(LoSPoly) - 1 do
@@ -661,7 +661,7 @@ begin
             end;
           end;
           
-          if True then
+          if fmController.ShowLoSPlayer then
             MapSegmentStretched.BlendImage(Bounds(0, 0, MapSegmentStretched.Width, MapSegmentStretched.Height), FLoSMap,
                                            {FMapOffsetX - FTargetMapOffsetX, FMapOffsetY - FTargetMapOffsetY}0, 0, boMultiply);
           MapSegmentStretched.Draw(Canvas, MapRect);

@@ -35,6 +35,7 @@ type
     bDetach: TButton;
     cbVisible: TCheckBox;
     cbOverlay: TComboBox;
+    cbShowLoS: TCheckBox;
     cdIndicatorColor: TColorDialog;
     eGridSlotsY: TEdit;
     eWidth: TEdit;
@@ -118,6 +119,7 @@ begin
     eGridSlotsX.Hide;
     Label4.Hide;
     eGridSlotsY.Hide;
+    cbShowLoS.Hide;
                          
     Label2.Show;
     eHeight.Show;
@@ -152,7 +154,8 @@ begin
     Label6.Hide;
     eGridSlotsX.Hide;
     Label4.Hide;
-    eGridSlotsY.Hide;  
+    eGridSlotsY.Hide;
+    cbShowLoS.Hide;
     Label2.Show;
     eHeight.Show;  
     Label7.Show;
@@ -174,6 +177,7 @@ begin
     seAlpha.Hide;
     Label4.Hide;
     eGridSlotsY.Hide;
+    cbShowLoS.Hide;
 
     udWidth.Position := TLightToken(token).Range;
     fseMaxStrength.Show;
@@ -196,6 +200,8 @@ begin
     eGridSlotsX.Show;
     Label4.Show;
     eGridSlotsY.Show;
+    cbShowLoS.Show;
+    cbShowLoS.Checked := TCharacterToken(token).ShowLoS;
                       
     fseMaxStrength.Hide;
     seSectorAngle.Hide;
@@ -228,6 +234,7 @@ begin
     begin
       TCharacterToken(LinkedToken).Number := seNumber.Value; 
       TCharacterToken(LinkedToken).OverlayIdx := cbOverlay.ItemIndex - 1;
+      TCharacterToken(LinkedToken).ShowLoS := cbShowLoS.Checked;
     end;
     if LinkedToken is TRangeIndicator then
     begin 
@@ -315,6 +322,7 @@ var
 begin
   Caption := GetString(LangStrings.LanguageID, 'TokenSettingsCaption');
   cbVisible.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsVisible');
+  cbShowLoS.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsShowLoS');
   Label1.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsWidth');
   Label2.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsHeight');
   Label5.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsRotation');

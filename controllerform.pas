@@ -87,6 +87,7 @@ type
     tbExportForPlayers: TToolButton;
     tbMeasure: TToolButton;
     tbShowLoSMaster: TToolButton;
+    tbShowLoSPlayers: TToolButton;
     tsCategoryEditor: TTabSheet;
     tsEntryListEditor: TTabSheet;
     tsEntryEditor: TTabSheet;
@@ -182,6 +183,7 @@ type
     procedure tbLibraryClick(Sender: TObject);
     procedure tbLoadNotesClick(Sender: TObject);
     procedure tbLoadSessionClick(Sender: TObject);
+    procedure tbLoSPlayersClick(Sender: TObject);
     procedure tbMapZoomChange(Sender: TObject);
     procedure tbMeasureClick(Sender: TObject);
     procedure tbNextCombatantClick(Sender: TObject);
@@ -223,7 +225,7 @@ type
     FShowMap: Boolean;
     FShowMarker: Boolean;
     FShowTokens: Boolean;
-    FShowLoS: Boolean;
+    FShowLoS, FShowLoSPlayer: Boolean;
     FCombatMode: Boolean;
     FInitiativePicList: TList;
     FInitiativeNumList: TList;
@@ -300,6 +302,7 @@ type
     property ShowTokens: Boolean read FShowTokens;
     property TokenSlotRect: TRect read FCurTokenRect write SetCurTokenRect;
     property WallManager: TWallManager read FWallManager;
+    property ShowLoSPlayer: Boolean read FShowLoSPlayer write FShowLoSPlayer;
   end;
 
 
@@ -363,6 +366,8 @@ begin
 
   tbFullScreen.Hint := GetString(LangStrings.LanguageID, 'ControllerFullscreenHint');
   tbShowMap.Hint := GetString(LangStrings.LanguageID, 'ControllerHideMapHint');
+  tbShowLoSMaster.Hint := GetString(LangStrings.LanguageID, 'ControllerLoSDMHint');
+  tbShowLoSPlayers.Hint := GetString(LangStrings.LanguageID, 'ControllerLoSPlayerHint');
   tbShowgrid.Hint := GetString(LangStrings.LanguageID, 'ControllerToggleGridHint');
   tbGridSettings.Hint := GetString(LangStrings.LanguageID, 'ControllerGridSettingsHint'); 
   tbSnapTokensToGrid.Hint := GetString(LangStrings.LanguageID, 'ControllerSnapToGridHint');
@@ -1506,6 +1511,12 @@ begin
   end;
 end;
 
+procedure TfmController.tbLoSPlayersClick(Sender: TObject);
+begin
+  FShowLoSPlayer := tbShowLoSPlayers.Down;
+  fmDisplay.Invalidate;
+end;
+
 procedure TfmController.tbSettingsClick(Sender: TObject);
 var
   i: Integer;
@@ -1817,7 +1828,7 @@ var
   MapBounds: TRect;
   tmpMap: TBGRABitmap;
 begin
-  FLoSMap.Fill(clBlack);
+  FLoSMap.Fill(BGRA(127, 127, 127));
   PolyCount := 0;
   {MapBounds := Bounds(0, 0, FMapPic.Width, FMapPic.Height);
   for i := 0 to FTokenList.Count - 1 do
@@ -1835,7 +1846,7 @@ begin
   for i := 0 to FTokenList.Count - 1 do
   begin
     CurToken := TToken(FTokenList[i]);
-    if (CurToken is TCharacterToken) and MapBounds.Contains(Point(CurToken.XEndPos, CurToken.YEndPos)) then
+    if (CurToken is TCharacterToken) and (TCharacterToken(CurToken).ShowLoS) and MapBounds.Contains(Point(CurToken.XEndPos, CurToken.YEndPos)) then
     begin
       LoSPoly := FWallManager.GetLoSPolygon(Point(CurToken.XEndPos, CurToken.YEndPos), MapBounds);
       for j := 0 to Length(LoSPoly) - 1 do
@@ -2048,6 +2059,8 @@ begin
   FLastClicked := Point(-1, -1);
   FLastLastClicked := Point(-1, -1);
   FWallManager := TWallManager.Create;
+  FShowLoS := False;
+  FShowLoSPlayer := False;
 
   // Load settings
   FMapDir := FAppSettings.ReadString('Settings', 'MapDir', 'Content\Maps\');

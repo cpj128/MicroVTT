@@ -145,6 +145,7 @@ type
     FNumber: Integer;   
     FOverlayIdx: Integer;
     FShowArrow: Boolean;
+    FShowLoS: Boolean;
     procedure SetOverlayIdx(val: Integer);
     procedure SetNumber(val: Integer);
     procedure SetAngle(val: Double); override;
@@ -155,6 +156,7 @@ type
     property Number: Integer read FNumber write SetNumber;
     property OverlayIdx: Integer read FOverlayIdx write SetOverlayIdx;
     property ShowArrow: Boolean read FShowArrow write FShowArrow;
+    property ShowLoS: Boolean read FShowLoS write FShowLoS;
   end;
 
   TAttachableToken = class(TToken)
@@ -412,7 +414,7 @@ begin
   else if GridData.GridType = gtIsometric then
   begin
     tmpGridSize := GridData.GridSizeY / 2;
-    Count := Round((FYTargetPos - GridData.GridOffsetY - FHeight / 2) / tmpGridSize);
+    Count := Round((FYTargetPos - GridData.GridOffsetY {- FHeight / 2}) / tmpGridSize) - 1;
     YPos := Round(Count * tmpGridSize + GridData.GridOffsetY +(FGridSlotsY * GridData.GridSizeY / 2));
     tmpOffset := GridData.GridOffsetX;
     if Odd(Count) then
@@ -475,7 +477,7 @@ begin
   else if GridData.GridType = gtIsometric then
   begin
     tmpGridSize := GridData.GridSizeY / 2;
-    Result.Top := Round((PosY - GridData.GridOffsetY - FHeight / 2) / tmpGridSize);
+    Result.Top := Round((PosY - GridData.GridOffsetY {- FHeight / 2}) / tmpGridSize) - 1;
     tmpOffset := GridData.GridOffsetX;
     if Odd(Result.Top) then
       tmpOffset := tmpOffset + GridData.GridSizeX / 2;
@@ -777,6 +779,7 @@ begin
     TCharacterToken(Result).Number:= saveFile.ReadInteger(SAVESECTIONTOKENS, 'No' + IntToStr(idx), 0); 
     TCharacterToken(Result).OverlayIdx := saveFile.ReadInteger(SAVESECTIONTOKENS, 'Overlay' + IntToStr(idx), -1);
     TCharacterToken(Result).ShowArrow := ShowDirectionArrow;
+    TCharacterToken(Result).ShowLoS := saveFile.ReadBool(SAVESECTIONTOKENS, 'LoS' + IntToStr(idx), False);
   end;
 
   if Assigned(Result) then
@@ -841,6 +844,7 @@ begin
   inherited Create(pPath, X, Y, pWidth, pHeight);
   FOverlayIdx := -1;
   FNumber := 0;
+  FShowLoS := False;
 end;
 
 procedure TCharacterToken.SaveToIni(SaveFile: TIniFile; idx: Integer);
@@ -848,6 +852,7 @@ begin
   inherited SaveToIni(SaveFile, idx);
   saveFile.WriteInteger(SAVESECTIONTOKENS, 'No' + IntToStr(idx), Number);
   saveFile.WriteInteger(SAVESECTIONTOKENS, 'Overlay' + IntToStr(idx), OverlayIdx);
+  saveFile.WriteBool(SAVESECTIONTOKENS, 'LoS' + IntToStr(idx), FShowLoS);
 end;
 
 procedure TCharacterToken.SetOverlayIdx(val: Integer);
