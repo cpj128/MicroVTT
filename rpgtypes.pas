@@ -19,7 +19,7 @@ unit RPGTypes;
 interface
 
 uses
-  Classes, Graphics, SysUtils, BGRABitmap, IniFiles;
+  Classes, Graphics, SysUtils, BGRABitmap, IniFiles, WallManager;
   
  const
   MAXTOKENANIMSTEPS = 20;
@@ -86,8 +86,8 @@ type
       FCurAnimationStep: Integer;
       FIsMoving: Boolean;
       FAttached: TList;
-      procedure SetXPos(val: Integer);
-      procedure SetYPos(val: integer); 
+      procedure SetXPos(val: Integer); virtual;
+      procedure SetYPos(val: integer); virtual; 
       procedure SetWidth(Val: Integer); virtual;
       procedure SetHeight(Val: Integer); virtual;
       function GetXPos: Integer; virtual;
@@ -136,6 +136,7 @@ type
     TokensSnapToGrid: Boolean; static;
     ShowDirectionArrow: Boolean; static;
     GridData: TGridData; static;
+    WallManager: TWallManager; static;
     class function CreateTokenFromIni(SaveFile: TIniFile; idx: Integer): TToken; static;
     class function CreateTokenFromNode(data: TTokenNodeData; X, Y: Integer): TToken; static;
   end;
@@ -161,7 +162,12 @@ type
 
   TAttachableToken = class(TToken)
   private
-    FAttachedTo: TToken;
+    FAttachedTo: TToken;  
+    function GetXPos: Integer; override;
+    function GetYPos: Integer; override;
+    function GetXEndPos: Integer; override;
+    function GetYEndPos: Integer; override;
+    function GetAngle: Double; override;
   public
     procedure AttachTo(token: TToken);
     procedure Detach;
@@ -182,11 +188,6 @@ type
     procedure SetWidth(Val: Integer); override;
     procedure SetHeight(Val: Integer); override;
     procedure SetAngle(val: Double); override;
-    function GetXPos: Integer; override;
-    function GetYPos: Integer; override;
-    function GetXEndPos: Integer; override;
-    function GetYEndPos: Integer; override;
-    function GetAngle: Double; override;
   public
     constructor Create(X, Y, pWidth, pHeight: Integer);
     destructor Destroy; override;
@@ -216,11 +217,14 @@ type
     FColor: TColor;
     FRange: Integer;
     FMaxStrength: Double;
+    FWallManager: TWallManager;
     procedure SetColor(val: TColor);
     procedure SetRange(val: Integer);
     procedure SetMaxStrength(val: Double);
     procedure SetWidth(Val: Integer); override;
     procedure SetHeight(Val: Integer); override;
+    procedure SetXPos(val: Integer); override;
+    procedure SetYPos(val: integer); override;
     function GetRange: Integer;
     function GetWidth: Integer; override;
     function GetHeight: Integer; override;
@@ -232,6 +236,7 @@ type
     property Range: Integer read GetRange write SetRange;
     property Color: TColor read FColor write SetColor;
     property MaxStrength: Double read FMaxStrength write SetMaxStrength;
+    property WallManager: TWallManager read FWallManager write FWallManager;
   end;
 
 
@@ -735,6 +740,41 @@ begin
   Result := Assigned(FAttachedTo);
 end;
 
+function TAttachableToken.GetXPos: Integer;
+begin
+  Result := inherited;
+  if Assigned(FAttachedTo) then
+    Result := FAttachedTo.XPos;
+end;
+
+function TAttachableToken.GetYPos: Integer;
+begin
+  Result := inherited;
+  if Assigned(FAttachedTo) then
+    Result := FAttachedTo.YPos;
+end;
+
+function TAttachableToken.GetXEndPos: Integer;
+begin
+  Result := FXTargetPos;
+  if Assigned(FAttachedTo) then
+    Result := FAttachedTo.XEndPos;
+end;
+
+function TAttachableToken.GetYEndPos: Integer;
+begin
+  Result := FYTargetPos;
+  if Assigned(FAttachedTo) then
+    Result := FAttachedTo.YEndPos;
+end;
+
+function TAttachableToken.GetAngle: Double;
+begin
+  Result := FAngle;
+  if Assigned(FAttachedTo) then
+    Result := FAttachedTo.Angle;
+end;
+
 { TTokenFactory }
 
 class function TTokenFactory.CreateTokenFromIni(SaveFile: TIniFile; idx: Integer): TToken;
@@ -768,6 +808,8 @@ begin
                                  saveFile.ReadInteger(SAVESECTIONTOKENS, 'Width' + IntToStr(idx), 100));
    TLightToken(Result).Color := saveFile.ReadInteger(SAVESECTIONTOKENS, 'Color' + IntToStr(idx), BGRA(255, 245, 238));
    TLightToken(Result).MaxStrength := saveFile.ReadFloat(SAVESECTIONTOKENS, 'MaxStrength' + IntToStr(idx), 0.5);
+   TLightToken(Result).WallManager := WallManager;
+   Result.RedrawGlyph;
   end
   else if FileExists(path) then // Character token
   begin
@@ -832,6 +874,8 @@ begin
     begin
       Result := TLightToken.Create(X, Y, 200);
       Result.Visible := TokensStartInvisible;
+      TLightToken(Result).WallManager := WallManager;
+      Result.RedrawGlyph;
       // Other values should be set to defaults already
     end;
   end;
@@ -986,41 +1030,6 @@ procedure TRangeIndicator.SetAngle(val: Double);
 begin
   FAngle := val;
   RedrawGlyph;
-end;
-
-function TRangeIndicator.GetXPos: Integer;
-begin
-  Result := inherited;
-  if Assigned(FAttachedTo) then
-    Result := FAttachedTo.XPos;
-end;
-
-function TRangeIndicator.GetYPos: Integer;
-begin
-  Result := inherited;
-  if Assigned(FAttachedTo) then
-    Result := FAttachedTo.YPos;
-end;
-
-function TRangeIndicator.GetXEndPos: Integer;
-begin
-  Result := FXTargetPos;
-  if Assigned(FAttachedTo) then
-    Result := FAttachedTo.XEndPos;
-end;
-
-function TRangeIndicator.GetYEndPos: Integer;
-begin
-  Result := FYTargetPos;
-  if Assigned(FAttachedTo) then
-    Result := FAttachedTo.YEndPos;
-end;
-
-function TRangeIndicator.GetAngle: Double;
-begin
-  Result := FAngle;
-  if Assigned(FAttachedTo) then
-    Result := FAttachedTo.Angle;
 end;
 
 procedure TRangeIndicator.RedrawGlyph;
@@ -1250,12 +1259,30 @@ begin
 end;
 
 procedure TLightToken.RedrawGlyph;
+var
+  mask: TBGRABitmap;
+  MaskPoly: ArrayOfTPointF;
+  i: Integer;
 begin
   FGlyph.Free;
   FGlyph := TBGRABitmap.Create(Width, Height);
   FGlyph.FillRect(0, 0, FRange * 2, FRange * 2, clBlack);
   // Just draw an ellipse for now
   FGlyph.FillEllipseAntialias(FRange, FRange, FRange, FRange, MixPixel(clBlack, FColor, FMaxStrength));
+  if Assigned(FWallManager) then
+  begin
+    mask := TBGRABitmap.Create(FGlyph.Width, FGlyph.Height, BGRA(0, 0, 0));
+    MaskPoly := FWallManager.GetLoSPolygon(Point(XEndPos, YEndPos), FWallManager.GetMinBoundingBox);
+    for i := 0 to Length(MaskPoly) - 1 do
+    begin
+      MaskPoly[i].x := MaskPoly[i].X - XEndPos + Width div 2;
+      MaskPoly[i].y := MaskPoly[i].Y - YEndPos + Height div 2;
+    end;
+    mask.FillPolyAntialias(MaskPoly, BGRA(255, 255, 255));
+    //mask := FWallManager.GetLoSMap(Point(XEndPos, YEndPos), Bounds(XEndPos - Width div 2, YEndPos - Height div 2, Width, Height), 1);
+    FGlyph.BlendImage(0, 0, mask, boMultiply);
+    mask.Free;
+  end;
 end;
 
 procedure TLightToken.SetColor(val: TColor);
@@ -1284,6 +1311,18 @@ end;
 procedure TLightToken.SetHeight(Val: Integer);
 begin
   FRange := Val div 2;
+end;
+
+procedure TLightToken.SetXPos(val: Integer);
+begin
+  inherited;
+  RedrawGlyph;
+end;
+
+procedure TLightToken.SetYPos(val: integer);
+begin
+  inherited;
+  RedrawGlyph;
 end;
 
 function TLightToken.GetRange: Integer;

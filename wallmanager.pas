@@ -42,6 +42,7 @@ public
   function GetWallCount: Integer;
   function GetLoSPolygon(centerPnt: TPoint; BoundingBox: TRect): ArrayOfTPointF;
   function GetLoSMap(centerPnt: TPoint; BoundingBox: TRect; scale: Double): TBGRABitmap;
+  function GetMinBoundingBox: TRect;
 end;
 
 implementation
@@ -119,6 +120,22 @@ end;
 function TWallManager.GetWallCount: Integer;
 begin
   Result := FWalls.Count;
+end;
+
+function TWallManager.GetMinBoundingBox: TRect;
+var
+  i: Integer;
+  CurPnt: TPoint;
+begin
+  Result := Rect(0, 0, 0, 0);
+  for i := 0 to FPoints.Count - 1 do
+  begin
+    CurPnt := FPoints[i];
+    Result.Left := Min(Result.Left, CurPnt.X);
+    Result.Top := Min(Result.Top, CurPnt.Y);
+    Result.Right := Max(Result.Right, CurPnt.X);
+    Result.Bottom := Max(Result.Bottom, CurPnt.Y);
+  end;
 end;
 
 // Failed attempt to simplify. This is several orders of magnitude slower than the last version.

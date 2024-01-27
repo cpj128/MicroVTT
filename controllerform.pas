@@ -255,7 +255,7 @@ type
     function ViewPortToMapX(ViewPortX: Integer): Integer;
     function ViewPortToMapY(ViewPortY: Integer): Integer;
     function GetTokenAtPos(X, Y: Integer): TToken;
-    function GetTokenExRangeAtPos(X, Y: Integer): TToken;
+    function GetNonAttachableTokenAtPos(X, Y: Integer): TToken;
     procedure SetCurInitiativeIndex(val: Integer);
     procedure LoadMap(FileName: string);
     procedure SetCombatMode(val: Boolean);
@@ -512,6 +512,7 @@ begin
     TTokenFactory.GridData := FGridData;
     TTokenFactory.TokensSnapToGrid := FSnapTokensToGrid;
     TTokenFactory.TokensStartInvisible := FTokensStartInvisible;
+    TTokenFactory.WallManager := FWallManager;
     TTokenFactory.ShowDirectionArrow := FTokenRotationStyle = rsShowArrow;
     tmpToken := TTokenFactory.CreateTokenFromNode(TTokenNodeData(TTreeView(Source).Selected.Data), ViewPortToMapX(X), ViewPortToMapY(Y));
 
@@ -653,7 +654,7 @@ begin
       begin
         if (FCurDraggedToken is TAttachableToken) and (ssCtrl in Shift) then
         begin
-          AttachToken := GetTokenExRangeAtPos(X, Y);
+          AttachToken := GetNonAttachableTokenAtPos(X, Y);
           if Assigned(AttachToken) then
           begin
             TAttachableToken(FCurDraggedToken).AttachTo(AttachToken);
@@ -1198,7 +1199,7 @@ begin
   end;
 end;
 
-function TfmController.GetTokenExRangeAtPos(X, Y: Integer): TToken;
+function TfmController.GetNonAttachableTokenAtPos(X, Y: Integer): TToken;
 var
   i: Integer;
   SearchPnt: TPoint;
@@ -1212,7 +1213,7 @@ begin
   for i := FTokenList.Count - 1 downto 0 do
   begin
     CurToken := TToken(FTokenList.Items[i]);
-    if CurToken is TRangeIndicator then
+    if CurToken is TAttachableToken then
       Continue;
     TokenRect := Bounds(CurToken.XEndPos - CurToken.Width div 2,
                         CurToken.YEndPos - CurToken.Height div 2,
@@ -1482,6 +1483,7 @@ begin
       begin
         TTokenFactory.TokensStartInvisible := FTokensStartInvisible;
         TTokenFactory.ShowDirectionArrow := FTokenRotationStyle = rsShowArrow;
+        TTokenFactory.WallManager := FWallManager;
         CurToken := TTokenFactory.CreateTokenFromIni(SaveFile, i);
         if Assigned(CurToken) then
         begin

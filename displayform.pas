@@ -747,11 +747,6 @@ begin
     FMapFrame.Free;
   MapWidth := ClientWidth - VMARGIN - VMARGIN - PORTRAITHEIGHT - VMARGIN;
   MapHeight := ClientHeight - HMARGIN - HMARGIN;
-  if Assigned(FMapPic) then
-  begin
-    MapWidth := Round(Min(MapWidth, FMapPic.Width * FMapZoom));
-    MapHeight := Round(Min(MapHeight, FMapPic.Height * FMapZoom));
-  end;
 
   FMapFrame := TBGRABitmap.Create(FRAMESIZE + MapWidth + FRAMESIZE, FRAMESIZE + MapHeight + FRAMESIZE);
   DrawPhongFrame(FMapFrame);
