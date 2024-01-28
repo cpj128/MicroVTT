@@ -225,14 +225,14 @@ type
     procedure SetColor(val: TColor);
     procedure SetRange(val: Integer);
     procedure SetMaxStrength(val: Double);
+    function GetRange: Integer;
+  protected   
     procedure SetWidth(Val: Integer); override;
     procedure SetHeight(Val: Integer); override;
     procedure SetXPos(val: Integer); override;
-    procedure SetYPos(val: integer); override;
-    function GetRange: Integer;
+    procedure SetYPos(val: integer); override;  
     function GetWidth: Integer; override;
     function GetHeight: Integer; override;
-  protected
     function GetPlayerGlyph: TBGRABitmap; override;
   public
     constructor Create(X, Y, pRange: Integer);
@@ -404,38 +404,38 @@ var
 begin
   if GridData.GridType = gtRect then
   begin
-    XPos := Round(Round((FXTargetPos - GridData.GridOffsetX - FWidth / 2) / GridData.GridSizeX) * GridData.GridSizeX + GridData.GridOffsetX + (FGridSlotsX * GridData.GridSizeX / 2));
-    YPos := Round(Round((FYTargetPos - GridData.GridOffsetY - FHeight / 2) / GridData.GridSizeY) * GridData.GridSizeY + GridData.GridOffsetY +(FGridSlotsY * GridData.GridSizeY / 2));
+    XPos := Round(Round((FXTargetPos - GridData.GridOffsetX - GridData.GridSizeX / 2) / GridData.GridSizeX) * GridData.GridSizeX + GridData.GridOffsetX + (FGridSlotsX * GridData.GridSizeX / 2));
+    YPos := Round(Round((FYTargetPos - GridData.GridOffsetY - GridData.GridSizeY / 2) / GridData.GridSizeY) * GridData.GridSizeY + GridData.GridOffsetY +(FGridSlotsY * GridData.GridSizeY / 2));
   end
   else if GridData.GridType = gtHexH then
   begin
     tmpGridSize := GridData.GridSizeY * 3 / 4;
-    Count := Round((FYTargetPos - GridData.GridOffsetY - FHeight / 2) / tmpGridSize);
+    Count := Round((FYTargetPos - GridData.GridOffsetY - Height / 2) / tmpGridSize);
     YPos := Round(Count * tmpGridSize + GridData.GridOffsetY +(FGridSlotsY * GridData.GridSizeY / 2));
     tmpOffset := GridData.GridOffsetX;
     if Odd(Count) then
       tmpOffset := tmpOffset + GridData.GridSizeX / 2;
-    XPos := Round(Round((FXTargetPos - tmpOffset - FWidth / 2) / GridData.GridSizeX) * GridData.GridSizeX + tmpOffset + (FGridSlotsX * GridData.GridSizeX / 2));
+    XPos := Round(Round((FXTargetPos - tmpOffset - Width / 2) / GridData.GridSizeX) * GridData.GridSizeX + tmpOffset + (FGridSlotsX * GridData.GridSizeX / 2));
   end
   else if GridData.GridType = gtHexV then
   begin
     tmpGridSize := GridData.GridSizeX * 3 / 4;
-    Count := Round((FXTargetPos - GridData.GridOffsetX - FWidth / 2) / tmpGridSize);
+    Count := Round((FXTargetPos - GridData.GridOffsetX - Width / 2) / tmpGridSize);
     XPos := Round(Count * tmpGridSize + GridData.GridOffsetX + (FGridSlotsX * GridData.GridSizeX / 2));
     tmpOffset := GridData.GridOffsetY;
     if Odd(Count) then
       tmpOffset := tmpOffset + GridData.GridSizeY / 2;
-    YPos := Round(Round((FYTargetPos - tmpOffset - FHeight / 2) / GridData.GridSizeY) * GridData.GridSizeY + tmpOffset +(FGridSlotsY * GridData.GridSizeY / 2));
+    YPos := Round(Round((FYTargetPos - tmpOffset - Height / 2) / GridData.GridSizeY) * GridData.GridSizeY + tmpOffset +(FGridSlotsY * GridData.GridSizeY / 2));
   end
   else if GridData.GridType = gtIsometric then
   begin
     tmpGridSize := GridData.GridSizeY / 2;
-    Count := Round((FYTargetPos - GridData.GridOffsetY {- FHeight / 2}) / tmpGridSize) - 1;
+    Count := Round((FYTargetPos - GridData.GridOffsetY {- Height / 2}) / tmpGridSize) - 1;
     YPos := Round(Count * tmpGridSize + GridData.GridOffsetY +(FGridSlotsY * GridData.GridSizeY / 2));
     tmpOffset := GridData.GridOffsetX;
     if Odd(Count) then
       tmpOffset := tmpOffset + GridData.GridSizeX / 2;
-    XPos := Round(Round((FXTargetPos - tmpOffset - FWidth / 2) / GridData.GridSizeX) * GridData.GridSizeX + tmpOffset + (FGridSlotsX * GridData.GridSizeX / 2));
+    XPos := Round(Round((FXTargetPos - tmpOffset - Width / 2) / GridData.GridSizeX) * GridData.GridSizeX + tmpOffset + (FGridSlotsX * GridData.GridSizeX / 2));
   end;
   if FVisible then
     StartAnimation;
@@ -449,15 +449,15 @@ begin
   Result := Rect(-1, -1, -1, -1);
   if GridData.GridType = gtRect then
   begin
-    Result.Left := Round((PosX - GridData.GridOffsetX - FWidth / 2) / GridData.GridSizeX);
-    Result.Top := Round((PosY - GridData.GridOffsetY - FHeight / 2) / GridData.GridSizeY);
+    Result.Left := Round((PosX - GridData.GridOffsetX - GridData.GridSizeX / 2) / GridData.GridSizeX);
+    Result.Top := Round((PosY - GridData.GridOffsetY - GridData.GridSizeX / 2) / GridData.GridSizeY);
     Result.Width := GridSlotsX;
     Result.Height := GridSlotsY;
   end
   else if GridData.GridType = gtHexH then
   begin
     tmpGridSize := GridData.GridSizeY * 3 / 4;
-    Result.Top := Round((PosY - GridData.GridOffsetY - FHeight / 2) / tmpGridSize);
+    Result.Top := Round((PosY - GridData.GridOffsetY - Height / 2) / tmpGridSize);
     tmpOffset := GridData.GridOffsetX;
     if Odd(Result.Top) then
       tmpOffset := tmpOffset + GridData.GridSizeX / 2;
@@ -465,48 +465,48 @@ begin
     Result.Width := GridSlotsX;
     Result.Height := GridSlotsY;
     {tmpGridSize := GridData.GridSizeY * 3 / 4;
-    Count := Round((FYTargetPos - GridData.GridOffsetY - FHeight / 2) / tmpGridSize);
+    Count := Round((FYTargetPos - GridData.GridOffsetY - Height / 2) / tmpGridSize);
     YPos := Round(Count * tmpGridSize + GridData.GridOffsetY +(FGridSlotsY * GridData.GridSizeY / 2));
     tmpOffset := GridData.GridOffsetX;
     if Odd(Count) then
       tmpOffset := tmpOffset + GridData.GridSizeX / 2;
-    XPos := Round(Round((FXTargetPos - tmpOffset - FWidth / 2) / GridData.GridSizeX) * GridData.GridSizeX + tmpOffset + (FGridSlotsX * GridData.GridSizeX / 2));}
+    XPos := Round(Round((FXTargetPos - tmpOffset - Width / 2) / GridData.GridSizeX) * GridData.GridSizeX + tmpOffset + (FGridSlotsX * GridData.GridSizeX / 2));}
   end
   else if GridData.GridType = gtHexV then
   begin
     tmpGridSize := GridData.GridSizeX * 3 / 4;
-    Result.Left := Round((PosX - GridData.GridOffsetX - FWidth / 2) / tmpGridSize);
+    Result.Left := Round((PosX - GridData.GridOffsetX - Width / 2) / tmpGridSize);
     tmpOffset := GridData.GridOffsetY;
     if Odd(Result.Left) then
       tmpOffset := tmpOffset + GridData.GridSizeY / 2;
-    Result.Top := Round((PosY - tmpOffset - FHeight / 2) / GridData.GridSizeY);
+    Result.Top := Round((PosY - tmpOffset - Height / 2) / GridData.GridSizeY);
     Result.Width := GridSlotsX;
     Result.Height := GridSlotsY;
     {tmpGridSize := GridData.GridSizeX * 3 / 4;
-    Count := Round((FXTargetPos - GridData.GridOffsetX - FWidth / 2) / tmpGridSize);
+    Count := Round((FXTargetPos - GridData.GridOffsetX - Width / 2) / tmpGridSize);
     XPos := Round(Count * tmpGridSize + GridData.GridOffsetX + (FGridSlotsX * GridData.GridSizeX / 2));
     tmpOffset := GridData.GridOffsetY;
     if Odd(Count) then
       tmpOffset := tmpOffset + GridData.GridSizeY / 2;
-    YPos := Round(Round((FYTargetPos - tmpOffset - FHeight / 2) / GridData.GridSizeY) * GridData.GridSizeY + tmpOffset +(FGridSlotsY * GridData.GridSizeY / 2));}
+    YPos := Round(Round((FYTargetPos - tmpOffset - Height / 2) / GridData.GridSizeY) * GridData.GridSizeY + tmpOffset +(FGridSlotsY * GridData.GridSizeY / 2));}
   end
   else if GridData.GridType = gtIsometric then
   begin
     tmpGridSize := GridData.GridSizeY / 2;
-    Result.Top := Round((PosY - GridData.GridOffsetY {- FHeight / 2}) / tmpGridSize) - 1;
+    Result.Top := Round((PosY - GridData.GridOffsetY {- Height / 2}) / tmpGridSize) - 1;
     tmpOffset := GridData.GridOffsetX;
     if Odd(Result.Top) then
       tmpOffset := tmpOffset + GridData.GridSizeX / 2;
-    Result.Left := Round((PosX - tmpOffset - FWidth / 2) / GridData.GridSizeX);
+    Result.Left := Round((PosX - tmpOffset - Width / 2) / GridData.GridSizeX);
     Result.Width := GridSlotsX;
     Result.Height := GridSlotsY;
     {tmpGridSize := GridData.GridSizeY / 2;
-    Count := Round((FYTargetPos - GridData.GridOffsetY - FHeight / 2) / tmpGridSize);
+    Count := Round((FYTargetPos - GridData.GridOffsetY - Height / 2) / tmpGridSize);
     YPos := Round(Count * tmpGridSize + GridData.GridOffsetY +(FGridSlotsY * GridData.GridSizeY / 2));
     tmpOffset := GridData.GridOffsetX;
     if Odd(Count) then
       tmpOffset := tmpOffset + GridData.GridSizeX / 2;
-    XPos := Round(Round((FXTargetPos - tmpOffset - FWidth / 2) / GridData.GridSizeX) * GridData.GridSizeX + tmpOffset + (FGridSlotsX * GridData.GridSizeX / 2));}
+    XPos := Round(Round((FXTargetPos - tmpOffset - Width / 2) / GridData.GridSizeX) * GridData.GridSizeX + tmpOffset + (FGridSlotsX * GridData.GridSizeX / 2));}
   end;
 end;
 
