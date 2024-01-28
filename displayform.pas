@@ -593,10 +593,7 @@ begin
                                     Round(CurToken.Width * FMapZoom),
                                     Round(CurToken.Height * FMapZoom));
 
-                if CurToken is TLightToken then
-                  TokenBmp := TLightToken(CurToken).PlayerGlyph.Resample(Round(CurToken.Width), Round(CurToken.Height), rmSimpleStretch)
-                else
-                  TokenBmp := CurToken.Glyph.Resample(Round(CurToken.Width), Round(CurToken.Height), rmSimpleStretch);
+                TokenBmp := CurToken.PlayerGlyph.Resample(Round(CurToken.Width), Round(CurToken.Height), rmSimpleStretch);
                 try
                   // Rotation for range indicator: Redraw entirely
                   //if CurToken is TRangeIndicator then

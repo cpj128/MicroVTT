@@ -86,6 +86,7 @@ type
       FCurAnimationStep: Integer;
       FIsMoving: Boolean;
       FAttached: TList;
+    protected
       procedure SetXPos(val: Integer); virtual;
       procedure SetYPos(val: integer); virtual; 
       procedure SetWidth(Val: Integer); virtual;
@@ -98,6 +99,7 @@ type
       function GetWidth: Integer; virtual;
       function GetHeight: Integer; virtual;
       procedure SetAngle(val: Double); virtual;
+      function GetPlayerGlyph: TBGRABitmap; virtual;
     public
       constructor Create(Path: string; X, Y, pWidth, pHeight: Integer);
       destructor Destroy; override;
@@ -125,6 +127,7 @@ type
       property GridSlotsY: Integer read FGridSlotsY write FGridSlotsY;
       property Angle: Double read GetAngle write SetAngle;
       property Glyph: TBGRABitmap read FGlyph;
+      property PlayerGlyph: TBGRABitmap read GetPlayerGlyph; // Glyph for player's view. Same as Glyph, unless overridden.
       property IsMoving: Boolean read FIsMoving;
       property Path: string read FPath;
       property Name: string read FName write FName;
@@ -229,6 +232,8 @@ type
     function GetRange: Integer;
     function GetWidth: Integer; override;
     function GetHeight: Integer; override;
+  protected
+    function GetPlayerGlyph: TBGRABitmap; override;
   public
     constructor Create(X, Y, pRange: Integer);
     destructor Destroy; override;
@@ -701,6 +706,11 @@ begin
   end;
 
   Result := Rect(Floor(MinX), Floor(MinY), Ceil(MaxX), Ceil(MaxY));
+end;
+
+function TToken.GetPlayerGlyph: TBGRABitmap;
+begin
+  Result := FGlyph;
 end;
 
 { TAttachableToken }
@@ -1407,6 +1417,10 @@ begin
   Result := FRange * 2;
 end;
 
+function TLightToken.GetPlayerGlyph: TBGRABitmap;
+begin
+  Result := FPlayerGlyph;
+end;
 
 end.
 
