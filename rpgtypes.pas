@@ -106,7 +106,7 @@ type
       function GetCellsAtPosition(PosX, PosY: Integer; GridData: TGridData): TRect;
       procedure StartAnimation;
       procedure StopAnimation;
-      procedure DoAnimationStep;
+      procedure DoAnimationStep; virtual;
       function GetBoundingRect: TRect;
       procedure Attach(token: TToken);
       function GetAttached(idx: Integer): TToken;
@@ -218,6 +218,7 @@ type
     FRange: Integer;
     FMaxStrength: Double;
     FWallManager: TWallManager;
+    FLightPic, FPlayerGlyph: TBGRABitmap;
     procedure SetColor(val: TColor);
     procedure SetRange(val: Integer);
     procedure SetMaxStrength(val: Double);
@@ -231,8 +232,12 @@ type
   public
     constructor Create(X, Y, pRange: Integer);
     destructor Destroy; override;
+    procedure DoAnimationStep; override;
     procedure SaveToIni(SaveFile: TIniFile; idx: Integer); override;
     procedure RedrawGlyph; override;
+    procedure RedrawPlayerGlyph;
+    procedure RedrawLightMap;
+    property PlayerGlyph: TBGRABitmap read FPlayerGlyph;
     property Range: Integer read GetRange write SetRange;
     property Color: TColor read FColor write SetColor;
     property MaxStrength: Double read FMaxStrength write SetMaxStrength;
@@ -246,6 +251,7 @@ uses
   Math,
   BGRABitmapTypes,
   BGRATextFX,
+  BGRAGradientScanner,
   DisplayConst,
   RPGUtils;
 
@@ -1241,12 +1247,16 @@ begin
   FColor := BGRA(255, 245, 238);
   FMaxStrength := 0.5;
   FRange:= pRange;
+  RedrawLightMap;
+  RedrawPlayerGlyph;
   RedrawGlyph;
   FAttached := TList.Create;
 end;
 
 destructor TLightToken.Destroy;
 begin
+  FLightPic.Free;
+  FPlayerGlyph.Free;
   inherited;
 end;
 
@@ -1258,49 +1268,104 @@ begin
   SaveFile.WriteFloat(SAVESECTIONTOKENS, 'MaxStrength' + IntToStr(idx), FMaxStrength);
 end;
 
+procedure TLightToken.DoAnimationStep;
+begin
+  inherited;
+  RedrawPlayerGlyph;
+end;
+
 procedure TLightToken.RedrawGlyph;
 var
-  mask: TBGRABitmap;
   MaskPoly: ArrayOfTPointF;
   i: Integer;
 begin
   FGlyph.Free;
   FGlyph := TBGRABitmap.Create(Width, Height);
   FGlyph.FillRect(0, 0, FRange * 2, FRange * 2, clBlack);
-  // Just draw an ellipse for now
-  FGlyph.FillEllipseAntialias(FRange, FRange, FRange, FRange, MixPixel(clBlack, FColor, FMaxStrength));
   if Assigned(FWallManager) then
   begin
-    mask := TBGRABitmap.Create(FGlyph.Width, FGlyph.Height, BGRA(0, 0, 0));
     MaskPoly := FWallManager.GetLoSPolygon(Point(XEndPos, YEndPos), FWallManager.GetMinBoundingBox);
     for i := 0 to Length(MaskPoly) - 1 do
     begin
       MaskPoly[i].x := MaskPoly[i].X - XEndPos + Width div 2;
       MaskPoly[i].y := MaskPoly[i].Y - YEndPos + Height div 2;
     end;
-    mask.FillPolyAntialias(MaskPoly, BGRA(255, 255, 255));
-    //mask := FWallManager.GetLoSMap(Point(XEndPos, YEndPos), Bounds(XEndPos - Width div 2, YEndPos - Height div 2, Width, Height), 1);
-    FGlyph.BlendImage(0, 0, mask, boMultiply);
-    mask.Free;
+    FGlyph.FillPolyAntialias(MaskPoly, BGRA(255, 255, 255));
+
+  end
+  else
+  begin
+    FGlyph.FillRect(0, 0, FRange * 2, FRange * 2, clWhite);
   end;
+  FGlyph.BlendImage(0, 0, FLightPic, boMultiply);
+  // Mark center and circumference to make the token _slightly_ easier to see
+  FGlyph.DrawLineAntialias(FWidth / 2 - 5, FHeight / 2 - 5, FWidth / 2 + 5, FHeight / 2 + 5, clNavy, 2);
+  FGlyph.DrawLineAntialias(FWidth / 2 + 5, FHeight / 2 - 5, FWidth / 2 - 5, FHeight / 2 + 5, clNavy, 2);
+  FGlyph.EllipseAntialias(FWidth / 2, FHeight / 2, 5, 5, clNavy, 2);
+  FGlyph.EllipseAntialias(FWidth / 2, FHeight / 2, FRange, FRange, clNavy, 2);
+end;
+
+procedure TLightToken.RedrawPlayerGlyph;
+var
+  MaskPoly: ArrayOfTPointF;
+  i: Integer;
+begin
+  if Assigned(FPlayerGlyph) then
+    FreeAndNil(FPlayerGlyph);
+  FPlayerGlyph := TBGRABitmap.Create(FWidth, FHeight, clBlack);
+  FPlayerGlyph.FillRect(0, 0, FRange * 2, FRange * 2, clBlack);
+  if Assigned(FWallManager) then
+  begin
+    MaskPoly := FWallManager.GetLoSPolygon(Point(XPos, YPos), FWallManager.GetMinBoundingBox);
+    for i := 0 to Length(MaskPoly) - 1 do
+    begin
+      MaskPoly[i].x := MaskPoly[i].X - XPos + Width div 2;
+      MaskPoly[i].y := MaskPoly[i].Y - YPos + Height div 2;
+    end;
+    FPlayerGlyph.FillPolyAntialias(MaskPoly, BGRA(255, 255, 255));
+  end
+  else
+  begin
+    FPlayerGlyph.FillRect(0, 0, FRange * 2, FRange * 2, clWhite);
+  end;
+  FPlayerGlyph.BlendImage(0, 0, FLightPic, boMultiply);
+end;
+
+procedure TLightToken.RedrawLightMap;
+var
+  gradient: TBGRAGradientScanner;
+begin
+  if Assigned(FLightPic) then
+    FreeAndNil(FLightPic);
+  FLightPic := TBGRABitmap.Create(FWidth, FHeight, clBlack);
+  gradient := TBGRAGradientScanner.Create(MixPixel(clBlack, FColor, FMaxStrength),
+                                          clBlack, gtRadial,
+                                          TPointF.Create(Width / 2, Height / 2),
+                                          TPointF.Create(0, Height / 2));
+  FLightPic.FillEllipseAntialias(FRange, FRange, FRange, FRange, gradient);
+  gradient.Free;
+
 end;
 
 procedure TLightToken.SetColor(val: TColor);
 begin
   FColor := val;
-  RedrawGlyph;
+  //RedrawGlyph;
+  RedrawLightMap;
 end;
 
 procedure TLightToken.SetRange(val: Integer);
 begin
   FRange := val;
-  RedrawGlyph;
+  //RedrawGlyph;
+  RedrawLightMap;
 end;
 
 procedure TLightToken.SetMaxStrength(val: Double);
 begin
   FMaxStrength := EnsureRange(val, 0, 1);
-  RedrawGlyph;
+  //RedrawGlyph;
+  RedrawLightMap;
 end;
 
 procedure TLightToken.SetWidth(Val: Integer);
@@ -1317,12 +1382,14 @@ procedure TLightToken.SetXPos(val: Integer);
 begin
   inherited;
   RedrawGlyph;
+  RedrawPlayerGlyph;
 end;
 
 procedure TLightToken.SetYPos(val: integer);
 begin
   inherited;
-  RedrawGlyph;
+  RedrawGlyph;      
+  RedrawPlayerGlyph;
 end;
 
 function TLightToken.GetRange: Integer;
