@@ -25,18 +25,21 @@ type
   public
     function LoadFromFile(filename: string): TBGRABitmap; virtual; abstract;
     function LoadWalls(filename: string; WallMgr: TWallManager): Integer; virtual; abstract;
+    function LoadLights(filename: string; TokenList: TList): Integer; virtual; abstract;
   end;
 
   TMapLoaderImg = class(TMapLoader)
   public
     function LoadFromFile(filename: string): TBGRABitmap; override;
     function LoadWalls(filename: string; WallMgr: TWallManager): Integer; override;
+    function LoadLights(filename: string; TokenList: TList): Integer; override;
   end;
 
   TMapLoaderUniversalVTT = class(TMapLoader)
   public
     function LoadFromFile(filename: string): TBGRABitmap; override;
     function LoadWalls(filename: string; WallMgr: TWallManager): Integer; override;
+    function LoadLights(filename: string; TokenList: TList): Integer; override;
   end;
 
 function GetMapImage(filename: string): TBGRABitmap;
@@ -52,7 +55,9 @@ uses
   fpjson,
   jsonparser,
   StrUtils,
-  DisplayConst;
+  BGRABitmapTypes,
+  DisplayConst,
+  RPGTypes;
 
 function GetMapImage(filename: string): TBGRABitmap;
 var
@@ -92,6 +97,11 @@ end;
 function TMapLoaderImg.LoadWalls(filename: string; WallMgr: TWallManager): Integer;
 begin
   WallMgr.Clear;
+  Result := 0;
+end;
+
+function TMapLoaderImg.LoadLights(filename: string; TokenList: TList): Integer;
+begin
   Result := 0;
 end;
 
@@ -148,7 +158,6 @@ var
   lineEnum, pntEnum: TJSONEnum;
   jLine: TJSONArray;
   jPnt: TJSONObject;
-  //CoordOffsetX, CoordOffsetY, SquaresX, SquaresY, MapWidth, MapHeight: Double;
   GridSize: Integer;
   TmpPnt, FirstPnt, prevPnt: TPoint;
   IsFirst: Boolean;
@@ -164,31 +173,13 @@ begin
     uvttFile.Free;
   end;
   ResolutionData := FileData.FindPath('resolution');
-  {CoordOffsetX := 0;
-  CoordOffsetY := 0;
-  SquaresX := 0;
-  SquaresY := 0;}
   GridSize := 50;
   if Assigned(ResolutionData) then
   begin
-    {SubData := ResolutionData.FindPath('map_origin');
-    if Assigned(SubData) then
-    begin
-      CoordOffsetX := SubData.FindPath('x').AsFloat;
-      CoordOffsetY := SubData.FindPath('y').AsFloat;
-    end;
-    SubData := ResolutionData.FindPath('map_size');
-    if Assigned(SubData) then
-    begin
-      SquaresX := SubData.FindPath('x').AsFloat;
-      SquaresY := SubData.FindPath('y').AsFloat;
-    end;}
     SubData := ResolutionData.FindPath('pixels_per_grid');
     if Assigned(SubData) then
       GridSize := SubData.AsInteger;
   end;
-  //MapWidth := SquaresX * GridSize;
-  //MapHeight := SquaresY * GridSize;
 
   WallMgr.Clear;
 
@@ -254,6 +245,64 @@ begin
   FileData.Free;
 end;
 
+function TMapLoaderUniversalVTT.LoadLights(filename: string; TokenList: TList): Integer; 
+var
+  uvttFile: TFileStream;
+  FileData, ResolutionData, LightData, SubData: TJSONData;
+  lightEnum, pntEnum: TJSONEnum;
+  jLine: TJSONArray;
+  jPnt, jLight: TJSONObject;
+  GridSize: Integer;
+  pX, pY, pRange: Integer;
+  tmpToken: TLightToken;
+  ClrStr: string;
+  tmpStr: string;
+begin
+  if not Assigned(TokenList) then
+    Exit; 
+  uvttFile := TFileStream.Create(filename, fmOpenRead);
+  try
+    FileData := GetJSON(uvttFile);
+  finally
+    uvttFile.Free;
+  end;
+
+  ResolutionData := FileData.FindPath('resolution');
+  GridSize := 50;
+  if Assigned(ResolutionData) then
+  begin
+    SubData := ResolutionData.FindPath('pixels_per_grid');
+    if Assigned(SubData) then
+      GridSize := SubData.AsInteger;
+  end;
+           
+  LightData := FileData.FindPath('lights');
+  if Assigned(LightData) and (LightData is TJSONArray) then
+  begin
+    for lightEnum in TJSONArray(LightData) do
+    begin
+      jLight := TJSONObject(lightEnum.Value);
+      tmpStr := jLight.AsJSON;
+      pX := -1;
+      pY := -1;
+      if jLight.Find('position', jPnt) then
+      begin
+        pX := Round(jPnt.Floats['x'] * GridSize);
+        pY := Round(jPnt.Floats['y'] * GridSize);
+      end;
+      pRange := Round(jLight.Floats['range'] * GridSize);
+      if (pX >= 0) and (pY >= 0) then
+      begin
+        tmpToken := TLightToken.Create(pX, pY, pRange);
+        tmpToken.MaxStrength := jLight.Floats['intensity'];
+        clrStr := jLight.Strings['color'];
+        tmpToken.Color := BGRA(StrToInt('$' + Copy(clrStr, 3, 2)), StrToInt('$' + Copy(clrStr, 5, 2)), StrToInt('$' + Copy(clrStr, 7, 2)), StrToInt('$' + Copy(clrStr, 1, 2)));
+        TokenList.Add(tmpToken);
+      end;
+    end;
+  end;
+
+end;
 
 end.
 

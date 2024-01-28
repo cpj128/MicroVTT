@@ -178,7 +178,9 @@ begin
     Label4.Hide;
     eGridSlotsY.Hide;
     cbShowLoS.Hide;
-
+     
+    bDetach.Show;
+    bDetach.Enabled := TLightToken(token).IsAttached;
     udWidth.Position := TLightToken(token).Range;
     fseMaxStrength.Show;
     fseMaxStrength.Value := TLightToken(token).MaxStrength;

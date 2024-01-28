@@ -1290,15 +1290,15 @@ var
   i: Integer;
 begin
   FGlyph.Free;
-  FGlyph := TBGRABitmap.Create(Width, Height);
+  FGlyph := TBGRABitmap.Create(FRange * 2, FRange * 2);
   FGlyph.FillRect(0, 0, FRange * 2, FRange * 2, clBlack);
   if Assigned(FWallManager) then
   begin
     MaskPoly := FWallManager.GetLoSPolygon(Point(XEndPos, YEndPos), FWallManager.GetMinBoundingBox);
     for i := 0 to Length(MaskPoly) - 1 do
     begin
-      MaskPoly[i].x := MaskPoly[i].X - XEndPos + Width div 2;
-      MaskPoly[i].y := MaskPoly[i].Y - YEndPos + Height div 2;
+      MaskPoly[i].x := MaskPoly[i].X - XEndPos + FRange;
+      MaskPoly[i].y := MaskPoly[i].Y - YEndPos + FRange;
     end;
     FGlyph.FillPolyAntialias(MaskPoly, BGRA(255, 255, 255));
 
@@ -1309,10 +1309,10 @@ begin
   end;
   FGlyph.BlendImage(0, 0, FLightPic, boMultiply);
   // Mark center and circumference to make the token _slightly_ easier to see
-  FGlyph.DrawLineAntialias(FWidth / 2 - 5, FHeight / 2 - 5, FWidth / 2 + 5, FHeight / 2 + 5, clNavy, 2);
-  FGlyph.DrawLineAntialias(FWidth / 2 + 5, FHeight / 2 - 5, FWidth / 2 - 5, FHeight / 2 + 5, clNavy, 2);
-  FGlyph.EllipseAntialias(FWidth / 2, FHeight / 2, 5, 5, clNavy, 2);
-  FGlyph.EllipseAntialias(FWidth / 2, FHeight / 2, FRange, FRange, clNavy, 2);
+  FGlyph.DrawLineAntialias(FRange - 5, FRange - 5, FRange + 5, FRange + 5, clNavy, 2);
+  FGlyph.DrawLineAntialias(FRange + 5, FRange - 5, FRange - 5, FRange + 5, clNavy, 2);
+  FGlyph.EllipseAntialias(FRange, FRange, 5, 5, clNavy, 2);
+  FGlyph.EllipseAntialias(FRange, FRange, FRange, FRange, clNavy, 2);
 end;
 
 procedure TLightToken.RedrawPlayerGlyph;
@@ -1322,7 +1322,7 @@ var
 begin
   if Assigned(FPlayerGlyph) then
     FreeAndNil(FPlayerGlyph);
-  FPlayerGlyph := TBGRABitmap.Create(FWidth, FHeight, clBlack);
+  FPlayerGlyph := TBGRABitmap.Create(FRange * 2, FRange * 2, clBlack);
   FPlayerGlyph.FillRect(0, 0, FRange * 2, FRange * 2, clBlack);
   if Assigned(FWallManager) then
   begin
@@ -1347,11 +1347,11 @@ var
 begin
   if Assigned(FLightPic) then
     FreeAndNil(FLightPic);
-  FLightPic := TBGRABitmap.Create(FWidth, FHeight, clBlack);
+  FLightPic := TBGRABitmap.Create(FRange * 2, FRange * 2, clBlack);
   gradient := TBGRAGradientScanner.Create(MixPixel(clBlack, FColor, FMaxStrength),
                                           clBlack, gtRadial,
-                                          TPointF.Create(Width / 2, Height / 2),
-                                          TPointF.Create(0, Height / 2));
+                                          TPointF.Create(FRange, FRange),
+                                          TPointF.Create(0, FRange));
   FLightPic.FillEllipseAntialias(FRange, FRange, FRange, FRange, gradient);
   gradient.Free;
 
@@ -1360,22 +1360,25 @@ end;
 procedure TLightToken.SetColor(val: TColor);
 begin
   FColor := val;
-  //RedrawGlyph;
-  RedrawLightMap;
+  RedrawLightMap;  
+  RedrawGlyph;  
+  RedrawPlayerGlyph;
 end;
 
 procedure TLightToken.SetRange(val: Integer);
 begin
   FRange := val;
-  //RedrawGlyph;
   RedrawLightMap;
+  RedrawGlyph;
+  RedrawPlayerGlyph;
 end;
 
 procedure TLightToken.SetMaxStrength(val: Double);
 begin
   FMaxStrength := EnsureRange(val, 0, 1);
-  //RedrawGlyph;
   RedrawLightMap;
+  RedrawGlyph;
+  RedrawPlayerGlyph;
 end;
 
 procedure TLightToken.SetWidth(Val: Integer);

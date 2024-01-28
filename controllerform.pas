@@ -475,6 +475,7 @@ begin
   try
     FMapPic := loader.LoadFromFile(Filename);
     loader.LoadWalls(Filename, FWallManager);
+    loader.LoadLights(Filename, FTokenList);
   finally
     loader.Free;
   end;
