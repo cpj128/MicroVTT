@@ -213,6 +213,7 @@ type
     FIsDraggingToken: Boolean;
     FIsRotatingToken: Boolean;
     FCurDraggedToken: TToken;
+    FCurHoverPortal, FPrevHoverPortal: Integer;
     FSnapTokensToGrid: Boolean;
     FDragStartX, FDragStartY, // In pbViewPort-coordinates
     FLastMouseX, FLastMouseY, // In pbViewPort-coordinates
@@ -624,6 +625,13 @@ begin
       //fmDisplay.MapOffsetY := Round(FViewRectYOffset / FDisplayScale);
     end;
     pbViewPort.Invalidate;
+  end
+  else
+  begin
+    FPrevHoverPortal := FCurHoverPortal;
+    FCurHoverPortal := FWallManager.GetPortalAtPos(Point(ViewportToMapX(X), ViewportToMapY(Y)));
+    if FCurHoverPortal <> FPrevHoverPortal then
+      pbViewPort.Invalidate;
   end;
 end;
 
@@ -634,6 +642,7 @@ var
   AttachToken: TToken;
   AttachedIdx, CurIdx: Integer;
   diffGrid: TPointF;
+  ClickedPortal: TMapPortal;
   //Modal: TModalResult;
 begin
   if Button = mbLeft then
@@ -696,6 +705,16 @@ begin
     FIsRotatingToken := False;
     FCurDraggedToken := nil;
 
+    if FCurHoverPortal > 0 then
+    begin
+      ClickedPortal := FWallManager.GetPortal(FCurHoverPortal);
+      if Assigned(ClickedPortal) then
+      begin
+        ClickedPortal.IsOpen := not ClickedPortal.IsOpen;
+        pbViewport.Invalidate;
+        fmDisplay.Invalidate;
+      end;
+    end;
   end
   else if Button = mbRight then
   begin
@@ -726,6 +745,8 @@ var
   Hex: array[0..5] of TPoint;
   Iso: array[0..3] of TPoint;
   Wall, WallP1, WallP2: TPoint;
+  Portal: TMapPortal;
+  PortalClr: TBGRAPixel;
   tmpGridSize: Single;
   Rotation: TBGRAAffineBitmapTransform;
   RotatedBmp, OverlayBmp, OverlayScaled: TBGRABitmap;
@@ -881,6 +902,26 @@ begin
           WallP2 := FWallManager.GetPoint(Wall.Y);
           DrawnMapSegment.DrawLineAntialias(MapToViewPortX(WallP1.X), MapToViewPortY(WallP1.Y),
                                             MapToViewPortX(WallP2.X), MapToViewPortY(WallP2.Y), clGreen, 1);
+        end;
+
+        // Draw Portals
+        for i := 0 to FWallManager.GetPortalCount - 1 do
+        begin
+          Portal := FWallManager.GetPortal(i);
+          WallP1 := FWallManager.GetPoint(Portal.P1);
+          WallP2 := FWallManager.GetPoint(Portal.P2);
+          PortalClr := clYellow;
+          if Portal.IsOpen then
+            PortalClr.alpha  := 128;
+
+          if FCurHoverPortal = i then
+            DrawnMapSegment.DrawLineAntialias(MapToViewPortX(WallP1.X), MapToViewPortY(WallP1.Y),
+                                              MapToViewPortX(WallP2.X), MapToViewPortY(WallP2.Y),
+                                              BGRA(32, 32, 0, 255), 7, False);
+
+          DrawnMapSegment.DrawLineAntialias(MapToViewPortX(WallP1.X), MapToViewPortY(WallP1.Y),
+                                            MapToViewPortX(WallP2.X), MapToViewPortY(WallP2.Y),
+                                            PortalClr, 3, False);
         end;
         // Draw Tokens
         // TODO: Draw Tokens on the map before downsampling?
@@ -2101,6 +2142,8 @@ begin
   FIsDragging := False;
   FIsDraggingToken := False;
   FIsRotatingToken := False;
+  FCurHoverPortal := -1;
+  FPrevHoverPortal := -1;
   FZoomFactor := 1;
   FGridData.GridSizeX := 100;
   FGridData.GridSizeY := 100;

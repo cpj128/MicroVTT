@@ -157,10 +157,10 @@ var
   FileData, ResolutionData, LoSData, SubData: TJSONData;
   lineEnum, pntEnum: TJSONEnum;
   jLine: TJSONArray;
-  jPnt: TJSONObject;
+  jPnt, jPortal: TJSONObject;
   GridSize: Integer;
-  TmpPnt, FirstPnt, prevPnt: TPoint;
-  IsFirst: Boolean;
+  TmpPnt, TmpPnt2, FirstPnt, prevPnt: TPoint;
+  IsFirst, tmpOpen: Boolean;
   tmpStr: string;
 begin
   Result := 0;
@@ -241,6 +241,27 @@ begin
     end;
     // Close Loop
     //WallMgr.AddWall(tmpPnt, FirstPnt);
+  end;
+  LoSData := FileData.FindPath('portals');
+  if Assigned(LoSData) and (LoSData is TJSONArray) then
+  begin
+
+    for lineEnum in TJSONArray(LoSData) do
+    begin
+      tmpStr := lineEnum.Value.AsJSON;
+
+      jPortal := TJSONObject(lineEnum.Value);
+      //jLine := jPortal.FindPath('bounds');
+      jPnt := TJSONObject(jPortal.FindPath('bounds[0]'));
+      TmpPnt := Point(Round(jPnt.Floats['x'] * GridSize), Round(jPnt.Floats['y'] * GridSize));
+      
+      jPnt := TJSONObject(jPortal.FindPath('bounds[1]'));
+      TmpPnt2 := Point(Round(jPnt.Floats['x'] * GridSize), Round(jPnt.Floats['y'] * GridSize));
+
+      tmpOpen := not jPortal.Booleans['closed'];
+
+      WallMgr.AddPortal(TmpPnt, TmpPnt2, TmpOpen);
+    end;
   end;
   FileData.Free;
 end;

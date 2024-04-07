@@ -22,27 +22,41 @@ uses
 
 type
 
+TMapPortal = class
+public
+  P1, P2: Integer;
+  IsOpen: Boolean;
+  //function DistFromPnt(pnt: TPoint): Double;
+end;
+
 TPointList = specialize TFPGList<TPoint>;
+TPortalList = specialize TFPGList<TMapPortal>;
 TIdxList = specialize TFPGList<Integer>;
 
 TWallManager = class
 private
   FPoints: TPointList;
   FWalls: TPointList; // Contains indices for the point list
+  FPortals: TPortalList;
   //FIdcs: TIdxList;                                                   
   //function IsNonBlockingCorner(PIdx: Integer; dx, dy: Double; var dir: Integer): Boolean;
+  function GetDoorDistFromPnt(pnt: TPoint; DoorIdx: Integer): Double;
 public  
   constructor Create;
   destructor Destroy; override;
   procedure Clear;
   procedure AddWall(P1, P2: TPoint);
+  procedure AddPortal(P1, P2: TPoint; Open: Boolean);
   function GetPoint(idx: Integer): TPoint;
   function GetPointCount: Integer;
   function GetWall(idx: Integer): TPoint;
   function GetWallCount: Integer;
+  function GetPortal(idx: Integer): TMapPortal;
+  function GetPortalCount: Integer;
   function GetLoSPolygon(centerPnt: TPoint; BoundingBox: TRect): ArrayOfTPointF;
   function GetLoSMap(centerPnt: TPoint; BoundingBox: TRect; scale: Double): TBGRABitmap;
   function GetMinBoundingBox: TRect;
+  function GetPortalAtPos(pnt: TPoint): Integer;
 end;
 
 implementation
@@ -51,6 +65,13 @@ uses
   Math,
   RPGUtils, RPGTypes;
 
+{ TMapPortal }
+
+{function TMapPortal.DistFromPnt: Double;
+begin
+  Result := Abs((Pnt.Y - P1.Y) * (P2.X - P1.X) - (P2.Y - P1.Y) * (Pnt.X - P1.X)) / Hypot(P2.X - P1.X, P2.Y - P1.Y);
+end;}
+
 { TWallManager }
 
 constructor TWallManager.Create;
@@ -58,6 +79,7 @@ begin
   inherited Create;
   FPoints := TPointList.Create;
   FWalls := TPointList.Create;
+  FPortals := TPortalList.Create;
   //FIdcs := TIdxList.Create;
 end;
 
@@ -65,6 +87,7 @@ destructor TWallManager.Destroy;
 begin
   FPoints.Free;
   FWalls.Free;
+  FPortals.Free;
   //FIdcs.Free;
   inherited;
 end;
@@ -73,6 +96,7 @@ procedure TWallManager.Clear;
 begin
   FPoints.Clear;
   FWalls.Clear;
+  FPortals.Clear;
   //FIdcs.Clear;
 end;
 
@@ -98,6 +122,34 @@ begin
   FWalls.Add(Point(p1Idx, P2Idx));
 end;
 
+procedure TWallManager.AddPortal(P1, P2: TPoint; Open: Boolean);
+var
+  i, p1Idx, p2Idx: Integer;
+  tmpPortal: TMapPortal;
+begin
+  // Check if points exists in list
+  p1Idx := -1;
+  p2Idx := -1;
+  for i := 0 to FPoints.Count - 1 do
+  begin
+    if FPoints[i] = P1 then
+      p1Idx := i;
+    if FPoints[i] = P2 then
+      p2Idx := i;
+  end;
+  if p1Idx < 0 then
+    p1Idx := FPoints.Add(P1);
+  if p2Idx < 0 then
+    p2Idx := FPoints.Add(P2);
+
+  //FWalls.Add(Point(p1Idx, P2Idx));
+  tmpPortal := TMapPortal.Create;
+  tmpPortal.p1 := p1Idx;
+  tmpPortal.p2 := p2Idx;
+  tmpPortal.IsOpen := Open;
+  FPortals.add(tmpPortal);
+end;
+
 function TWallManager.GetPoint(idx: Integer): TPoint;
 begin
   Result := Point(0, 0);
@@ -120,6 +172,51 @@ end;
 function TWallManager.GetWallCount: Integer;
 begin
   Result := FWalls.Count;
+end;
+
+function TWallManager.GetPortal(idx: Integer): TMapPortal;
+begin
+  Result := nil;
+  if (idx >= 0) and (idx < FPortals.Count) then
+    Result := FPortals[idx];
+end;
+
+function TWallManager.GetPortalCount: Integer;
+begin
+  Result := FPortals.Count;
+end;
+
+function TWallManager.GetDoorDistFromPnt(pnt: TPoint; DoorIdx: Integer): Double;
+var DoorP1, DoorP2: TPoint;
+begin
+  Result := MAXDOUBLE;
+  DoorP1 := GetPoint(FPortals[DoorIdx].P1);
+  DoorP2 := GetPoint(FPortals[DoorIdx].P2);
+  if (DoorIdx >= 0) and (DoorIdx < FPortals.Count) then
+    Result := Abs((Pnt.Y - DoorP1.Y) * (DoorP2.X - DoorP1.X)
+                  - (DoorP2.Y - DoorP1.Y) * (Pnt.X - DoorP1.X))
+                  / Hypot(DoorP2.X - DoorP1.X, DoorP2.Y - DoorP1.Y);
+end;
+
+function TWallManager.GetPortalAtPos(pnt: TPoint): Integer;
+var
+  i: Integer;
+  CurDist, MinDist: Double;
+const
+  MAXDIST = 5;
+begin
+  Result := -1;
+  MinDist := MAXDOUBLE;
+
+  for i := 0 to FPortals.Count - 1 do
+  begin
+    CurDist := GetDoorDistFromPnt(pnt, i);
+    if (CurDist <= MAXDIST) and (CurDist < MinDist) then
+    begin
+      MinDist := CurDist;
+      Result := i;
+    end;
+  end;
 end;
 
 function TWallManager.GetMinBoundingBox: TRect;
@@ -288,6 +385,7 @@ var
   InPnt, OutPnt: TPoint;
   OutIdx: Integer;
   Liststr: string;
+  tmpPortal: TMapPortal;
 
   function AddTmpPnt(pnt: TPoint): Integer;
   var idx, pntNo: Integer;
@@ -400,6 +498,14 @@ begin
     // keep points that belong to walls partially inside the rect
     tmpPnts.AddList(FPoints);
     tmpWalls.AddList(FWalls);
+
+    // Add Portals only if closed
+    for i := 0 to GetPortalCount - 1 do
+    begin
+      tmpPortal := GetPortal(i);
+      if not tmpPortal.IsOpen then
+        tmpWalls.Add(Point(tmpPortal.P1, tmpPortal.P2));
+    end;
 
     // Add walls for bounding box
     boundingPnts[0] := AddTmpPnt(BoundingBox.TopLeft);

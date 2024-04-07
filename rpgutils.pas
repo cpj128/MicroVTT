@@ -79,6 +79,8 @@ function MixPixel(p1, p2: TBGRAPixel; s: Single): TBGRAPixel;
 
 function GetIntersection_RaySegment(rO, rD, s1, s2: TPointF; var int: TPointF): Boolean;
 
+function GetIntersection_RayRay(r1O, r1D, r2O, r2D: TPointF; var int: TPointF): Boolean;
+
 function GetPointSideOfLine(L1, L2, pnt: TPoint): Integer;
 
 implementation
@@ -160,6 +162,25 @@ begin
   begin
     // d = 0 => Ray and Segment are parallel
     int := rO;
+    Result := False;
+  end;
+end;
+
+function GetIntersection_RayRay(r1O, r1D, r2O, r2D: TPointF; var int: TPointF): Boolean;
+var d, s, t: Double;
+begin
+  d := Cross2(r2D, r1D);
+  if not SameValue(d, 0) then
+  begin
+    s := Cross2(r1O - r2O, r1D) / d;
+    t := Cross2(r1O - r2O, r2D) / d;
+    int := r1O + r1D * t;
+    Result := (CompareValue(t, 0) >= 0) and (CompareValue(s, 0, 1E-5) >= 0);
+  end
+  else
+  begin
+    // d = 0 => Ray and Segment are parallel
+    int := r1O;
     Result := False;
   end;
 end;
