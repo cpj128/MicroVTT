@@ -19,7 +19,8 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ComCtrls,
-  ExtCtrls, Menus, DateTimePicker, IniFiles, BGRABitmap, RPGTypes, HtmlView,
+  ExtCtrls, Menus, DateTimePicker, IniFiles, BGRABitmap,
+  BGRABitmapTypes, RPGTypes, HtmlView,
   Notes, HtmlGlobals, HTMLUn2, LCLType, WallManager;
 
 const
@@ -238,6 +239,12 @@ type
     FTokenRotationStyle: TTokenRotationStyle;
     FAppSettings: TIniFile;
     FMapLib, FTokenLib, FOverlayLib: TStringList;
+    FTokenShadowClr,
+    FWallClr,
+    FPortalClr,
+    FHiddenMarkerClr,
+    FMarkerClr,
+    FMeasureClr: TBGRAPixel;
     // Notes module
     FNotesList: TEntryList; 
     FEditedEntry: TNoteEntry;
@@ -304,6 +311,8 @@ type
     property TokenSlotRect: TRect read FCurTokenRect write SetCurTokenRect;
     property WallManager: TWallManager read FWallManager;
     property ShowLoSPlayer: Boolean read FShowLoSPlayer write FShowLoSPlayer;
+    property TokenShadowColor: TBGRAPixel read FTokenShadowClr;
+    property MarkerColor: TBGRAPixel read FMarkerClr;
   end;
 
 
@@ -333,7 +342,6 @@ uses
   GetText,
   LCLIntf,
   RegExpr,
-  BGRABitmapTypes, 
   BGRATextFX,
   BGRATransform,
   DisplayConst,
@@ -813,7 +821,7 @@ begin
                     DrawnMapSegment.EllipseAntialias(MapToViewPortX((i + 0.5) * FGridData.GridSizeX + FGridData.GridOffsetX),
                                                      MapToViewPortY((j + 0.5) * FGridData.GridSizeY + FGridData.GridOffsetY),
                                                      0.4 * FGridData.GridSizeX * FDisplayScale * FZoomFactor,
-                                                     0.4 * FGridData.GridSizeY * FDisplayScale * FZoomFactor, clGray, 2);
+                                                     0.4 * FGridData.GridSizeY * FDisplayScale * FZoomFactor, FTokenShadowClr, 2);
                   end;
               end;
             end;
@@ -839,7 +847,7 @@ begin
                   if FSnapTokensToGrid and TokenSlotRect.Contains(Point(j, i)) then
                     DrawnMapSegment.EllipseAntialias(CellRect.CenterPoint.X, CellRect.CenterPoint.Y,
                                                      0.4 * FGridData.GridSizeX * FDisplayScale * FZoomFactor,
-                                                     0.4 * FGridData.GridSizeY * FDisplayScale * FZoomFactor, clGray, 2);
+                                                     0.4 * FGridData.GridSizeY * FDisplayScale * FZoomFactor, FTokenShadowClr, 2);
                 end;
             end;
             gtHexV:
@@ -864,7 +872,7 @@ begin
                   if FSnapTokensToGrid and TokenSlotRect.Contains(Point(j, i)) then
                     DrawnMapSegment.EllipseAntialias(CellRect.CenterPoint.X, CellRect.CenterPoint.Y,
                                                      0.4 * FGridData.GridSizeX * FDisplayScale * FZoomFactor,
-                                                     0.4 * FGridData.GridSizeY * FDisplayScale * FZoomFactor, clGray, 2);
+                                                     0.4 * FGridData.GridSizeY * FDisplayScale * FZoomFactor, FTokenShadowClr, 2);
                 end;
             end;
             gtIsometric:
@@ -889,7 +897,7 @@ begin
                   if FSnapTokensToGrid and TokenSlotRect.Contains(Point(j, i)) then
                     DrawnMapSegment.EllipseAntialias(CellRect.CenterPoint.X, CellRect.CenterPoint.Y,
                                                      0.4 * FGridData.GridSizeX * FDisplayScale * FZoomFactor,
-                                                     0.4 * FGridData.GridSizeY * FDisplayScale * FZoomFactor, clGray, 2);
+                                                     0.4 * FGridData.GridSizeY * FDisplayScale * FZoomFactor, FTokenShadowClr, 2);
                 end;
             end;
           end;
@@ -901,7 +909,7 @@ begin
           WallP1 := FWallManager.GetPoint(Wall.X);
           WallP2 := FWallManager.GetPoint(Wall.Y);
           DrawnMapSegment.DrawLineAntialias(MapToViewPortX(WallP1.X), MapToViewPortY(WallP1.Y),
-                                            MapToViewPortX(WallP2.X), MapToViewPortY(WallP2.Y), clGreen, 1);
+                                            MapToViewPortX(WallP2.X), MapToViewPortY(WallP2.Y), FWallClr, 1);
         end;
 
         // Draw Portals
@@ -910,7 +918,7 @@ begin
           Portal := FWallManager.GetPortal(i);
           WallP1 := FWallManager.GetPoint(Portal.P1);
           WallP2 := FWallManager.GetPoint(Portal.P2);
-          PortalClr := clYellow;
+          PortalClr := FPortalClr;
           if Portal.IsOpen then
             PortalClr.alpha  := 128;
 
@@ -933,11 +941,11 @@ begin
           try
             if not CurToken.Visible then
             begin
-              TokenBmp.DrawLineAntialias(0, 0, TokenBmp.Width, TokenBmp.Height, clRed, 2);
+              TokenBmp.DrawLineAntialias(0, 0, TokenBmp.Width, TokenBmp.Height, FHiddenMarkerClr, 2);
             end;
             if not FShowTokens then
             begin
-              TokenBmp.DrawLineAntialias(TokenBmp.Width, 0, 0, TokenBmp.Height, clRed, 2);
+              TokenBmp.DrawLineAntialias(TokenBmp.Width, 0, 0, TokenBmp.Height, FHiddenMarkerClr, 2);
             end;
 
             // Rotation for range indicator: Redraw entirely
@@ -1017,7 +1025,7 @@ begin
         begin
           CurMarkerX := MapToViewPortX(FMarkerPosX);
           CurMarkerY := MapToViewPortY(FMarkerPosY);
-          DrawnMapSegment.EllipseAntialias(CurMarkerX, CurMarkerY, 3, 3, clRed, 2);
+          DrawnMapSegment.EllipseAntialias(CurMarkerX, CurMarkerY, 3, 3, FMarkerClr, 2);
         end;
 
         // Draw Measurement
@@ -1029,27 +1037,27 @@ begin
                                             MapToViewPortY(FLastClicked.Y),
                                             MapToViewPortX(FLastClicked.X) + 5,
                                             MapToViewPortY(FLastClicked.Y),
-                                            clYellow, 1);
+                                            FMeasureClr, 1);
           DrawnMapSegment.DrawLineAntialias(MapToViewPortX(FLastClicked.X),
                                             MapToViewPortY(FLastClicked.Y) - 5,
                                             MapToViewPortX(FLastClicked.X),
                                             MapToViewPortY(FLastClicked.Y) + 5,
-                                            clYellow, 1);
+                                            FMeasureClr, 1);
           DrawnMapSegment.DrawLineAntialias(MapToViewPortX(FLastLastClicked.X) - 5,
                                             MapToViewPortY(FLastLastClicked.Y),
                                             MapToViewPortX(FLastLastClicked.X) + 5,
                                             MapToViewPortY(FLastLastClicked.Y),
-                                            clYellow, 1);
+                                            FMeasureClr, 1);
           DrawnMapSegment.DrawLineAntialias(MapToViewPortX(FLastLastClicked.X),
                                             MapToViewPortY(FLastLastClicked.Y) - 5,
                                             MapToViewPortX(FLastLastClicked.X),
                                             MapToViewPortY(FLastLastClicked.Y) + 5,
-                                            clYellow, 1);
+                                            FMeasureClr, 1);
           DrawnMapSegment.DrawLineAntialias(MapToViewPortX(FLastClicked.X),
                                             MapToViewPortY(FLastClicked.Y),
                                             MapToViewPortX(FLastLastClicked.X),
                                             MapToViewPortY(FLastLastClicked.Y),
-                                            clYellow, 1);
+                                            FMeasureClr, 1);
           TextAngle := Round(RadToDeg(-ArcTan2(FLastClicked.Y - FLastLastClicked.Y, FLastClicked.X - FLastLastClicked.X))) * 10;
           if TextAngle > 900 then
             TextAngle := TextAngle - 1800
@@ -1060,12 +1068,12 @@ begin
           DrawnMapSegment.TextOutAngle(MapToViewPortX((FLastClicked.X + FLastLastClicked.X - (Cos(DegToRad(TextAngle / 10)) * TextSize.cX)) / 2),
                                        MapToViewPortY((FLastClicked.Y + FLastLastClicked.Y + (Sin(DegToRad(TextAngle / 10)) * TextSize.cX)) / 2),
                                        TextAngle,
-                                       AngleText, clYellow);
+                                       AngleText, FMeasureClr);
         end;
 
         // Draw marker if player's view is disabled
         if not FShowMap then
-          DrawnMapSegment.DrawLineAntialias(0, 0, FViewRectWidth, FViewRectHeight, clRed, 3);
+          DrawnMapSegment.DrawLineAntialias(0, 0, FViewRectWidth, FViewRectHeight, FHiddenMarkerClr, 3);
 
         DrawnMapSegment.Draw(pbViewPort.Canvas, 0, 0, False);
       finally
@@ -1085,7 +1093,7 @@ begin
   if not (FShowMap and Assigned(FMapPic)) then
   begin
     // Draw marker here, if player's view is disabled and no map is loaded
-    pbViewPort.Canvas.Pen.Color := clRed;
+    pbViewPort.Canvas.Pen.Color := FHiddenMarkerClr.ToColor;
     pbViewPort.Canvas.MoveTo(0, 0);
     pbViewPort.Canvas.LineTo(FViewRectWidth, FViewRectHeight);
   end;
@@ -1574,6 +1582,14 @@ begin
   fmSettings.cbTokenRotation.ItemIndex := Ord(FTokenRotationStyle);
   fmSettings.cbLanguage.Items := GetLanguages;
   fmSettings.cbLanguage.ItemIndex := fmSettings.cbLanguage.Items.IndexOf(LanguageID);
+
+  fmSettings.pnTokenShadow.Color := FTokenShadowClr;
+  fmSettings.pnWalls.Color := FWallClr;
+  fmSettings.pnPortals.Color := FPortalClr;
+  fmSettings.pnHiddenMark.Color := FHiddenMarkerClr;
+  fmSettings.pnMarker.Color := FMarkerClr;
+  fmSettings.pnMeasure.Color := FMeasureClr;
+
   if fmSettings.ShowModal = mrOK then
   begin
     if not SameText(FMapDir, fmSettings.eMapDirectory.Text) then
@@ -1604,6 +1620,13 @@ begin
         CurToken.RedrawGlyph;
       end;
     end;
+    FTokenShadowClr := fmSettings.pnTokenShadow.Color;
+    FWallClr := fmSettings.pnWalls.Color;
+    FPortalClr := fmSettings.pnPortals.Color;
+    FHiddenMarkerClr := fmSettings.pnHiddenMark.Color;
+    FMarkerClr := fmSettings.pnMarker.Color;
+    FMeasureClr := fmSettings.pnMeasure.Color;
+
     // Save changes to ini
     FAppSettings.WriteString('Settings', 'MapDir', FMapDir);
     FAppSettings.WriteString('Settings', 'TokenDir', FTokenDir);
@@ -1612,6 +1635,14 @@ begin
     FAppSettings.WriteString('Settings', 'TokensStartInvisible', BoolToStr(FTokensStartInvisible));
     FAppSettings.WriteInteger('Settings', 'TokenRotationStyle', Ord(FTokenRotatioNStyle));
     FAppSettings.WriteString('Settings', 'Language', LanguageID);
+
+    FAppSettings.WriteInteger('Settings', 'TokenShadowClr', FTokenShadowClr.ToColor);
+    FAppSettings.WriteInteger('Settings', 'WallClr', FWallClr.ToColor);                         
+    FAppSettings.WriteInteger('Settings', 'PortalClr', FPortalClr.ToColor);
+    FAppSettings.WriteInteger('Settings', 'HiddenMarkerClr', FHiddenMarkerClr.ToColor);
+    FAppSettings.WriteInteger('Settings', 'MarkerClr', FMarkerClr.ToColor);
+    FAppSettings.WriteInteger('Settings', 'MeasureClr', FMeasureClr.ToColor);
+
     FAppSettings.UpdateFile;
 
     pbViewPort.Invalidate;
@@ -2114,6 +2145,13 @@ begin
   FTokensStartInvisible := StrToBoolDef(FAppSettings.ReadString('Settings', 'TokensStartInvisible', 'true'), True);
   FTokenRotationStyle := TTokenRotationStyle(FAppSettings.ReadInteger('Settings', 'TokenRotationStyle', 0));
 
+  FTokenShadowClr := FAppSettings.ReadInteger('Settings', 'TokenShadowClr', clGray);
+  FWallClr := FAppSettings.ReadInteger('Settings', 'WallClr', clGreen);
+  FPortalClr := FAppSettings.ReadInteger('Settings', 'PortalClr', clBlue);
+  FHiddenMarkerClr := FAppSettings.ReadInteger('Settings', 'HiddenMarkerClr', clRed);
+  FMarkerClr := FAppSettings.ReadInteger('Settings', 'MarkerClr', clRed);
+  FMeasureClr := FAppSettings.ReadInteger('Settings', 'MeasureClr', clYellow);
+
   FThumbnailDir := IncludeTrailingPathDelimiter(ExtractFilePath(Application.ExeName)) + 'Thumbnails\';
   // Maybe use Appdata instead?
   if not DirectoryExists(FThumbnailDir) then
@@ -2211,13 +2249,13 @@ begin
     if FileExists(CurFile) then
     begin
       if AnsiContainsText(PicFilterStr, ExtractFileExt(CurFile)) and
-         PtInRect(ScreenToClient(Mouse.CursorPos), pPortrait.BoundsRect) then
+         pPortrait.BoundsRect.Contains(ScreenToClient(Mouse.CursorPos)) then
       begin
         fmDisplay.PortraitFileName := CurFile;
         Break;
       end
       else if AnsiContainsText(PicFilterStrAll, ExtractFileExt(CurFile)) and
-              PtInRect(ScreenToClient(Mouse.CursorPos), pbViewport.BoundsRect) then
+              pbViewport.BoundsRect.Contains(ScreenToClient(Mouse.CursorPos)) then
       begin
         LoadMap(CurFile);
         Break;

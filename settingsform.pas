@@ -18,7 +18,8 @@ unit SettingsForm;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, Buttons;
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, Buttons,
+  ComCtrls, ExtCtrls;
 
 type
 
@@ -28,23 +29,41 @@ type
     bOk: TButton;
     bCancel: TButton;
     cbInitiativeOrder: TComboBox;
-    cbTokenRotation: TComboBox;
     cbLanguage: TComboBox;
+    cbTokenRotation: TComboBox;
     cbTokensStartInvisible: TCheckBox;
+    cdClrSelect: TColorDialog;
     eMapDirectory: TEdit;
-    eTokenDirectory: TEdit;
     eOverlayDirectory: TEdit;
+    eTokenDirectory: TEdit;
     Label1: TLabel;
+    Label10: TLabel;
+    Label11: TLabel;
+    Label12: TLabel;
+    Label13: TLabel;
     Label2: TLabel;
     Label3: TLabel;
     Label4: TLabel;
     Label5: TLabel;
     Label6: TLabel;
     Label7: TLabel;
+    Label8: TLabel;
+    Label9: TLabel;
+    pnHiddenMark: TPanel;
+    pnMarker: TPanel;
+    pnMeasure: TPanel;
+    pnTokenShadow: TPanel;
+    pcSettings: TPageControl;
+    pnWalls: TPanel;
+    pnPortals: TPanel;
     sbSelectMapDirectory: TSpeedButton;
-    sbSelectTokenDirectory: TSpeedButton;
     sbSelectOverlayDirectory: TSpeedButton;
+    sbSelectTokenDirectory: TSpeedButton;
+    tsInterface: TTabSheet;
+    tsRules: TTabSheet;
+    tsAssets: TTabSheet;
     procedure FormShow(Sender: TObject);
+    procedure pnTokenShadowClick(Sender: TObject);
     procedure sbSelectMapDirectoryClick(Sender: TObject);
     procedure sbSelectOverlayDirectoryClick(Sender: TObject);
     procedure sbSelectTokenDirectoryClick(Sender: TObject);
@@ -91,6 +110,10 @@ end;
 procedure TfmSettings.FormShow(Sender: TObject);
 begin
   Caption := GetString(LangStrings.LanguageID, 'SettingsCaption');
+  tsAssets.Caption := GetString(LangStrings.LanguageID, 'SettingsHeaderDirectories');
+  tsRules.Caption := GetString(LangStrings.LanguageID, 'SettingsHeaderRules');
+  tsInterface.Caption := GetString(LangStrings.LanguageID, 'SettingsHeaderInterface');
+
   Label1.Caption := GetString(LangStrings.LanguageID, 'SettingsMapDir');
   Label2.Caption := GetString(LangStrings.LanguageID, 'SettingsTokenDir');  
   Label6.Caption := GetString(LangStrings.LanguageID, 'SettingsOverlayDir');
@@ -105,8 +128,23 @@ begin
   cbTokenRotation.Items[1] := GetString(LangStrings.LanguageID, 'SettingsTokenRotationStyle2');
   Label4.Caption := GetString(LangStrings.LanguageID, 'SettingsLanguage');
   Label5.Caption := GetString(LangStrings.LanguageID, 'SettingsLanguageHint');
+
+  Label8.Caption := GetString(LangStrings.LanguageID, 'SettingsInterfaceTokenShadow');
+  Label9.Caption := GetString(LangStrings.LanguageID, 'SettingsInterfaceWall');
+  Label10.Caption := GetString(LangStrings.LanguageID, 'SettingsInterfacePortal');
+  Label11.Caption := GetString(LangStrings.LanguageID, 'SettingsInterfaceHiddenToken');
+  Label12.Caption := GetString(LangStrings.LanguageID, 'SettingsInterfaceMarker');
+  Label13.Caption := GetString(LangStrings.LanguageID, 'SettingsInterfaceMeasure');
+
   bCancel.Caption := GetString(LangStrings.LanguageID, 'ButtonCancel');
   bOk.Caption := GetString(LangStrings.LanguageID, 'ButtonOk');
+end;
+
+procedure TfmSettings.pnTokenShadowClick(Sender: TObject);
+begin
+  cdClrSelect.Color := TPanel(Sender).Color;
+  if cdClrSelect.Execute then
+    TPanel(Sender).Color := cdClrSelect.Color;
 end;
 
 end.

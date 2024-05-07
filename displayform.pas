@@ -470,7 +470,7 @@ begin
                       MapSegmentStretched.EllipseAntialias(Round(((i + 0.5) * FGridData.GridSizeX + FGridData.GridOffsetX) * FMapZoom - FMapOffsetX),
                                                            Round(((j + 0.5) * FGridData.GridSizeY + FGridData.GridOffsetY) * FMapZoom - FMapOffsetY),
                                                            0.4 * FGridData.GridSizeX * FMapZoom,
-                                                           0.4 * FGridData.GridSizeY * FMapZoom, clGray, 2);
+                                                           0.4 * FGridData.GridSizeY * FMapZoom, fmController.TokenShadowColor, 2);
                     end;
                 end;
               end;
@@ -496,7 +496,7 @@ begin
                     if FSnapTokensToGrid and TokenSlotRect.Contains(Point(j, i)) then
                       MapSegmentStretched.EllipseAntialias(CellRect.CenterPoint.X, CellRect.CenterPoint.Y,
                                                        0.4 * FGridData.GridSizeX * FMapZoom,
-                                                       0.4 * FGridData.GridSizeY * FMapZoom, clGray, 2);
+                                                       0.4 * FGridData.GridSizeY * FMapZoom, fmController.TokenShadowColor, 2);
                   end;
               end;
               gtHexV:
@@ -521,7 +521,7 @@ begin
                     if FSnapTokensToGrid and TokenSlotRect.Contains(Point(j, i)) then
                       MapSegmentStretched.EllipseAntialias(CellRect.CenterPoint.X, CellRect.CenterPoint.Y,
                                                        0.4 * FGridData.GridSizeX * FMapZoom,
-                                                       0.4 * FGridData.GridSizeY * FMapZoom, clGray, 2);
+                                                       0.4 * FGridData.GridSizeY * FMapZoom, fmController.TokenShadowColor, 2);
                   end;
               end;
               gtIsometric:
@@ -546,7 +546,7 @@ begin
                     if FSnapTokensToGrid and TokenSlotRect.Contains(Point(j, i)) then
                       MapSegmentStretched.EllipseAntialias(CellRect.CenterPoint.X, CellRect.CenterPoint.Y,
                                                        0.2 * FGridData.GridSizeX * FMapZoom,
-                                                       0.2 * FGridData.GridSizeY * FMapZoom, clGray, 2);
+                                                       0.2 * FGridData.GridSizeY * FMapZoom, fmController.TokenShadowColor, 2);
                   end;
                 end;
             end;
@@ -557,12 +557,12 @@ begin
             if (DraggedTokenPos.X >= 0) and (DraggedTokenPos.Y >= 0) then
               MapSegmentStretched.EllipseAntialias(Round(DraggedTokenPos.X * FMapZoom - FMapOffsetX),
                                                    Round(DraggedTokenPos.Y * FMapZoom - FMapOffsetY),
-                                                   50, 50, clGray, 2);
+                                                   50, 50, fmController.TokenShadowColor, 2);
           end;
           // Marker
           if fmController.ShowMarker then
           begin
-            Canvas.Pen.Color := clRed;
+            Canvas.Pen.Color := fmController.MarkerColor.ToColor;
             Canvas.Pen.Width := 2;
             Canvas.Brush.Style := bsClear;
             CurMarkerX := FMarkerX * FMapZoom - FMapOffsetX;
@@ -571,11 +571,11 @@ begin
             begin
               MapSegmentStretched.EllipseAntialias(CurMarkerX, CurMarkerY, 10, 10, clRed, 2, BGRAPixelTransparent);
 
-              MapSegmentStretched.DrawLineAntialias(CurMarkerX - 15, CurMarkerY, CurMarkerX - 5, CurMarkerY, clRed, 2);
-              MapSegmentStretched.DrawLineAntialias(CurMarkerX + 5, CurMarkerY, CurMarkerX + 15, CurMarkerY, clRed, 2);
+              MapSegmentStretched.DrawLineAntialias(CurMarkerX - 15, CurMarkerY, CurMarkerX - 5, CurMarkerY, fmController.MarkerColor, 2);
+              MapSegmentStretched.DrawLineAntialias(CurMarkerX + 5, CurMarkerY, CurMarkerX + 15, CurMarkerY, fmController.MarkerColor, 2);
 
-              MapSegmentStretched.DrawLineAntialias(CurMarkerX, CurMarkerY - 15, CurMarkerX, CurMarkerY - 5, clRed, 2);
-              MapSegmentStretched.DrawLineAntialias(CurMarkerX, CurMarkerY + 5, CurMarkerX, CurMarkerY + 15, clRed, 2);
+              MapSegmentStretched.DrawLineAntialias(CurMarkerX, CurMarkerY - 15, CurMarkerX, CurMarkerY - 5, fmController.MarkerColor, 2);
+              MapSegmentStretched.DrawLineAntialias(CurMarkerX, CurMarkerY + 5, CurMarkerX, CurMarkerY + 15, fmController.MarkerColor, 2);
             end;
           end;
 
