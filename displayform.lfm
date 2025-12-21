@@ -16,16 +16,9 @@ object fmDisplay: TfmDisplay
   OnResize = FormResize
   OnShow = FormShow
   LCLVersion = '2.2.4.0'
-  object tMapAnim: TTimer
-    Enabled = False
+  object tAnimation: TTimer
     Interval = 20
-    OnTimer = tMapAnimTimer
-    Left = 39
-    Top = 30
-  end
-  object tTokenAnim: TTimer
-    Interval = 20
-    OnTimer = tTokenAnimTimer
+    OnTimer = tAnimationTimer
     Left = 112
     Top = 32
   end

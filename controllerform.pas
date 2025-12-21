@@ -1,4 +1,4 @@
-{Copyright (c) 2023 Stephan Breer
+{Copyright (c) 2023-2025 Stephan Breer
 
 This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
 
@@ -21,7 +21,9 @@ uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ComCtrls,
   ExtCtrls, Menus, DateTimePicker, IniFiles, BGRABitmap,
   BGRABitmapTypes, RPGTypes, HtmlView,
-  Notes, HtmlGlobals, HTMLUn2, LCLType, WallManager;
+  Notes, HtmlGlobals, HTMLUn2, LCLType,
+  WallManager,
+  Particles;
 
 const
   MAPLIBFILE = 'Maps.txt';
@@ -233,7 +235,7 @@ type
     FInitiativeNumList: TList;
     FCurInitiativeIndex: Integer;
     FTokenList: TList;
-    FMapDir, FTokenDir, FOverlayDir: string;
+    FMapDir, FTokenDir, FOverlayDir, FParticleDir: string;
     FThumbnailDir: string;
     FInitiativeDesc, FTokensStartInvisible: Boolean;
     FTokenRotationStyle: TTokenRotationStyle;
@@ -251,8 +253,11 @@ type
     FHistoryList: TStringList;
     FHistoryIdx: Integer;
     FNotesSaved: Boolean;
+
+
     FCurTokenRect: TRect;
     FWallManager: TWallManager;
+    FParticleManager: TParticleManager;
 
     procedure UpdateMapList;
     procedure UpdateTokenList;
@@ -310,9 +315,11 @@ type
     property ShowTokens: Boolean read FShowTokens;
     property TokenSlotRect: TRect read FCurTokenRect write SetCurTokenRect;
     property WallManager: TWallManager read FWallManager;
+    property ParticleManager: TParticleManager read FParticleManager;
     property ShowLoSPlayer: Boolean read FShowLoSPlayer write FShowLoSPlayer;
     property TokenShadowColor: TBGRAPixel read FTokenShadowClr;
     property MarkerColor: TBGRAPixel read FMarkerClr;
+    property MapPic: TBGRABitmap read FMapPic;
   end;
 
 
@@ -479,7 +486,7 @@ begin
   fmDisplay.MapFileName := FMapFileName;
   if Assigned(FMapPic) then
     FMapPic.Free;
-  //FMapPic := TBGRABitmap.Create(FMapFileName, True);
+
   Loader := GetMapLoader(Filename);
   try
     FMapPic := loader.LoadFromFile(Filename);
@@ -488,6 +495,7 @@ begin
   finally
     loader.Free;
   end;
+  //BGRAReplace(FMapPic, FMapPic.FilterContour);
   FViewRectXOffset := 0;
   FViewRectYOffset := 0;
   TokenSlotRect := Bounds(-1, -1, 0, 0);
@@ -657,10 +665,8 @@ begin
   begin
     if FIsDragging then
     begin
-      fmDisplay.MapOffsetX := Round(FViewRectXOffset / FDisplayScale);
-      fmDisplay.MapOffsetY := Round(FViewRectYOffset / FDisplayScale);
+      fmDisplay.SetMapOffset(Round(FViewRectXOffset / FDisplayScale), Round(FViewRectYOffset / FDisplayScale));
       pbViewPort.Invalidate;
-      fmDisplay.Invalidate;
     end;
     if FIsDraggingToken then
     begin
@@ -2089,8 +2095,7 @@ begin
   end;
   FViewRectXOffset := EnsureRange(FViewRectXOffset, 0, FViewRectMaxXOffset);
   FViewRectYOffset := EnsureRange(FViewRectYOffset, 0, FViewRectMaxYOffset);
-  fmDisplay.MapOffsetX := Round(FViewRectXOffset / FDisplayScale);
-  fmDisplay.MapOffsetY := Round(FViewRectYOffset / FDisplayScale);
+  fmDisplay.SetMapOffset(Round(FViewRectXOffset / FDisplayScale), Round(FViewRectYOffset / FDisplayScale));
 
   pbViewPort.Invalidate;
 end;
@@ -2141,9 +2146,12 @@ begin
   FMapDir := FAppSettings.ReadString('Settings', 'MapDir', 'Content\Maps\');
   FTokenDir := FAppSettings.ReadString('Settings', 'TokenDir', 'Content\Tokens\');
   FOverlayDir := FAppSettings.ReadString('Settings', 'OverlayDir', 'Content\Overlays\');
+  FParticleDir := FAppSettings.ReadString('Settings', 'ParticleDir', 'Content\Particles\');
   FInitiativeDesc := StrToBoolDef(FAppSettings.ReadString('Settings', 'InitiativeDesc', 'true'), True);
   FTokensStartInvisible := StrToBoolDef(FAppSettings.ReadString('Settings', 'TokensStartInvisible', 'true'), True);
   FTokenRotationStyle := TTokenRotationStyle(FAppSettings.ReadInteger('Settings', 'TokenRotationStyle', 0));
+
+  FParticleManager := TParticleManager.Create(FParticleDir);
 
   FTokenShadowClr := FAppSettings.ReadInteger('Settings', 'TokenShadowClr', clGray);
   FWallClr := FAppSettings.ReadInteger('Settings', 'WallClr', clGreen);
@@ -2229,6 +2237,7 @@ begin
   FAppSettings.UpdateFile;
   FAppSettings.Free;
   FWallManager.Free;
+  FParticleManager.Free;
   FMapLib.Free;
   FTokenLib.Free;
   FOverlayLib.Free;

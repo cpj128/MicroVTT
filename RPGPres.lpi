@@ -145,7 +145,7 @@
         <PackageName Value="LCL"/>
       </Item8>
     </RequiredPackages>
-    <Units Count="15">
+    <Units Count="17">
       <Unit0>
         <Filename Value="RPGPres.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -241,6 +241,15 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="WallManager"/>
       </Unit14>
+      <Unit15>
+        <Filename Value="griddetector.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="GridDetector"/>
+      </Unit15>
+      <Unit16>
+        <Filename Value="particles.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit16>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

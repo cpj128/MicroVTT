@@ -10,7 +10,7 @@ uses
   Forms, lazcontrols, datetimectrls, ControllerForm, DisplayForm, DisplayConst,
   GridSettingsForm, TokenSettingsForm, SettingsForm, LangStrings, RPGTypes,
   LibraryForm, InitiativeForm, Notes, RPGUtils, MapLoaders,
-WallManager;
+  WallManager, GridDetector, particles;
 
 {$R *.res}
 

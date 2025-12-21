@@ -1,4 +1,4 @@
-{Copyright (c) 2023 Stephan Breer
+{Copyright (c) 2023-2025 Stephan Breer
 
 This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
 
@@ -35,12 +35,14 @@ type
     cdClrSelect: TColorDialog;
     eMapDirectory: TEdit;
     eOverlayDirectory: TEdit;
+    eParticleDirectory: TEdit;
     eTokenDirectory: TEdit;
     Label1: TLabel;
     Label10: TLabel;
     Label11: TLabel;
     Label12: TLabel;
     Label13: TLabel;
+    Label14: TLabel;
     Label2: TLabel;
     Label3: TLabel;
     Label4: TLabel;
@@ -58,6 +60,7 @@ type
     pnPortals: TPanel;
     sbSelectMapDirectory: TSpeedButton;
     sbSelectOverlayDirectory: TSpeedButton;
+    sbSelectParticleDirectory: TSpeedButton;
     sbSelectTokenDirectory: TSpeedButton;
     tsInterface: TTabSheet;
     tsRules: TTabSheet;
@@ -66,6 +69,7 @@ type
     procedure pnTokenShadowClick(Sender: TObject);
     procedure sbSelectMapDirectoryClick(Sender: TObject);
     procedure sbSelectOverlayDirectoryClick(Sender: TObject);
+    procedure sbSelectParticleDirectoryClick(Sender: TObject);
     procedure sbSelectTokenDirectoryClick(Sender: TObject);
   private
 
@@ -99,6 +103,13 @@ begin
   if SelectDirectory(GetString(LangStrings.LanguageID, 'SelectOverlayDirCaption'), eOverlayDirectory.Text, OutDir) then
     eOverlayDirectory.Text := OutDir;
 end;
+
+procedure TfmSettings.sbSelectParticleDirectoryClick(Sender: TObject);
+var OutDir: string;
+begin
+  if SelectDirectory(GetString(LangStrings.LanguageID, 'SelectParticleDirCaption'), eParticleDirectory.Text, OutDir) then
+    eParticleDirectory.Text := OutDir;
+end;
     
 procedure TfmSettings.sbSelectTokenDirectoryClick(Sender: TObject);
 var OutDir: string;
@@ -117,6 +128,7 @@ begin
   Label1.Caption := GetString(LangStrings.LanguageID, 'SettingsMapDir');
   Label2.Caption := GetString(LangStrings.LanguageID, 'SettingsTokenDir');  
   Label6.Caption := GetString(LangStrings.LanguageID, 'SettingsOverlayDir');
+  Label14.Caption := GetString(LangStrings.LanguageID, 'SettingsParticleDir');
   Label3.Caption := GetString(LangStrings.LanguageID, 'SettingsInitiativeOrder');
   cbInitiativeOrder.Items[0] := GetString(LangStrings.LanguageID, 'SettingsInitiativeOrderHighest');
   cbInitiativeOrder.Items[1] := GetString(LangStrings.LanguageID, 'SettingsInitiativeOrderLowest');

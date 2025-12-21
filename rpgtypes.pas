@@ -1,4 +1,4 @@
-{Copyright (c) 2023 Stephan Breer
+{Copyright (c) 2023-2025 Stephan Breer
 
 This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
 
@@ -19,7 +19,9 @@ unit RPGTypes;
 interface
 
 uses
-  Classes, Graphics, SysUtils, BGRABitmap, IniFiles, WallManager;
+  Classes, Graphics, SysUtils, BGRABitmap, IniFiles,
+  WallManager,
+  Particles;
   
  const
   MAXTOKENANIMSTEPS = 20;
@@ -56,7 +58,7 @@ var
 type
   TTokenRotationStyle = (rsRotateToken, rsShowArrow);
 
-  TTokenType = (ttCharacter, ttRange, ttText, ttLight);
+  TTokenType = (ttCharacter, ttRange, ttText, ttLight, ttParticleEmitter);
 
   TTokenNodeData = class
     public
@@ -116,6 +118,8 @@ type
       procedure RemoveAttached(token: TToken);
       procedure UpdateAttached;
       procedure SaveToIni(SaveFile: TIniFile; idx: Integer); virtual;
+      procedure DrawForMaster(toCanvas: TBGRABitmap); virtual;       
+      procedure DrawForPlayer(toCanvas: TBGRABitmap); virtual;
       property XPos: Integer read GetXPos write SetXPos;
       property YPos: Integer read GetYPos write SetYPos;
       property XEndPos: Integer read GetXEndPos;
@@ -249,6 +253,9 @@ type
     property WallManager: TWallManager read FWallManager write FWallManager;
   end;
 
+  TParticleEmmitterToken = class(TToken)
+
+  end;
 
 implementation
 
@@ -380,6 +387,16 @@ begin
   FGlyph.Free;
   FAttached.Free;
   inherited;
+end;
+
+procedure TToken.DrawForMaster(toCanvas: TBGRABitmap);
+begin
+  //
+end;
+
+procedure TToken.DrawForPlayer(toCanvas: TBGRABitmap);
+begin
+  //
 end;
 
 procedure TToken.SaveToIni(SaveFile: TIniFile; idx: Integer);
