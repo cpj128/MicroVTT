@@ -227,9 +227,9 @@ end;
 
 procedure TfmDisplay.SetMapOffset(OffsetX, OffsetY: Integer);
 begin
-  FStartMapOffsetX := EnsureRange(FMapOffsetX, 0, GetMapFileWidth - GetMapAreaWidth);
+  FStartMapOffsetX := EnsureRange(FMapOffsetX, 0, Max(0, GetMapFileWidth - GetMapAreaWidth));
   FTargetMapOffsetX := OffsetX;
-  FStartMapOffsetY := EnsureRange(FMapOffsetY, 0, GetMapFileHeight - GetMapAreaHeight);
+  FStartMapOffsetY := EnsureRange(FMapOffsetY, 0, Max(0, GetMapFileHeight - GetMapAreaHeight));
   FTargetMapOffsetY := OffsetY;
   // Restart scrolling animation
   FCurMapAnimStep := 0;
