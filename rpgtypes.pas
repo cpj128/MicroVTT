@@ -1,4 +1,4 @@
-{Copyright (c) 2023-2025 Stephan Breer
+{Copyright (c) 2023-2026 Stephan Breer
 
 This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
 
@@ -635,6 +635,7 @@ end;
 procedure TToken.Attach(token: TToken);
 begin
   FAttached.Add(token);
+  token.RedrawGlyph;
 end;
 
 function TToken.GetAttached(idx: Integer): TToken;
