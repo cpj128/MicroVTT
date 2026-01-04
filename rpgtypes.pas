@@ -110,7 +110,7 @@ type
       function GetCellsAtPosition(PosX, PosY: Integer; GridData: TGridData): TRect;
       procedure StartAnimation;
       procedure StopAnimation;
-      procedure DoAnimationStep; virtual;
+      procedure DoAnimationStep(var NeedsUpdate: Boolean); virtual;
       function GetBoundingRect: TRect;
       procedure Attach(token: TToken);
       function GetAttached(idx: Integer): TToken;
@@ -215,9 +215,11 @@ type
     constructor Create(X, Y, pWidth, pHeight: Integer; text: string);
     destructor Destroy; override;
     procedure SaveToIni(SaveFile: TIniFile; idx: Integer); override;
-    procedure RedrawGlyph;
+    procedure RedrawGlyph; override;
     property Text: string read FText write SetText;
   end;
+
+  TLightAnimationType = (latNone, latFlicker, latPulse, latFlash); // Another for steady light that turns off on occasion?
 
   TLightToken = class(TAttachableToken)
   private
@@ -226,10 +228,14 @@ type
     FMaxStrength: Double;
     FWallManager: TWallManager;
     FLightPic, FPlayerGlyph: TBGRABitmap;
+    FAnimationType: TLightAnimationType;
+    FAnimationStep: Integer;
+    // TODO: Add Animation speed setting, make accessible in token dialog
     procedure SetColor(val: TColor);
     procedure SetRange(val: Integer);
     procedure SetMaxStrength(val: Double);
     function GetRange: Integer;
+    function GetCurrentLightStrength(step: Integer): Double;
   protected   
     procedure SetWidth(Val: Integer); override;
     procedure SetHeight(Val: Integer); override;
@@ -241,7 +247,7 @@ type
   public
     constructor Create(X, Y, pRange: Integer);
     destructor Destroy; override;
-    procedure DoAnimationStep; override;
+    procedure DoAnimationStep(var NeedsUpdate: Boolean); override;
     procedure SaveToIni(SaveFile: TIniFile; idx: Integer); override;
     procedure RedrawGlyph; override;
     procedure RedrawPlayerGlyph;
@@ -669,10 +675,13 @@ begin
   FYStartPos := FYPos;
 end;
 
-procedure TToken.DoAnimationStep;
+procedure TToken.DoAnimationStep(var NeedsUpdate: Boolean);
 begin
   if not FIsMoving then
+  begin
+    NeedsUpdate := False;
     Exit;
+  end;
   if FCurAnimationStep = MAXTOKENANIMSTEPS then
   begin
     FXPos := FXTargetPos;
@@ -687,6 +696,7 @@ begin
     FXPos := Round(Ease(FCurAnimationStep, FXStartPos, FXTargetPos - FXStartPos, MAXTOKENANIMSTEPS, etOutQuad));
     FYPos := Round(Ease(FCurAnimationStep, FYStartPos, FYTargetPos - FYStartPos, MAXTOKENANIMSTEPS, etOutQuad));
   end;
+  NeedsUpdate := True;
 end;
 
 function TToken.GetBoundingRect: TRect;
@@ -1279,6 +1289,8 @@ begin
   RedrawPlayerGlyph;
   RedrawGlyph;
   FAttached := TList.Create;
+  FAnimationType := latNone;
+  FAnimationStep := 0;
 end;
 
 destructor TLightToken.Destroy;
@@ -1296,10 +1308,17 @@ begin
   SaveFile.WriteFloat(SAVESECTIONTOKENS, 'MaxStrength' + IntToStr(idx), FMaxStrength);
 end;
 
-procedure TLightToken.DoAnimationStep;
+procedure TLightToken.DoAnimationStep(var NeedsUpdate: Boolean);
+var
+  LastAniStep: Integer;
 begin
   inherited;
+  LastAniStep := FAnimationStep;
+  FAnimationStep := (FAnimationStep + 1) mod 360;
+
   RedrawPlayerGlyph;
+  NeedsUpdate := GetCurrentLightStrength(LastAniStep) <> GetCurrentLightStrength(FAnimationStep);
+  NeedsUpdate := NeedsUpdate or IsMoving;
 end;
 
 procedure TLightToken.RedrawGlyph;
@@ -1337,7 +1356,12 @@ procedure TLightToken.RedrawPlayerGlyph;
 var
   MaskPoly: ArrayOfTPointF;
   i: Integer;
+  CurrentStrength: Byte;
+  CurrentPixel: TBGRAPixel;
 begin
+  CurrentStrength := Floor(FMaxStrength * GetCurrentLightStrength(FAnimationStep) * 255);
+  CurrentPixel := BGRA(CurrentStrength, CurrentStrength, CurrentStrength);
+
   if Assigned(FPlayerGlyph) then
     FreeAndNil(FPlayerGlyph);
   FPlayerGlyph := TBGRABitmap.Create(FRange * 2, FRange * 2, clBlack);
@@ -1350,11 +1374,11 @@ begin
       MaskPoly[i].x := MaskPoly[i].X - XPos + Width div 2;
       MaskPoly[i].y := MaskPoly[i].Y - YPos + Height div 2;
     end;
-    FPlayerGlyph.FillPolyAntialias(MaskPoly, BGRA(255, 255, 255));
+    FPlayerGlyph.FillPolyAntialias(MaskPoly, CurrentPixel);
   end
   else
   begin
-    FPlayerGlyph.FillRect(0, 0, FRange * 2, FRange * 2, clWhite);
+    FPlayerGlyph.FillRect(0, 0, FRange * 2, FRange * 2, CurrentPixel);
   end;
   FPlayerGlyph.BlendImage(0, 0, FLightPic, boMultiply);
 end;
@@ -1426,6 +1450,26 @@ end;
 function TLightToken.GetRange: Integer;
 begin
   Result := FRange;
+end;
+
+function TLightToken.GetCurrentLightStrength(step: Integer): Double;
+begin
+  case FAnimationType of
+    latFlicker:
+    begin
+      Result := 0.7 + Random * 0.3;
+    end;
+    latPulse:
+    begin
+      Result := 0.5 + 0.5 * Sin(DegToRad(step));
+    end;
+    latFlash:
+    begin
+      Result := Ord((step mod 360) >= 180);
+    end;
+    else
+      Result := 1;
+  end;
 end;
 
 function TLightToken.GetWidth: Integer;

@@ -1,4 +1,4 @@
-{Copyright (c) 2023-2025 Stephan Breer
+{Copyright (c) 2023-2026 Stephan Breer
 
 This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
 
@@ -40,7 +40,6 @@ type
     procedure FormResize(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure tAnimationTimer(Sender: TObject);
-    procedure tMapAnimTimer(Sender: TObject);
   private
     FMapOffsetX, FMapOffsetY: Integer;
     FStartMapOffsetX, FStartMapOffsetY: Integer;
@@ -49,10 +48,10 @@ type
     FAnimateMap: Boolean;
     FMapZoom: Double;
     FMapFileName: string;
-    FMapPic,                      // Gesamtes Hintergrundbild, wie geladen
-    FPortrait,                    // Portraitbild
-    FZoomedMapPic,                // Hintergrundbild, auf aktuellen Zoomfaktor gebracht
-    FCurrentMapPic: TBGRABitmap;  // Hintergrundbild, nur aktuelle sichtbarer Ausschnitt
+    FMapPic,                      // entire map, as loaded from file
+    FPortrait,                    // portrait
+    FZoomedMapPic,                // map, resampled to current zoom factor
+    FCurrentMapPic: TBGRABitmap;  // map, currently visible section only
     FPortraitFrame, FInitiativeFrame, FMapFrame: TBGRABitmap;
     FBgPic: TPicture;
     FMarkerX, FMarkerY: Integer;
@@ -824,17 +823,18 @@ procedure TfmDisplay.tAnimationTimer(Sender: TObject);
 var
   i: Integer;
   CurToken: TToken;
-  AnyTokenMoving: Boolean;
+  AnyTokenMoving, NeedsUpdate: Boolean;
 begin
    // Move Tokens
   AnyTokenMoving := False;
+  NeedsUpdate := False;
   for i := 0 to fmController.GetTokenCount - 1 do
   begin
     CurToken := fmController.GetToken(i);
     if Assigned(CurToken) then
     begin
-      CurToken.DoAnimationStep;
-      AnyTokenMoving := AnyTokenMoving or CurToken.IsMoving;
+      CurToken.DoAnimationStep(NeedsUpdate);
+      AnyTokenMoving := AnyTokenMoving or NeedsUpdate;
     end;
   end;
 
@@ -861,11 +861,6 @@ begin
 
   if AnyTokenMoving or FAnimateMap then
     Invalidate;
-end;
-
-procedure TfmDisplay.tMapAnimTimer(Sender: TObject);
-begin
-
 end;
 
 { TBGRAFrameScanner }
