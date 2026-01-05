@@ -1,4 +1,4 @@
-{Copyright (c) 2023-2025 Stephan Breer
+{Copyright (c) 2023-2026 Stephan Breer
 
 This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
 
@@ -37,6 +37,7 @@ type
     cbOverlay: TComboBox;
     cbShowLoS: TCheckBox;
     cdIndicatorColor: TColorDialog;
+    cbAnimationType: TComboBox;
     eGridSlotsY: TEdit;
     eWidth: TEdit;
     eHeight: TEdit;
@@ -120,9 +121,12 @@ begin
     Label4.Hide;
     eGridSlotsY.Hide;
     cbShowLoS.Hide;
+    cbAnimationType.Hide;
                          
     Label2.Show;
     eHeight.Show;
+    Label5.Show;   
+    fseRotation.Show;
     Label7.Show;
     seSectorAngle.Show;
     seSectorAngle.Value := Round(TRangeIndicator(token).SectorAngle);
@@ -156,8 +160,12 @@ begin
     Label4.Hide;
     eGridSlotsY.Hide;
     cbShowLoS.Hide;
+    cbAnimationType.Hide;
+
     Label2.Show;
-    eHeight.Show;  
+    eHeight.Show;
+    Label5.Show;
+    fseRotation.Show;
     Label7.Show;
     mText.Show;
     mText.Text := TTextToken(token).Text;
@@ -165,7 +173,7 @@ begin
   end
   else if token is TLightToken then
   begin
-    Label2.Hide;
+    Label2.Show;
     eHeight.Hide;
     Label7.Hide;
     seNumber.Hide;
@@ -178,6 +186,8 @@ begin
     Label4.Hide;
     eGridSlotsY.Hide;
     cbShowLoS.Hide;
+    Label5.Hide;
+    fseRotation.Hide;
      
     bDetach.Show;
     bDetach.Enabled := TLightToken(token).IsAttached;
@@ -186,12 +196,22 @@ begin
     fseMaxStrength.Value := TLightToken(token).MaxStrength;
     Label6.Show;
     pnColor.Show;
-    pnColor.Color := TLightToken(token).Color;
+    pnColor.Color := TLightToken(token).Color; 
+    cbAnimationType.Show;
+    // Do this here, because we call this function before we show the form
+    cbAnimationType.Items.Clear;
+    cbAnimationType.Items.Add(GetString(LangStrings.LanguageID, 'TokenSettingsLightNone'));
+    cbAnimationType.Items.Add(GetString(LangStrings.LanguageID, 'TokenSettingsLightFlicker'));
+    cbAnimationType.Items.Add(GetString(LangStrings.LanguageID, 'TokenSettingsLightPulse'));
+    cbAnimationType.Items.Add(GetString(LangStrings.LanguageID, 'TokenSettingsLightFlash'));
+    cbAnimationType.ItemIndex := Ord(TLightToken(token).AnimationType);
   end
   else if token is TCharacterToken then
   begin       
     Label2.Show;
-    eHeight.Show; 
+    eHeight.Show;  
+    Label5.Show;
+    fseRotation.Show;
     Label7.Show;
     seNumber.Show; 
     seNumber.Value := TCharacterToken(token).Number;
@@ -211,6 +231,7 @@ begin
     seAlpha.Hide;
     mText.Hide;
     bDetach.Hide;
+    cbAnimationType.Hide;
     bBringToFront.Enabled := True;
     bSendToBack.Enabled := True;
   end;
@@ -253,6 +274,7 @@ begin
       TLightToken(LinkedToken).Color := pnColor.Color;
       TLightToken(LinkedToken).Range := udWidth.Position;
       TLightToken(LinkedToken).MaxStrength := fseMaxStrength.Value;
+      TLightToken(LinkedToken).AnimationType := TLightAnimationType(cbAnimationType.ItemIndex);
     end;
     LinkedToken.UpdateAttached;
     LinkedToken := nil;
@@ -342,7 +364,8 @@ begin
   else if LinkedToken is TLightToken then
   begin
     Label1.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsRange');
-    Label5.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsMaxStrength');
+    Label2.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsMaxStrength');
+    Label5.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsLightAnimation');
     Label6.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsColor');
   end
   else

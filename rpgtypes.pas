@@ -256,6 +256,7 @@ type
     property Range: Integer read GetRange write SetRange;
     property Color: TColor read FColor write SetColor;
     property MaxStrength: Double read FMaxStrength write SetMaxStrength;
+    property AnimationType: TLightAnimationType read FAnimationType write FAnimationType;
     property WallManager: TWallManager read FWallManager write FWallManager;
   end;
 
@@ -1461,11 +1462,11 @@ begin
     end;
     latPulse:
     begin
-      Result := 0.5 + 0.5 * Sin(DegToRad(step));
+      Result := 0.5 + 0.5 * Sin(DegToRad(2*step));
     end;
     latFlash:
     begin
-      Result := Ord((step mod 360) >= 180);
+      Result := Ord(((2 * step) mod 360) >= 180);
     end;
     else
       Result := 1;

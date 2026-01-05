@@ -12,10 +12,10 @@ object fmTokenSettings: TfmTokenSettings
   OnShow = FormShow
   LCLVersion = '2.2.4.0'
   object mText: TMemo
-    Left = 85
+    Left = 86
     Height = 107
     Top = 119
-    Width = 97
+    Width = 96
     Lines.Strings = (
       'mText'
     )
@@ -33,7 +33,7 @@ object fmTokenSettings: TfmTokenSettings
     Left = 85
     Height = 23
     Top = 35
-    Width = 80
+    Width = 79
     TabOrder = 1
     Text = 'eWidth'
   end
@@ -46,7 +46,7 @@ object fmTokenSettings: TfmTokenSettings
     ParentColor = False
   end
   object udWidth: TUpDown
-    Left = 165
+    Left = 164
     Height = 23
     Top = 35
     Width = 17
@@ -65,10 +65,10 @@ object fmTokenSettings: TfmTokenSettings
     ParentColor = False
   end
   object eHeight: TEdit
-    Left = 85
+    Left = 86
     Height = 23
     Top = 63
-    Width = 80
+    Width = 79
     TabOrder = 2
     Text = 'eHeight'
   end
@@ -120,10 +120,10 @@ object fmTokenSettings: TfmTokenSettings
     ParentColor = False
   end
   object eGridSlotsX: TEdit
-    Left = 85
+    Left = 86
     Height = 23
     Top = 175
-    Width = 80
+    Width = 79
     TabOrder = 3
     Text = 'eGridSlotsX'
   end
@@ -148,10 +148,10 @@ object fmTokenSettings: TfmTokenSettings
     ParentColor = False
   end
   object eGridSlotsY: TEdit
-    Left = 85
+    Left = 86
     Height = 23
     Top = 203
-    Width = 80
+    Width = 79
     TabOrder = 4
     Text = 'eGridSlotsY'
   end
@@ -196,7 +196,7 @@ object fmTokenSettings: TfmTokenSettings
     Left = 85
     Height = 23
     Top = 147
-    Width = 97
+    Width = 96
     ItemHeight = 15
     Items.Strings = (
       '-'
@@ -264,18 +264,18 @@ object fmTokenSettings: TfmTokenSettings
     Value = 90
   end
   object pnColor: TPanel
-    Left = 85
+    Left = 86
     Height = 23
     Top = 147
-    Width = 97
+    Width = 96
     TabOrder = 19
     OnClick = pnColorClick
   end
   object seAlpha: TSpinEditEx
-    Left = 85
+    Left = 86
     Height = 23
     Top = 175
-    Width = 97
+    Width = 96
     MaxLength = 0
     TabOrder = 20
     MaxValue = 255
@@ -294,11 +294,13 @@ object fmTokenSettings: TfmTokenSettings
   object fseMaxStrength: TFloatSpinEdit
     Left = 86
     Height = 23
-    Top = 91
+    Top = 63
     Width = 96
     Increment = 0.1
-    MinValue = 1
+    MaxValue = 1
+    MinValue = 0.1
     TabOrder = 23
+    Value = 0.1
   end
   object cbShowLoS: TCheckBox
     Left = 85
@@ -307,6 +309,15 @@ object fmTokenSettings: TfmTokenSettings
     Width = 71
     Caption = 'Show LoS'
     TabOrder = 24
+  end
+  object cbAnimationType: TComboBox
+    Left = 86
+    Height = 23
+    Top = 91
+    Width = 96
+    ItemHeight = 15
+    Style = csDropDownList
+    TabOrder = 25
   end
   object cdIndicatorColor: TColorDialog
     Color = clBlack
