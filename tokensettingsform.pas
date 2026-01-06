@@ -175,9 +175,7 @@ begin
   begin
     Label2.Show;
     eHeight.Hide;
-    Label7.Hide;
     seNumber.Hide;
-    seSectorAngle.Hide;
     mText.Hide;
     cbOverlay.Hide;
     Label3.Hide;
@@ -186,7 +184,6 @@ begin
     Label4.Hide;
     eGridSlotsY.Hide;
     cbShowLoS.Hide;
-    Label5.Hide;
     fseRotation.Hide;
      
     bDetach.Show;
@@ -196,7 +193,8 @@ begin
     fseMaxStrength.Value := TLightToken(token).MaxStrength;
     Label6.Show;
     pnColor.Show;
-    pnColor.Color := TLightToken(token).Color; 
+    pnColor.Color := TLightToken(token).Color;  
+    Label5.Show;
     cbAnimationType.Show;
     // Do this here, because we call this function before we show the form
     cbAnimationType.Items.Clear;
@@ -204,7 +202,12 @@ begin
     cbAnimationType.Items.Add(GetString(LangStrings.LanguageID, 'TokenSettingsLightFlicker'));
     cbAnimationType.Items.Add(GetString(LangStrings.LanguageID, 'TokenSettingsLightPulse'));
     cbAnimationType.Items.Add(GetString(LangStrings.LanguageID, 'TokenSettingsLightFlash'));
+    cbAnimationType.Items.Add(GetString(LangStrings.LanguageID, 'TokenSettingsLightUnstable'));
     cbAnimationType.ItemIndex := Ord(TLightToken(token).AnimationType);
+
+    Label7.Show; 
+    seSectorAngle.Show;
+    seSectorAngle.Value := TLightToken(token).AnimationSpeed;
   end
   else if token is TCharacterToken then
   begin       
@@ -275,6 +278,7 @@ begin
       TLightToken(LinkedToken).Range := udWidth.Position;
       TLightToken(LinkedToken).MaxStrength := fseMaxStrength.Value;
       TLightToken(LinkedToken).AnimationType := TLightAnimationType(cbAnimationType.ItemIndex);
+      TLightToken(LinkedToken).AnimationSpeed := seSectorAngle.Value;
     end;
     LinkedToken.UpdateAttached;
     LinkedToken := nil;
@@ -367,6 +371,7 @@ begin
     Label2.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsMaxStrength');
     Label5.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsLightAnimation');
     Label6.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsColor');
+    Label7.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsAnimationSpeed');
   end
   else
   begin

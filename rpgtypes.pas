@@ -219,7 +219,7 @@ type
     property Text: string read FText write SetText;
   end;
 
-  TLightAnimationType = (latNone, latFlicker, latPulse, latFlash); // Another for steady light that turns off on occasion?
+  TLightAnimationType = (latNone, latFlicker, latPulse, latFlash, latUnstable); // TODO: Add smooth sawtooth-like animation, based on rkSin
 
   TLightToken = class(TAttachableToken)
   private
@@ -230,7 +230,8 @@ type
     FLightPic, FPlayerGlyph: TBGRABitmap;
     FAnimationType: TLightAnimationType;
     FAnimationStep: Integer;
-    // TODO: Add Animation speed setting, make accessible in token dialog
+    FAnimationSpeed: Integer;
+    FLastFlickerVal, FCurFlickerVal: Double;
     procedure SetColor(val: TColor);
     procedure SetRange(val: Integer);
     procedure SetMaxStrength(val: Double);
@@ -240,7 +241,8 @@ type
     procedure SetWidth(Val: Integer); override;
     procedure SetHeight(Val: Integer); override;
     procedure SetXPos(val: Integer); override;
-    procedure SetYPos(val: integer); override;  
+    procedure SetYPos(val: integer); override;
+    procedure SetAnimationSpeed(val: Integer);
     function GetWidth: Integer; override;
     function GetHeight: Integer; override;
     function GetPlayerGlyph: TBGRABitmap; override;
@@ -257,6 +259,7 @@ type
     property Color: TColor read FColor write SetColor;
     property MaxStrength: Double read FMaxStrength write SetMaxStrength;
     property AnimationType: TLightAnimationType read FAnimationType write FAnimationType;
+    property AnimationSpeed: Integer read FAnimationSpeed write SetAnimationSpeed;
     property WallManager: TWallManager read FWallManager write FWallManager;
   end;
 
@@ -852,7 +855,8 @@ begin
                                  saveFile.ReadInteger(SAVESECTIONTOKENS, 'YPos' + IntToStr(idx), 0),
                                  saveFile.ReadInteger(SAVESECTIONTOKENS, 'Width' + IntToStr(idx), 100));
    TLightToken(Result).Color := saveFile.ReadInteger(SAVESECTIONTOKENS, 'Color' + IntToStr(idx), BGRA(255, 245, 238));
-   TLightToken(Result).MaxStrength := saveFile.ReadFloat(SAVESECTIONTOKENS, 'MaxStrength' + IntToStr(idx), 0.5);
+   TLightToken(Result).MaxStrength := saveFile.ReadFloat(SAVESECTIONTOKENS, 'MaxStrength' + IntToStr(idx), 1.0);
+   TLightToken(Result).AnimationType := TLightAnimationType(saveFile.ReadInteger(SAVESECTIONTOKENS, 'Animation' + IntToStr(idx), 0));
    TLightToken(Result).WallManager := WallManager;
    Result.RedrawGlyph;
   end
@@ -1284,7 +1288,7 @@ begin
   FCurAnimationStep := 0;
   FPath := '';
   FColor := BGRA(255, 245, 238);
-  FMaxStrength := 0.5;
+  FMaxStrength := 1.0;
   FRange:= pRange;
   RedrawLightMap;
   RedrawPlayerGlyph;
@@ -1292,6 +1296,9 @@ begin
   FAttached := TList.Create;
   FAnimationType := latNone;
   FAnimationStep := 0;
+  FAnimationSpeed := 10;
+  FLastFlickerVal := 0.7;
+  FCurFlickerVal := 0.7 + Random * 0.3;
 end;
 
 destructor TLightToken.Destroy;
@@ -1307,6 +1314,7 @@ begin
   SaveFile.WriteString(SAVESECTIONTOKENS, 'Path' + IntToStr(idx), '::light');
   SaveFile.WriteInteger(SAVESECTIONTOKENS, 'Color' + IntToStr(idx), FColor);
   SaveFile.WriteFloat(SAVESECTIONTOKENS, 'MaxStrength' + IntToStr(idx), FMaxStrength);
+  SaveFile.WriteInteger(SAVESECTIONTOKENS, 'Animation' + IntToStr(idx), Ord(FAnimationType));
 end;
 
 procedure TLightToken.DoAnimationStep(var NeedsUpdate: Boolean);
@@ -1315,7 +1323,13 @@ var
 begin
   inherited;
   LastAniStep := FAnimationStep;
-  FAnimationStep := (FAnimationStep + 1) mod 360;
+  FAnimationStep := FAnimationStep + FAnimationSpeed;
+  if FAnimationStep >= 360 then
+  begin
+    FAnimationStep := FAnimationStep mod 360;
+    FLastFlickerVal := FCurFlickerVal;
+    FCurFlickerVal := 0.7 + Random * 0.3;
+  end;
 
   RedrawPlayerGlyph;
   NeedsUpdate := GetCurrentLightStrength(LastAniStep) <> GetCurrentLightStrength(FAnimationStep);
@@ -1448,6 +1462,11 @@ begin
   RedrawPlayerGlyph;
 end;
 
+procedure TLightToken.SetAnimationSpeed(val: Integer);
+begin
+  FAnimationSpeed := EnsureRange(val, 0, 180);
+end;
+
 function TLightToken.GetRange: Integer;
 begin
   Result := FRange;
@@ -1459,15 +1478,24 @@ begin
     latFlicker:
     begin
       Result := 0.7 + Random * 0.3;
+      // TODO: Tried to use interpolated noise as below, but it does not right
+      // at the frequencies used by the other animations. Going to think about
+      // this a bit more later.
+      //Result := Map(step, 0, 360, FLastFlickerVal, FCurFlickerVal);
     end;
     latPulse:
     begin
-      Result := 0.5 + 0.5 * Sin(DegToRad(2*step));
+      Result := 0.5 + 0.5 * Sin(DegToRad(step));
     end;
     latFlash:
     begin
-      Result := Ord(((2 * step) mod 360) >= 180);
+      Result := TanH(5 * Sin(DegToRad(step))) * 0.5 + 0.5; // TODO: better use a SmoothStep-based solution for performance reasons
     end;
+    latUnstable:
+    begin
+      //Result := 1 - Ord((step mod 77 = 0) or (step mod 101 = 0));
+      Result := 1 - Max(CubicPulse(step mod 77, 0, FAnimationSpeed / 2), CubicPulse(step mod 101, 0, FAnimationSpeed / 2));
+    end
     else
       Result := 1;
   end;
