@@ -219,7 +219,7 @@ type
     property Text: string read FText write SetText;
   end;
 
-  TLightAnimationType = (latNone, latFlicker, latPulse, latFlash, latUnstable); // TODO: Add smooth sawtooth-like animation, based on rkSin
+  TLightAnimationType = (latNone, latFlicker, latPulse, latFlash, latUnstable, latRampUp, latRampDown);
 
   TLightToken = class(TAttachableToken)
   private
@@ -1473,6 +1473,12 @@ begin
 end;
 
 function TLightToken.GetCurrentLightStrength(step: Integer): Double;
+const
+  RKSINSCALER = 0.9;
+  RKSINNORMALIZE = 1.1197695149986342;
+  //RKSINNORMALIZE = ArcTan((RKSINSCALER * Sin(ArcCos(RKSINSCALER))) / (1 - Sqr(RKSINSCALER))); const for RKSINSCALER = 0.9
+var
+  tmpVal: Double;
 begin
   case FAnimationType of
     latFlicker:
@@ -1495,6 +1501,34 @@ begin
     begin
       //Result := 1 - Ord((step mod 77 = 0) or (step mod 101 = 0));
       Result := 1 - Max(CubicPulse(step mod 77, 0, FAnimationSpeed / 2), CubicPulse(step mod 101, 0, FAnimationSpeed / 2));
+    end;
+    latRampUp:
+    begin
+      tmpVal := 1 - (RKSINSCALER * Cos(DegToRad(step)));
+      if SameValue(tmpVal, 0) then
+        Result := 0
+      else
+      begin
+        Result := ArcTan((RKSINSCALER * Sin(DegToRad(step))) / tmpVal);
+        // Normalize
+        Result := Result / RKSINNORMALIZE;
+        // Scale & Invert
+        Result := 0.5 - Result * 0.5;
+      end;
+    end;
+    latRampDown:
+    begin
+      tmpVal := 1 - (RKSINSCALER * Cos(DegToRad(step)));
+      if SameValue(tmpVal, 0) then
+        Result := 0
+      else
+      begin
+        Result := ArcTan((RKSINSCALER * Sin(DegToRad(step))) / tmpVal);
+        // Normalize
+        Result := Result / RKSINNORMALIZE;
+        // Scale
+        Result := 0.5 + Result * 0.5;
+      end;
     end
     else
       Result := 1;

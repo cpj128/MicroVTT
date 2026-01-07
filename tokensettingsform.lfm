@@ -316,6 +316,9 @@ object fmTokenSettings: TfmTokenSettings
     Top = 91
     Width = 96
     ItemHeight = 15
+    Items.Strings = (
+      ''
+    )
     Style = csDropDownList
     TabOrder = 25
   end

@@ -196,13 +196,6 @@ begin
     pnColor.Color := TLightToken(token).Color;  
     Label5.Show;
     cbAnimationType.Show;
-    // Do this here, because we call this function before we show the form
-    cbAnimationType.Items.Clear;
-    cbAnimationType.Items.Add(GetString(LangStrings.LanguageID, 'TokenSettingsLightNone'));
-    cbAnimationType.Items.Add(GetString(LangStrings.LanguageID, 'TokenSettingsLightFlicker'));
-    cbAnimationType.Items.Add(GetString(LangStrings.LanguageID, 'TokenSettingsLightPulse'));
-    cbAnimationType.Items.Add(GetString(LangStrings.LanguageID, 'TokenSettingsLightFlash'));
-    cbAnimationType.Items.Add(GetString(LangStrings.LanguageID, 'TokenSettingsLightUnstable'));
     cbAnimationType.ItemIndex := Ord(TLightToken(token).AnimationType);
 
     Label7.Show; 
@@ -346,6 +339,7 @@ end;
 procedure TfmTokenSettings.FormShow(Sender: TObject);
 var
   i, PrevIdx: Integer;
+  AniType: TLightAnimationType;
   ContentList: TStringList;
 begin
   Caption := GetString(LangStrings.LanguageID, 'TokenSettingsCaption');
@@ -372,6 +366,20 @@ begin
     Label5.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsLightAnimation');
     Label6.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsColor');
     Label7.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsAnimationSpeed');
+
+    i := cbAnimationType.ItemIndex;
+    cbAnimationType.Items.Clear;
+    // Make sure we have the correct amount of items
+    for AniType := Low(TLightAnimationType) to High(TLightANimationType) do
+      cbAnimationType.Items.Add('');
+    cbAnimationType.Items[0] := GetString(LangStrings.LanguageID, 'TokenSettingsLightNone');
+    cbAnimationType.Items[1] := GetString(LangStrings.LanguageID, 'TokenSettingsLightFlicker');
+    cbAnimationType.Items[2] := GetString(LangStrings.LanguageID, 'TokenSettingsLightPulse');
+    cbAnimationType.Items[3] := GetString(LangStrings.LanguageID, 'TokenSettingsLightFlash');
+    cbAnimationType.Items[4] := GetString(LangStrings.LanguageID, 'TokenSettingsLightUnstable');
+    cbAnimationType.Items[5] := GetString(LangStrings.LanguageID, 'TokenSettingsLightRampUp');
+    cbAnimationType.Items[6] := GetString(LangStrings.LanguageID, 'TokenSettingsLightRampDown');
+    cbAnimationType.ItemIndex := i;
   end
   else
   begin
