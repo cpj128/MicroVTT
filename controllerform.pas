@@ -1,4 +1,4 @@
-{Copyright (c) 2023-2025 Stephan Breer
+{Copyright (c) 2023-2026 Stephan Breer
 
 This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
 
@@ -719,7 +719,7 @@ begin
     FIsRotatingToken := False;
     FCurDraggedToken := nil;
 
-    if FCurHoverPortal > 0 then
+    if FCurHoverPortal >= 0 then
     begin
       ClickedPortal := FWallManager.GetPortal(FCurHoverPortal);
       if Assigned(ClickedPortal) then
@@ -2127,7 +2127,9 @@ end;
 
 procedure TfmController.FormCreate(Sender: TObject);
 var
-  LangID, FallbackLangID, LangName: string;
+  LangID, FallbackLangID, LangName, tmpLang: string;
+  LangList: TStrings;
+  i: Integer;
 begin
   FMapPic := nil;
   FLoSMap := nil;
@@ -2166,10 +2168,27 @@ begin
     MkDir(FThumbnailDir);
 
   // Set language
+  // Default to english, when all else fails
   LangName := 'English';
   GetLanguageIDs(LangID, FallbackLangID);
-  if SameText(FallbackLangID, 'de') then
-    LangName := 'Deutsch';
+  
+  // Do we have the system language available? Use that
+  LangList := GetLanguages;
+  try
+    for i := 0 to LangList.Count - 1 do
+    begin
+      tmpLang := GetString(LangList[i], 'ISO639');
+      if SameText(tmpLang, FallbackLangID) then
+      begin
+        LangName := LangList[i];
+        Break;
+      end;
+    end;
+  finally
+    LangList.Free;
+  end;
+
+  // ...but read from settings and use the language defined there, if we have a settings file
   LanguageID := FAppSettings.ReadString('Settings', 'Language', LangName);
 
   Notes.SetLanguage(LanguageID);
