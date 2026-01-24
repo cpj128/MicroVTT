@@ -267,7 +267,7 @@ type
     function MapToViewPortY(MapY: Single): Integer;
     function ViewPortToMapX(ViewPortX: Integer): Integer;
     function ViewPortToMapY(ViewPortY: Integer): Integer;
-    function GetTokenAtPos(X, Y: Integer): TToken;
+    function GetTokenAtPos(X, Y: Integer; AllowLocked: Boolean = False): TToken;
     function GetNonAttachableTokenAtPos(X, Y: Integer): TToken;
     procedure SetCurInitiativeIndex(val: Integer);
     procedure LoadMap(FileName: string);
@@ -531,6 +531,7 @@ begin
     TTokenFactory.TokensSnapToGrid := FSnapTokensToGrid;
     TTokenFactory.TokensStartInvisible := FTokensStartInvisible;
     TTokenFactory.WallManager := FWallManager;
+    TTokenFactory.ParticleManager := FParticleManager;
     TTokenFactory.ShowDirectionArrow := FTokenRotationStyle = rsShowArrow;
     tmpToken := TTokenFactory.CreateTokenFromNode(TTokenNodeData(TTreeView(Source).Selected.Data), ViewPortToMapX(X), ViewPortToMapY(Y));
 
@@ -733,6 +734,8 @@ begin
   else if Button = mbRight then
   begin
     ClickedToken := GetTokenAtPos(X, Y);
+    if not Assigned(ClickedToken) then
+      ClickedToken := GetTokenAtPos(X, Y, True);
     if Assigned(ClickedToken) then
     begin
 
@@ -1229,7 +1232,7 @@ begin
   FCurInitiativeIndex := val mod lvInitiative.Items.Count;
 end;
 
-function TfmController.GetTokenAtPos(X, Y: Integer): TToken;
+function TfmController.GetTokenAtPos(X, Y: Integer; AllowLocked: Boolean = False): TToken;
 var
   i: Integer;
   SearchPnt: TPoint;
@@ -1247,7 +1250,7 @@ begin
                         CurToken.YEndPos - CurToken.Height div 2,
                         CurToken.Width,
                         CurToken.Height);
-    if TokenRect.Contains(SearchPnt) then
+    if TokenRect.Contains(SearchPnt) and (AllowLocked or not CurToken.LockPos) then
     begin
       Result := CurToken;
       Break;
@@ -1540,6 +1543,7 @@ begin
         TTokenFactory.TokensStartInvisible := FTokensStartInvisible;
         TTokenFactory.ShowDirectionArrow := FTokenRotationStyle = rsShowArrow;
         TTokenFactory.WallManager := FWallManager;
+        TTokenFactory.ParticleManager := FParticleManager;
         CurToken := TTokenFactory.CreateTokenFromIni(SaveFile, i);
         if Assigned(CurToken) then
         begin

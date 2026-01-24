@@ -1,11 +1,11 @@
 object fmTokenSettings: TfmTokenSettings
   Left = 299
-  Height = 239
+  Height = 267
   Top = 274
   Width = 303
   BorderStyle = bsNone
   Caption = 'Token Settings'
-  ClientHeight = 239
+  ClientHeight = 267
   ClientWidth = 303
   FormStyle = fsStayOnTop
   OnDeactivate = FormDeactivate
@@ -14,7 +14,7 @@ object fmTokenSettings: TfmTokenSettings
   object mText: TMemo
     Left = 86
     Height = 107
-    Top = 119
+    Top = 147
     Width = 96
     Lines.Strings = (
       'mText'
@@ -32,7 +32,7 @@ object fmTokenSettings: TfmTokenSettings
   object eWidth: TEdit
     Left = 85
     Height = 23
-    Top = 35
+    Top = 63
     Width = 79
     TabOrder = 1
     Text = 'eWidth'
@@ -40,7 +40,7 @@ object fmTokenSettings: TfmTokenSettings
   object Label1: TLabel
     Left = 8
     Height = 15
-    Top = 39
+    Top = 67
     Width = 35
     Caption = 'Width:'
     ParentColor = False
@@ -48,7 +48,7 @@ object fmTokenSettings: TfmTokenSettings
   object udWidth: TUpDown
     Left = 164
     Height = 23
-    Top = 35
+    Top = 63
     Width = 17
     Associate = eWidth
     Max = 1000
@@ -59,7 +59,7 @@ object fmTokenSettings: TfmTokenSettings
   object Label2: TLabel
     Left = 8
     Height = 15
-    Top = 67
+    Top = 95
     Width = 39
     Caption = 'Height:'
     ParentColor = False
@@ -67,7 +67,7 @@ object fmTokenSettings: TfmTokenSettings
   object eHeight: TEdit
     Left = 86
     Height = 23
-    Top = 63
+    Top = 91
     Width = 79
     TabOrder = 2
     Text = 'eHeight'
@@ -75,7 +75,7 @@ object fmTokenSettings: TfmTokenSettings
   object udHeight: TUpDown
     Left = 165
     Height = 23
-    Top = 63
+    Top = 91
     Width = 17
     Associate = eHeight
     Max = 1000
@@ -114,7 +114,7 @@ object fmTokenSettings: TfmTokenSettings
   object Label3: TLabel
     Left = 8
     Height = 15
-    Top = 179
+    Top = 207
     Width = 63
     Caption = 'Grid Slots X:'
     ParentColor = False
@@ -122,7 +122,7 @@ object fmTokenSettings: TfmTokenSettings
   object eGridSlotsX: TEdit
     Left = 86
     Height = 23
-    Top = 175
+    Top = 203
     Width = 79
     TabOrder = 3
     Text = 'eGridSlotsX'
@@ -130,7 +130,7 @@ object fmTokenSettings: TfmTokenSettings
   object udGridSlotsX: TUpDown
     Left = 165
     Height = 23
-    Top = 175
+    Top = 203
     Width = 17
     Associate = eGridSlotsX
     Max = 1000
@@ -142,7 +142,7 @@ object fmTokenSettings: TfmTokenSettings
   object Label4: TLabel
     Left = 8
     Height = 15
-    Top = 207
+    Top = 235
     Width = 63
     Caption = 'Grid Slots Y:'
     ParentColor = False
@@ -150,7 +150,7 @@ object fmTokenSettings: TfmTokenSettings
   object eGridSlotsY: TEdit
     Left = 86
     Height = 23
-    Top = 203
+    Top = 231
     Width = 79
     TabOrder = 4
     Text = 'eGridSlotsY'
@@ -158,7 +158,7 @@ object fmTokenSettings: TfmTokenSettings
   object udGridSlotsY: TUpDown
     Left = 165
     Height = 23
-    Top = 203
+    Top = 231
     Width = 17
     Associate = eGridSlotsY
     Max = 1000
@@ -170,7 +170,7 @@ object fmTokenSettings: TfmTokenSettings
   object Label5: TLabel
     Left = 8
     Height = 15
-    Top = 95
+    Top = 123
     Width = 48
     Caption = 'Rotation:'
     ParentColor = False
@@ -178,7 +178,7 @@ object fmTokenSettings: TfmTokenSettings
   object fseRotation: TFloatSpinEdit
     Left = 86
     Height = 23
-    Top = 91
+    Top = 119
     Width = 96
     MaxValue = 360
     MinValue = -360
@@ -187,7 +187,7 @@ object fmTokenSettings: TfmTokenSettings
   object Label6: TLabel
     Left = 8
     Height = 15
-    Top = 151
+    Top = 179
     Width = 43
     Caption = 'Overlay:'
     ParentColor = False
@@ -195,7 +195,7 @@ object fmTokenSettings: TfmTokenSettings
   object cbOverlay: TComboBox
     Left = 85
     Height = 23
-    Top = 147
+    Top = 175
     Width = 96
     ItemHeight = 15
     Items.Strings = (
@@ -207,7 +207,7 @@ object fmTokenSettings: TfmTokenSettings
   object Label7: TLabel
     Left = 8
     Height = 15
-    Top = 123
+    Top = 151
     Width = 47
     Caption = 'Number:'
     ParentColor = False
@@ -215,7 +215,7 @@ object fmTokenSettings: TfmTokenSettings
   object seNumber: TSpinEditEx
     Left = 86
     Height = 23
-    Top = 119
+    Top = 147
     Width = 96
     MaxLength = 0
     NumbersOnly = True
@@ -255,7 +255,7 @@ object fmTokenSettings: TfmTokenSettings
   object seSectorAngle: TSpinEditEx
     Left = 86
     Height = 23
-    Top = 119
+    Top = 147
     Width = 96
     MaxLength = 0
     TabOrder = 18
@@ -266,7 +266,7 @@ object fmTokenSettings: TfmTokenSettings
   object pnColor: TPanel
     Left = 86
     Height = 23
-    Top = 147
+    Top = 175
     Width = 96
     TabOrder = 19
     OnClick = pnColorClick
@@ -274,7 +274,7 @@ object fmTokenSettings: TfmTokenSettings
   object seAlpha: TSpinEditEx
     Left = 86
     Height = 23
-    Top = 175
+    Top = 203
     Width = 96
     MaxLength = 0
     TabOrder = 20
@@ -294,7 +294,7 @@ object fmTokenSettings: TfmTokenSettings
   object fseMaxStrength: TFloatSpinEdit
     Left = 86
     Height = 23
-    Top = 63
+    Top = 91
     Width = 96
     Increment = 0.1
     MaxValue = 1
@@ -313,7 +313,7 @@ object fmTokenSettings: TfmTokenSettings
   object cbAnimationType: TComboBox
     Left = 86
     Height = 23
-    Top = 91
+    Top = 119
     Width = 96
     ItemHeight = 15
     Items.Strings = (
@@ -321,6 +321,14 @@ object fmTokenSettings: TfmTokenSettings
     )
     Style = csDropDownList
     TabOrder = 25
+  end
+  object cbLockPosition: TCheckBox
+    Left = 8
+    Height = 19
+    Top = 36
+    Width = 91
+    Caption = 'Lock Position'
+    TabOrder = 26
   end
   object cdIndicatorColor: TColorDialog
     Color = clBlack
@@ -346,7 +354,7 @@ object fmTokenSettings: TfmTokenSettings
       'ColorS=F0FBFF'
       'ColorT=A4A0A0'
     )
-    Left = 112
-    Top = 120
+    Left = 224
+    Top = 216
   end
 end

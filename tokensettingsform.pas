@@ -38,6 +38,7 @@ type
     cbShowLoS: TCheckBox;
     cdIndicatorColor: TColorDialog;
     cbAnimationType: TComboBox;
+    cbLockPosition: TCheckBox;
     eGridSlotsY: TEdit;
     eWidth: TEdit;
     eHeight: TEdit;
@@ -106,6 +107,7 @@ begin
   if not Assigned(token) then
     Exit;
   cbVisible.Checked := token.Visible;
+  cbLockPosition.Checked := token.LockPos;
   udWidth.Position  := token.Width;
   udHeight.Position := token.Height;
   fseRotation.Value := -RadToDeg(token.Angle);
@@ -243,6 +245,7 @@ begin
   if Assigned(LinkedToken) then
   begin
     LinkedToken.Visible := cbVisible.Checked;
+    LinkedToken.LockPos := cbLockPosition.Checked;
     LinkedToken.Width   := udWidth.Position;
     LinkedToken.Height  := udHeight.Position;
     LinkedToken.Angle   := -DegToRad(fseRotation.Value);
@@ -344,6 +347,7 @@ var
 begin
   Caption := GetString(LangStrings.LanguageID, 'TokenSettingsCaption');
   cbVisible.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsVisible');
+  cbLockPosition.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsLockPosition');
   cbShowLoS.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsShowLoS');
   Label1.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsWidth');
   Label2.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsHeight');

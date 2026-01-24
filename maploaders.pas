@@ -318,6 +318,7 @@ begin
         tmpToken.MaxStrength := jLight.Floats['intensity'];
         clrStr := jLight.Strings['color'];
         tmpToken.Color := BGRA(StrToInt('$' + Copy(clrStr, 3, 2)), StrToInt('$' + Copy(clrStr, 5, 2)), StrToInt('$' + Copy(clrStr, 7, 2)), StrToInt('$' + Copy(clrStr, 1, 2)));
+        tmpToken.LockPos := True;
         TokenList.Add(tmpToken);
       end;
     end;

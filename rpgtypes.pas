@@ -84,6 +84,7 @@ type
       FWidth, FHeight: Integer;
       FAngle: Double;
       FVisible: Boolean;
+      FLockPos: Boolean;
       FGridSlotsX, FGridSlotsY: Integer;
       FCurAnimationStep: Integer;
       FIsMoving: Boolean;
@@ -100,6 +101,7 @@ type
       function GetAngle: Double; virtual;
       function GetWidth: Integer; virtual;
       function GetHeight: Integer; virtual;
+      function GetLockPos: Boolean; virtual;
       procedure SetAngle(val: Double); virtual;
       function GetPlayerGlyph: TBGRABitmap; virtual;
     public
@@ -127,6 +129,7 @@ type
       property Width: Integer read GetWidth write SetWidth;
       property Height: Integer read GetHeight write SetHeight;
       property Visible: Boolean read FVisible write FVisible;
+      property LockPos: Boolean read GetLockPos write FLockPos;
       property GridSlotsX: Integer read FGridSlotsX write FGridSlotsX;
       property GridSlotsY: Integer read FGridSlotsY write FGridSlotsY;
       property Angle: Double read GetAngle write SetAngle;
@@ -144,6 +147,7 @@ type
     ShowDirectionArrow: Boolean; static;
     GridData: TGridData; static;
     WallManager: TWallManager; static;
+    ParticleManager: TParticleManager; static;
     class function CreateTokenFromIni(SaveFile: TIniFile; idx: Integer): TToken; static;
     class function CreateTokenFromNode(data: TTokenNodeData; X, Y: Integer): TToken; static;
   end;
@@ -175,6 +179,7 @@ type
     function GetXEndPos: Integer; override;
     function GetYEndPos: Integer; override;
     function GetAngle: Double; override;
+    function GetLockPos: Boolean; override;
   public
     procedure AttachTo(token: TToken);
     procedure Detach;
@@ -263,8 +268,17 @@ type
     property WallManager: TWallManager read FWallManager write FWallManager;
   end;
 
-  TParticleEmmitterToken = class(TToken)
+  TParticleEmitterToken = class(TAttachableToken)
+  private
+    FParticleManager: TParticleManager;
+    FParticleName: string;
+    FParticle: TParticle;
+    procedure SetParticleName(pName: string);
+  public
+    constructor Create(X, Y: Integer);
 
+    property ParticleManager: TParticleManager read FParticleManager write FParticleManager;
+    property ParticleName: string read FParticleName write SetParticleName;
   end;
 
 implementation
@@ -420,6 +434,7 @@ begin
   saveFile.WriteInteger(SAVESECTIONTOKENS, 'Height' + IntToStr(idx), Height);
   saveFile.WriteFloat(SAVESECTIONTOKENS, 'Angle' + IntToStr(idx), Angle);
   saveFile.WriteBool(SAVESECTIONTOKENS, 'Visible' + IntToStr(idx), Visible);
+  saveFile.WriteBool(SAVESECTIONTOKENS, 'LockPos' + IntToStr(idx), LockPos);
   saveFile.WriteInteger(SAVESECTIONTOKENS, 'XSlots' + IntToStr(idx), GridSlotsX);
   saveFile.WriteInteger(SAVESECTIONTOKENS, 'YSlots' + IntToStr(idx), GridSlotsY);
 end;
@@ -624,6 +639,11 @@ begin
   Result := FHeight;
 end;
 
+function TToken.GetLockPos: Boolean;
+begin
+  Result := FLockPos;
+end;
+
 procedure TToken.SetAngle(val: Double);
 begin
   FAngle := val;
@@ -823,6 +843,13 @@ begin
     Result := FAttachedTo.Angle;
 end;
 
+function TAttachableToken.GetLockPos: Boolean;
+begin
+  Result := FLockPos;
+  if Assigned(FAttachedTo) then
+    Result := FAttachedTo.LockPos;
+end;
+
 { TTokenFactory }
 
 class function TTokenFactory.CreateTokenFromIni(SaveFile: TIniFile; idx: Integer): TToken;
@@ -860,6 +887,13 @@ begin
    TLightToken(Result).WallManager := WallManager;
    Result.RedrawGlyph;
   end
+  else if SameText(path, '::particle') then // Particle Emitter
+  begin
+    Result := TParticleEmitterToken.Create(saveFile.ReadInteger(SAVESECTIONTOKENS, 'XPos' + IntToStr(idx), 0),
+                                           saveFile.ReadInteger(SAVESECTIONTOKENS, 'YPos' + IntToStr(idx), 0));
+    TParticleEmitterToken(Result).ParticleManager := ParticleManager;
+    TParticleEmitterToken(Result).ParticleName := saveFile.ReadString(SAVESECTIONTOKENS, 'ParticleName' + IntToStr(idx), '');
+  end
   else if FileExists(path) then // Character token
   begin
     Result := TCharacterToken.Create(path,
@@ -877,6 +911,7 @@ begin
   begin
     Result.Angle := saveFile.ReadFloat(SAVESECTIONTOKENS, 'Angle' + IntToStr(idx), 0);
     Result.Visible := saveFile.ReadBool(SAVESECTIONTOKENS, 'Visible' + IntToStr(idx), TokensStartInvisible);
+    Result.LockPos := saveFile.ReadBool(SAVESECTIONTOKENS, 'LockPos' + IntToStr(idx), False);
     Result.GridSlotsX := saveFile.ReadInteger(SAVESECTIONTOKENS, 'XSlots' + IntToStr(idx), 1);
     Result.GridSlotsY := saveFile.ReadInteger(SAVESECTIONTOKENS, 'YSlots' + IntToStr(idx), 1);
     Result.Name := saveFile.ReadString(SAVESECTIONTOKENS, 'Name' + IntToStr(idx), '');
@@ -926,6 +961,12 @@ begin
       TLightToken(Result).WallManager := WallManager;
       Result.RedrawGlyph;
       // Other values should be set to defaults already
+    end;
+    ttParticleEmitter:
+    begin
+      Result := TParticleEmitterToken.Create(X, Y);
+      Result.Visible := True;
+      TParticleEmitterToken(Result).ParticleName := '';
     end;
   end;
 end;
@@ -1548,6 +1589,36 @@ end;
 function TLightToken.GetPlayerGlyph: TBGRABitmap;
 begin
   Result := FPlayerGlyph;
+end;
+
+{ TParticleEmitterToken }
+
+constructor TParticleEmitterToken.Create(X, Y: Integer);
+begin
+  inherited Create;
+  FXPos := X;
+  FYPos := Y;
+  FXTargetPos := X;
+  FYTargetPos := Y;
+  FXStartPos := X;
+  FYStartPos := Y;
+  FWidth := 80;
+  FHeight := 80;
+  FVisible := True;
+  FIsMoving := False;
+  FGridSlotsX := 1;
+  FGridSlotsY := 1;
+  FCurAnimationStep := 0;
+  FPath := '';
+  FParticleName := '';
+  FParticle := nil;
+end;
+
+procedure TParticleEmitterToken.SetParticleName(pName: string);
+begin
+  FParticleName := pName;
+  if FParticleManager.HasParticle(pName) then
+    FParticle := FParticleManager.ParticleByName[pName];
 end;
 
 end.
