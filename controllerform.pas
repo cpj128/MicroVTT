@@ -206,6 +206,7 @@ type
   private
     FMapPic: TBGRABitmap;
     FLoSMap: TBGRABitmap;
+    FLockedPic: TBGRABitmap;
     FMapFileName: string;
     FViewRectWidth, FViewRectHeight: Integer;
     FViewRectXOffset, FViewRectYOffset: Integer;
@@ -948,11 +949,11 @@ begin
           CurToken := TToken(FTokenList[i]);
           TokenBmp := CurToken.Glyph.Resample(Round(CurToken.Width * FDisplayScale * FZoomFactor), Round(CurToken.Height * FDisplayScale * FZoomFactor));
           try
-            if not CurToken.Visible then
+            if not CurToken.Visible then // This token is hidden
             begin
               TokenBmp.DrawLineAntialias(0, 0, TokenBmp.Width, TokenBmp.Height, FHiddenMarkerClr, 2);
             end;
-            if not FShowTokens then
+            if not FShowTokens then // All tokens are hidden
             begin
               TokenBmp.DrawLineAntialias(TokenBmp.Width, 0, 0, TokenBmp.Height, FHiddenMarkerClr, 2);
             end;
@@ -991,8 +992,13 @@ begin
                                      False);
                   OverlayScaled.Free;
                 end;
-
               end;
+
+              // Lock symbol
+              if CurToken.LockPos then
+                FLockedPic.Draw(RotatedBmp.Canvas,
+                                (RotatedBmp.Width - FLockedPic.Width),
+                                0, False);
 
               if CurToken is TLightToken then
               begin
@@ -2134,6 +2140,7 @@ var
   LangID, FallbackLangID, LangName, tmpLang: string;
   LangList: TStrings;
   i: Integer;
+  LoadLock: TPicture;
 begin
   FMapPic := nil;
   FLoSMap := nil;
@@ -2147,6 +2154,16 @@ begin
   FWallManager := TWallManager.Create;
   FShowLoS := False;
   FShowLoSPlayer := False;
+
+  FLockedPic := TBGRABitmap.Create(24, 24, BGRA(0, 0, 0, 0));
+
+  LoadLock := TPicture.Create;
+  try
+    LoadLock.LoadFromResourceName(HINSTANCE, 'LOCKED');
+    FLockedPic.Assign(LoadLock.Png);
+  finally
+    LoadLock.Free;
+  end;
 
   // Load settings
   FMapDir := FAppSettings.ReadString('Settings', 'MapDir', 'Content\Maps\');
@@ -2248,6 +2265,7 @@ procedure TfmController.FormDestroy(Sender: TObject);
 begin
   if Assigned(FMapPic) then
     FMapPic.Free;
+  FLockedPic.Free;
   FTokenList.Free;
   FInitiativePicList.Free;
   FInitiativeNumList.Free;
