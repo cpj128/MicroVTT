@@ -102,6 +102,7 @@ type
       function GetWidth: Integer; virtual;
       function GetHeight: Integer; virtual;
       function GetLockPos: Boolean; virtual;
+      function GetVisible: Boolean; virtual;
       procedure SetAngle(val: Double); virtual;
       function GetPlayerGlyph: TBGRABitmap; virtual;
     public
@@ -128,7 +129,7 @@ type
       property YEndPos: Integer read GetYEndPos;
       property Width: Integer read GetWidth write SetWidth;
       property Height: Integer read GetHeight write SetHeight;
-      property Visible: Boolean read FVisible write FVisible;
+      property Visible: Boolean read GetVisible write FVisible;
       property LockPos: Boolean read GetLockPos write FLockPos;
       property GridSlotsX: Integer read FGridSlotsX write FGridSlotsX;
       property GridSlotsY: Integer read FGridSlotsY write FGridSlotsY;
@@ -173,7 +174,8 @@ type
 
   TAttachableToken = class(TToken)
   private
-    FAttachedTo: TToken;  
+    FAttachedTo: TToken;
+  protected
     function GetXPos: Integer; override;
     function GetYPos: Integer; override;
     function GetXEndPos: Integer; override;
@@ -197,6 +199,7 @@ type
     procedure SetColor(val: TColor);
     procedure SetAlpha(val: Byte);
     procedure SetSectorAngle(Val: Double);
+  protected
     procedure SetWidth(Val: Integer); override;
     procedure SetHeight(Val: Integer); override;
     procedure SetAngle(val: Double); override;
@@ -213,6 +216,7 @@ type
   TTextToken = class(TToken)
   private
     FText: string;
+  protected
     procedure SetWidth(Val: Integer); override;
     procedure SetHeight(Val: Integer); override;
     procedure SetText(val: string);
@@ -273,12 +277,18 @@ type
     FParticleManager: TParticleManager;
     FParticleName: string;
     FParticle: TParticle;
+    FActive: Boolean;
     procedure SetParticleName(pName: string);
+  protected
+    function GetVisible: Boolean; override;
   public
     constructor Create(X, Y: Integer);
+    procedure RedrawGlyph; override;
+    procedure DoAnimationStep(var NeedsUpdate: Boolean); override;
 
     property ParticleManager: TParticleManager read FParticleManager write FParticleManager;
     property ParticleName: string read FParticleName write SetParticleName;
+    property Active: Boolean read FActive write FActive;
   end;
 
 implementation
@@ -644,6 +654,11 @@ begin
   Result := FLockPos;
 end;
 
+function TToken.GetVisible: Boolean;
+begin
+  Result := FVisible;
+end;
+
 procedure TToken.SetAngle(val: Double);
 begin
   FAngle := val;
@@ -965,8 +980,9 @@ begin
     ttParticleEmitter:
     begin
       Result := TParticleEmitterToken.Create(X, Y);
-      Result.Visible := True;
-      TParticleEmitterToken(Result).ParticleName := '';
+      Result.Visible := True;                                           
+      TParticleEmitterToken(Result).ParticleManager := ParticleManager;
+      TParticleEmitterToken(Result).ParticleName := 'Test';
     end;
   end;
 end;
@@ -1602,16 +1618,19 @@ begin
   FYTargetPos := Y;
   FXStartPos := X;
   FYStartPos := Y;
-  FWidth := 80;
-  FHeight := 80;
-  FVisible := True;
+  FWidth := 20;
+  FHeight := 20;
+  FVisible := False;
   FIsMoving := False;
   FGridSlotsX := 1;
   FGridSlotsY := 1;
   FCurAnimationStep := 0;
-  FPath := '';
+  FPath := ''; 
+  FAttached := TList.Create;
   FParticleName := '';
   FParticle := nil;
+  FActive := True;
+  RedrawGlyph;
 end;
 
 procedure TParticleEmitterToken.SetParticleName(pName: string);
@@ -1619,6 +1638,33 @@ begin
   FParticleName := pName;
   if FParticleManager.HasParticle(pName) then
     FParticle := FParticleManager.ParticleByName[pName];
+end;
+
+function TParticleEmitterToken.GetVisible: Boolean;
+begin
+  Result := False;
+end;
+
+procedure TParticleEmitterToken.RedrawGlyph;
+begin
+  FGlyph.Free;
+  FGlyph := TBGRABitmap.Create(FWidth, FHeight);
+  // Mark center and circumference to make the token _slightly_ easier to see
+  FGlyph.EllipseAntialias(FWidth / 2, FHeight / 2, FWidth / 2, FHeight / 2, clLime, 2);
+end;
+
+procedure TParticleEmitterToken.DoAnimationStep(var NeedsUpdate: Boolean);
+var
+  ang: Double;
+begin
+  inherited;
+  // Hier Partikel erzeugen
+  if Assigned(FParticle) and FActive then
+  begin
+    Ang := Random(360);
+    FParticle.AddParticle(FXPos, FYPos, 0, Sin(DegToRad(ang)) * 5, Cos(DegToRad(ang)) * 5, 2, 50);
+  end;
+  NeedsUpdate := True;
 end;
 
 end.

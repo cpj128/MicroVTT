@@ -379,6 +379,7 @@ var
   MapSegmentStretched: TBGRABitmap;
   TokenBmp, RotatedBmp, OverlayBmp, OverlayScaled: TBGRABitmap;
   Rotation: TBGRAAffineBitmapTransform;
+  //ViewTransform: TAffineMatrix;
   MapWidth, MapHeight: Integer;
   i, j, CurGridPos: Integer;
   CurMarkerX, CurMarkerY: Single;
@@ -716,7 +717,9 @@ begin
         end;
 
         // Particles
-        fmController.ParticleManager.Draw(MapSegmentStretched);
+        //ViewTransform := AffineMatrixScale(FMapZoom, FMapZoom);
+        //ViewTransform := ViewTransform * AffineMatrixTranslation(-FMapOffsetX, -FMapOffsetY);
+        fmController.ParticleManager.Draw(MapSegmentStretched, FMapZoom, FMapOffsetX, FMapOffsetY);
 
         // LoS
         if fmController.ShowLoSPlayer then

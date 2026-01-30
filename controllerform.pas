@@ -1868,6 +1868,12 @@ begin
     NodeData.TokenType := ttLight;
     Data := NodeData;
   end;
+  with tvTokens.Items.AddChild(nil, GetString(LangStrings.LanguageID, 'ControllerTokenParticle')) do
+  begin
+    NodeData := TTokenNodeData.Create;
+    NodeData.TokenType := ttParticleEmitter;
+    Data := NodeData;
+  end;
   tvTokens.EndUpdate;
 end;
 

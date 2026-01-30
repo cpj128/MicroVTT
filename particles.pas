@@ -19,7 +19,9 @@ unit particles;
 interface
 
 uses
-  Classes, SysUtils, BGRABitmap;
+  Classes, SysUtils, Math,
+  BGRABitmap,
+  BGRATransform;
 type
 
   // Data of one individual particle
@@ -68,7 +70,7 @@ type
   public
     constructor Create(DefFileName: string);
     destructor Destroy; override;
-    procedure Draw(target: TBGRABitmap);
+    procedure Draw(target: TBGRABitmap; ZoomFactor, OffsetX, OffsetY: Double);
     procedure DoTick;
     procedure AddParticle(X, Y, R, DX, DY, DR: Double; TTL: Integer);
   end;
@@ -87,7 +89,7 @@ TParticleManager = class
     constructor Create(ParticleDir: string);
     destructor Destroy; override;
     procedure DoTick;
-    procedure Draw(target: TBGRABitmap);
+    procedure Draw(target: TBGRABitmap; ZoomFactor, OffsetX, OffsetY: Double);
 
     function HasParticle(name: string): Boolean;
     function GetParticleCount: Integer;
@@ -100,7 +102,6 @@ end;
 implementation
 
 uses
-  BGRATransform,
   IniFiles,
   FileUtil;
 
@@ -120,16 +121,18 @@ constructor TParticle.Create(DefFileName: string);
 var
   particleFile: TIniFile;
   graphicFileName: string;
+  RelPath: string;
 begin
   FGraphic := nil;
   if not FileExists(DefFileName) then
     raise Exception.Create('Particle definition file "' + DefFileName + '" not found.');
   particleFile := TIniFile.Create(DefFileName);
   try
+    RelPath := ExtractFilePath(DefFileName);
     graphicFileName := particleFile.ReadString('Particle', 'GraphicFile', '');
     if graphicFileName = '' then
       raise Exception.Create('Particle definition "' + DefFileName + '" does not contain graphic file name.');
-    FGraphic := TBGRABitmap.Create(graphicFileName);
+    FGraphic := TBGRABitmap.Create(RelPath + graphicFileName);
     FMaxCount := particleFile.ReadInteger('Particle', 'MaxCount', 1000);
     FMaxIdx := 0;
 
@@ -146,13 +149,17 @@ begin
     FGraphic.Free;
 end;
 
-procedure TParticle.Draw(target: TBGRABitmap);
+procedure TParticle.Draw(target: TBGRABitmap; ZoomFactor, OffsetX, OffsetY: Double);
 var
   i: Integer;
+  fixMat, tmpMat: TAffineMatrix;
 begin
+  fixMat := AffineMatrixTranslation(-OffsetX, -OffsetY) * AffineMatrixScale(ZoomFactor, ZoomFactor);
   for i := 0 to FMaxIdx - 1 do
   begin
-    target.PutImageAngle(FData[i].PosX, FData[i].PosY, FGraphic, FData[i].Rot);
+    tmpMat := fixMat * AffineMatrixTranslation(FData[i].PosX, FData[i].PosY);
+    tmpMat := tmpMat * AffineMatrixRotationDeg(FData[i].Rot);
+    target.PutImageAffine(tmpMat, FGraphic);
   end;
 end;
 
@@ -167,7 +174,7 @@ begin
     if FData[i + IdxOffset].TTL <= 0 then
     begin
       // This particle is dead, replace with next living one
-      while (i + IdxOffset < FMaxCount) and (FData[i + IdxOffset].TTL <= 0) do
+      while (i + IdxOffset < FMaxIdx) and (FData[i + IdxOffset].TTL <= 0) do
         Inc(IdxOffset);
     end;
 
@@ -194,7 +201,7 @@ var
 begin
   // Test if we can create this particle at all
   // Not possible if we are at capacity, chance to fail when at more than 50%
-  CanCreate := FMaxIdx = FMaxCount - 1;
+  CanCreate := FMaxIdx < FMaxCount - 1;
   CanCreate := CanCreate and (not (FMaxIdx > FMaxCount / 2) or (Random < 0.5));
 
   if CanCreate then
@@ -231,7 +238,7 @@ var
   FileList: TStringList;
   i: Integer;
   tmpParticleFile: TIniFile;
-  ParticleName: string;
+  ParticleName, path: string;
 begin
   // Scan directory for particle definitions...
   FileList := TStringList.Create;
@@ -245,6 +252,8 @@ begin
         if tmpParticleFile.SectionExists('Particle') then
         begin
           ParticleName := ExtractFileNameWithoutExt(FileList[i]);
+          path := ExtractFilePath(FileList[i]);
+          ParticleName := Copy(ParticleName, Length(path) + 1, Length(ParticleName));
           FParticleList.AddObject(ParticleName, TParticle.Create(FileList[i]));
         end;
       finally
@@ -264,11 +273,11 @@ begin
     TParticle(FParticleList.Objects[i]).DoTick;
 end;
 
-procedure TParticleManager.Draw(target: TBGRABitmap);
+procedure TParticleManager.Draw(target: TBGRABitmap; ZoomFactor, OffsetX, OffsetY: Double);
 var i: Integer;
 begin
   for i := 0 to FParticleList.Count - 1 do
-    TParticle(FParticleList.Objects[i]).Draw(target);
+    TParticle(FParticleList.Objects[i]).Draw(target, ZoomFactor, OffsetX, OffsetY);
 end;
 
 function TParticleManager.GetParticleByName(name: string): TParticle;
