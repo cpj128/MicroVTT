@@ -272,15 +272,22 @@ type
     property WallManager: TWallManager read FWallManager write FWallManager;
   end;
 
+  TParticleEmitterShape = (esPoint, esRect, esEllipse);
+
   TParticleEmitterToken = class(TAttachableToken)
   private
     FParticleManager: TParticleManager;
     FParticleName: string;
     FParticle: TParticle;
     FActive: Boolean;
+    FShape: TParticleEmitterShape;
     procedure SetParticleName(pName: string);
+    procedure SetShape(val: TParticleEmitterShape);
+    function GetNextPoint: TPoint;
   protected
-    function GetVisible: Boolean; override;
+    function GetVisible: Boolean; override; 
+    procedure SetWidth(Val: Integer); override;
+    procedure SetHeight(Val: Integer); override;
   public
     constructor Create(X, Y: Integer);
     procedure RedrawGlyph; override;
@@ -289,6 +296,7 @@ type
     property ParticleManager: TParticleManager read FParticleManager write FParticleManager;
     property ParticleName: string read FParticleName write SetParticleName;
     property Active: Boolean read FActive write FActive;
+    property Shape: TParticleEmitterShape read FShape write SetShape;
   end;
 
 implementation
@@ -1036,6 +1044,7 @@ begin
   FGlyph := TBGRABitmap.Create(Path);
   if FNumber > 0 then
   begin
+    FGlyph.FontHeight := FGlyph.Height div 4;
     TextRenderer := TBGRATextEffectFontRenderer.Create;
     TextRenderer.OutlineVisible := True;
     TextRenderer.OutlineColor := clBlack;
@@ -1400,21 +1409,27 @@ var
 begin
   FGlyph.Free;
   FGlyph := TBGRABitmap.Create(FRange * 2, FRange * 2);
-  FGlyph.FillRect(0, 0, FRange * 2, FRange * 2, clBlack);
   if Assigned(FWallManager) then
   begin
     MaskPoly := FWallManager.GetLoSPolygon(Point(XEndPos, YEndPos), FWallManager.GetMinBoundingBox);
-    for i := 0 to Length(MaskPoly) - 1 do
+    if Length(MaskPoly) > 0 then
     begin
-      MaskPoly[i].x := MaskPoly[i].X - XEndPos + FRange;
-      MaskPoly[i].y := MaskPoly[i].Y - YEndPos + FRange;
+      for i := 0 to Length(MaskPoly) - 1 do
+      begin
+        MaskPoly[i].x := MaskPoly[i].X - XEndPos + FRange;
+        MaskPoly[i].y := MaskPoly[i].Y - YEndPos + FRange;
+      end;
+      FGlyph.FillRect(0, 0, FRange * 2, FRange * 2, clBlack);
+      FGlyph.FillPolyAntialias(MaskPoly, BGRA(255, 255, 255));
+    end
+    else
+    begin
+      FGlyph.FillRect(0, 0, FRange * 2, FRange * 2, BGRA(255, 255, 255));
     end;
-    FGlyph.FillPolyAntialias(MaskPoly, BGRA(255, 255, 255));
-
   end
   else
   begin
-    FGlyph.FillRect(0, 0, FRange * 2, FRange * 2, clWhite);
+    FGlyph.FillRect(0, 0, FRange * 2, FRange * 2, BGRA(255, 255, 255));
   end;
   FGlyph.BlendImage(0, 0, FLightPic, boMultiply);
   // Mark center and circumference to make the token _slightly_ easier to see
@@ -1441,12 +1456,19 @@ begin
   if Assigned(FWallManager) then
   begin
     MaskPoly := FWallManager.GetLoSPolygon(Point(XPos, YPos), FWallManager.GetMinBoundingBox);
-    for i := 0 to Length(MaskPoly) - 1 do
+    if Length(MaskPoly) > 0 then
     begin
-      MaskPoly[i].x := MaskPoly[i].X - XPos + Width div 2;
-      MaskPoly[i].y := MaskPoly[i].Y - YPos + Height div 2;
+      for i := 0 to Length(MaskPoly) - 1 do
+      begin
+        MaskPoly[i].x := MaskPoly[i].X - XPos + Width div 2;
+        MaskPoly[i].y := MaskPoly[i].Y - YPos + Height div 2;
+      end;
+      FPlayerGlyph.FillPolyAntialias(MaskPoly, CurrentPixel);
+    end
+    else
+    begin
+      FPlayerGlyph.FillRect(0, 0, FRange * 2, FRange * 2, CurrentPixel);
     end;
-    FPlayerGlyph.FillPolyAntialias(MaskPoly, CurrentPixel);
   end
   else
   begin
@@ -1630,6 +1652,7 @@ begin
   FParticleName := '';
   FParticle := nil;
   FActive := True;
+  FShape := esPoint;
   RedrawGlyph;
 end;
 
@@ -1640,17 +1663,72 @@ begin
     FParticle := FParticleManager.ParticleByName[pName];
 end;
 
+procedure TParticleEmitterToken.SetShape(val: TParticleEmitterShape);
+begin
+  FShape := val;
+  RedrawGlyph;
+end;
+
 function TParticleEmitterToken.GetVisible: Boolean;
 begin
   Result := False;
+end;
+  
+procedure TParticleEmitterToken.SetWidth(Val: Integer);
+begin
+  FWidth := val;
+  RedrawGlyph;
+end;
+
+procedure TParticleEmitterToken.SetHeight(Val: Integer);
+begin
+  FHeight := val;
+  RedrawGlyph;
 end;
 
 procedure TParticleEmitterToken.RedrawGlyph;
 begin
   FGlyph.Free;
-  FGlyph := TBGRABitmap.Create(FWidth, FHeight);
+  FGlyph := TBGRABitmap.Create(FWidth, FHeight, BGRA(0, 0, 0, 0));
   // Mark center and circumference to make the token _slightly_ easier to see
-  FGlyph.EllipseAntialias(FWidth / 2, FHeight / 2, FWidth / 2, FHeight / 2, clLime, 2);
+  if FShape = esPoint then
+  begin
+    FGlyph.EllipseAntialias(FWidth / 2, FHeight / 2, 5, 5, clRed, 2, BGRA(255, 0, 0, 64));
+    FGlyph.DrawLineAntialias(FWidth, 0, 0, FHeight, clRed, 2);
+    FGlyph.DrawLineAntialias(0, 0, FWidth, FHeight, clRed, 2);
+  end
+  else if FShape = esRect then
+  begin
+    FGlyph.RectangleAntialias(1, 1, FWidth - 2, FHeight - 2, clRed, 2, BGRA(255, 0, 0, 64));
+    FGlyph.DrawLineAntialias(FWidth, 0, 0, FHeight, clRed, 2);
+  end
+  else if FShape = esEllipse then
+  begin
+    FGlyph.EllipseAntialias(FWidth / 2, FHeight / 2, FWidth / 2 - 1, FHeight / 2 - 1, clRed, 2, BGRA(255, 0, 0, 64));
+    FGlyph.DrawLineAntialias(FWidth, 0, 0, FHeight, clRed, 2);
+  end;
+end;
+
+function TParticleEmitterToken.GetNextPoint: TPoint;
+var APos, BPos: Double;
+begin
+  if FShape = esPoint then
+  begin
+    Result := Point(FXPos, FXPos);
+  end
+  else if FShape = esRect then
+  begin
+    APos := FWidth * Random + FXPos;
+    BPos := FHeight * Random + FYPos;
+    Result := Point(Round(APos), Round(BPos));
+  end
+  else if FShape = esEllipse then
+  begin
+    APos := Random * 2 * PI;
+    BPos := Sqrt(Random);
+    Result := Point(Round(FXPos + Sin(APos) * BPos * FWidth / 2),
+                    Round(FYPos + Cos(APos) * BPos * FHeight / 2));
+  end;
 end;
 
 procedure TParticleEmitterToken.DoAnimationStep(var NeedsUpdate: Boolean);
