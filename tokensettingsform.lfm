@@ -8,6 +8,7 @@ object fmTokenSettings: TfmTokenSettings
   ClientHeight = 267
   ClientWidth = 303
   FormStyle = fsStayOnTop
+  OnCreate = FormCreate
   OnDeactivate = FormDeactivate
   OnShow = FormShow
   LCLVersion = '2.2.4.0'
@@ -316,9 +317,6 @@ object fmTokenSettings: TfmTokenSettings
     Top = 119
     Width = 96
     ItemHeight = 15
-    Items.Strings = (
-      ''
-    )
     Style = csDropDownList
     TabOrder = 25
   end
@@ -329,6 +327,24 @@ object fmTokenSettings: TfmTokenSettings
     Width = 91
     Caption = 'Lock Position'
     TabOrder = 26
+  end
+  object cbParticleType: TComboBox
+    Left = 86
+    Height = 23
+    Top = 119
+    Width = 96
+    ItemHeight = 15
+    Style = csDropDownList
+    TabOrder = 27
+  end
+  object cbEmitterShape: TComboBox
+    Left = 86
+    Height = 23
+    Top = 147
+    Width = 96
+    ItemHeight = 15
+    Style = csDropDownList
+    TabOrder = 28
   end
   object cdIndicatorColor: TColorDialog
     Color = clBlack

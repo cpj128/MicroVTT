@@ -1714,12 +1714,12 @@ var APos, BPos: Double;
 begin
   if FShape = esPoint then
   begin
-    Result := Point(FXPos, FXPos);
+    Result := Point(FXPos, FYPos);
   end
   else if FShape = esRect then
   begin
-    APos := FWidth * Random + FXPos;
-    BPos := FHeight * Random + FYPos;
+    APos := FWidth * (Random - 0.5) + FXPos;
+    BPos := FHeight * (Random - 0.5) + FYPos;
     Result := Point(Round(APos), Round(BPos));
   end
   else if FShape = esEllipse then
@@ -1734,13 +1734,15 @@ end;
 procedure TParticleEmitterToken.DoAnimationStep(var NeedsUpdate: Boolean);
 var
   ang: Double;
+  pnt: TPoint;
 begin
   inherited;
   // Hier Partikel erzeugen
   if Assigned(FParticle) and FActive then
   begin
     Ang := Random(360);
-    FParticle.AddParticle(FXPos, FYPos, 0, Sin(DegToRad(ang)) * 5, Cos(DegToRad(ang)) * 5, 2, 50);
+    pnt := GetNextPoint;
+    FParticle.AddParticle(pnt.X, pnt.y, 0, Sin(DegToRad(ang)) * 2, Cos(DegToRad(ang)) * 2, 2, 50);
   end;
   NeedsUpdate := True;
 end;

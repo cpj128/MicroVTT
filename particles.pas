@@ -29,7 +29,9 @@ type
     // Coordinates of the particles
     PosX, PosY: Single;         
     // Rotations of the particles
-    Rot: Single;           
+    Rot: Single;
+    // Set Rotation to movement direction
+    RByDir: Boolean;
     // Delta-X/Y/Rotation of the particles
     DX, DY, DRot: Single;  
     // Time to life per particle, in frames
@@ -93,6 +95,8 @@ TParticleManager = class
 
     function HasParticle(name: string): Boolean;
     function GetParticleCount: Integer;
+    function ParticleList: TStringList;
+    function ParticleNameByIdx(idx: Integer): string;
 
     property ParticleByName[s: string]: TParticle read GetParticleByName;
     property Particle[i: Integer]: TParticle read GetParticle;
@@ -111,7 +115,10 @@ procedure TParticleData.DoTick;
 begin
   PosX := PosX + DX;
   PosY := PosY + DY;
-  Rot  := Rot  + DRot;
+  if RByDir then
+    Rot := RadToDeg(ArcTan2(DY, DX))
+  else
+    Rot  := Rot  + DRot;
   TTL  := TTL  - 1;
 end;
 
@@ -135,6 +142,8 @@ begin
     FGraphic := TBGRABitmap.Create(RelPath + graphicFileName);
     FMaxCount := particleFile.ReadInteger('Particle', 'MaxCount', 1000);
     FMaxIdx := 0;
+
+    FSetRByDir := particleFile.ReadBool('Particle', 'RByDir', False);
 
     SetLength(FData, FMaxCount);
   finally
@@ -186,7 +195,6 @@ begin
 
     // Set data for the next step
     FData[i].DoTick;
-    // TODO: Set R by dir, if option is set
     Inc(i);
   end;
 
@@ -214,6 +222,7 @@ begin
     tmpData.DY   := DY;
     tmpData.DRot := DR;
     tmpData.TTL  := TTL;
+    tmpData.RByDir := FSetRByDir;
     FData[FMaxIdx] := tmpData;
   end;
 end;
@@ -302,6 +311,21 @@ end;
 function TParticleManager.GetParticleCount: Integer;
 begin
   Result := FParticleList.Count;
+end;
+
+function TParticleManager.ParticleList: TStringList;
+var i: Integer;
+begin
+  Result := TStringList.Create;
+  for i := 0 to FParticleList.Count - 1 do
+    Result.Add(FParticleList[i]);
+end;
+
+function TParticleManager.ParticleNameByIdx(idx: Integer): string;
+begin
+  Result := '';
+  if (idx >= 0) and (idx < FParticleList.Count) then
+    Result := FParticleList[idx];
 end;
 
 end.

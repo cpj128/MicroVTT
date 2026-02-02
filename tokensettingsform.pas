@@ -33,6 +33,8 @@ type
     bCancel: TButton;
     bBringToFront: TButton;
     bDetach: TButton;
+    cbParticleType: TComboBox;
+    cbEmitterShape: TComboBox;
     cbVisible: TCheckBox;
     cbOverlay: TComboBox;
     cbShowLoS: TCheckBox;
@@ -68,6 +70,7 @@ type
     procedure bDetachClick(Sender: TObject);
     procedure bOkClick(Sender: TObject);
     procedure bSendToBackClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
     procedure FormDeactivate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure pnColorClick(Sender: TObject);
@@ -94,6 +97,16 @@ uses
   DisplayForm,
   InitiativeForm;
 
+const
+  LIGHTANIMATIONSTR: array[0..6] of string = ('TokenSettingsLightNone', 'TokenSettingsLightFlicker',
+                                              'TokenSettingsLightPulse', 'TokenSettingsLightFlash',
+                                              'TokenSettingsLightUnstable', 'TokenSettingsLightRampUp',
+                                              'TokenSettingsLightRampDown');
+
+  PARTICLEEMITTERSHAPES: array [0..2] of string = ('TokenSettingsEmitterShapePoint',
+                                                   'TokenSettingsEmitterShapeRect',
+                                                   'TokenSettingsEmitterShapeEllipse');
+
 { TfmTokenSettings }
 
 procedure TfmTokenSettings.SetCombatMode(val: Boolean);
@@ -115,7 +128,9 @@ begin
   udGridSlotsY.Position := token.GridSlotsY;
 
   if token is TRangeIndicator then
-  begin
+  begin               
+    cbShowLoS.Show;
+    cbLockPosition.Show;
     fseMaxStrength.Hide;
     seNumber.Hide;
     cbOverlay.Hide;
@@ -124,6 +139,8 @@ begin
     eGridSlotsY.Hide;
     cbShowLoS.Hide;
     cbAnimationType.Hide;
+    cbParticleType.Hide;
+    cbEmitterShape.Hide;
                          
     Label2.Show;
     eHeight.Show;
@@ -146,7 +163,9 @@ begin
     bAddToInitiative.Enabled := False;
   end
   else if token is TTextToken then
-  begin
+  begin          
+    cbShowLoS.Show;
+    cbLockPosition.Show;
     fseMaxStrength.Hide;
     seSectorAngle.Hide;
     pnColor.Hide;
@@ -163,6 +182,8 @@ begin
     eGridSlotsY.Hide;
     cbShowLoS.Hide;
     cbAnimationType.Hide;
+    cbParticleType.Hide;
+    cbEmitterShape.Hide;
 
     Label2.Show;
     eHeight.Show;
@@ -174,7 +195,9 @@ begin
     bAddToInitiative.Enabled := False;
   end
   else if token is TLightToken then
-  begin
+  begin         
+    cbShowLoS.Show;
+    cbLockPosition.Show;
     Label2.Show;
     eHeight.Hide;
     seNumber.Hide;
@@ -187,6 +210,8 @@ begin
     eGridSlotsY.Hide;
     cbShowLoS.Hide;
     fseRotation.Hide;
+    cbParticleType.Hide;
+    cbEmitterShape.Hide;
      
     bDetach.Show;
     bDetach.Enabled := TLightToken(token).IsAttached;
@@ -203,9 +228,43 @@ begin
     Label7.Show; 
     seSectorAngle.Show;
     seSectorAngle.Value := TLightToken(token).AnimationSpeed;
+
+    bAddToInitiative.Enabled := False;
+  end
+  else if token is TParticleEmitterToken then
+  begin
+    cbShowLoS.Hide;
+    cbLockPosition.Hide;
+    fseMaxStrength.Hide;
+    Label7.Show;
+    seSectorAngle.Hide;
+    seNumber.Hide;
+    Label6.Hide;
+    pnColor.Hide;
+    Label3.Hide;
+    Label4.Hide;
+    seAlpha.Hide;
+    eGridSlotsX.Hide;
+    eGridSLotsY.Hide;
+    mText.Hide;
+    cbOverlay.Hide;
+    cbAnimationType.Hide;
+    cbParticleType.Show;
+    cbParticleType.ItemIndex := cbParticleType.Items.IndexOf(TParticleEmitterToken(token).ParticleName);
+    cbEmitterShape.Show;
+    cbEmitterShape.ItemIndex := Ord(TParticleEmitterToken(token).Shape);
+    bAddToInitiative.Enabled := False;
+
+    eWidth.Show;
+    eHeight.Show;
+    cbVisible.Show;
+    cbVisible.Checked := TParticleEmitterToken(token).Active;
+
   end
   else if token is TCharacterToken then
-  begin       
+  begin
+    cbShowLoS.Show;
+    cbLockPosition.Show;
     Label2.Show;
     eHeight.Show;  
     Label5.Show;
@@ -230,6 +289,8 @@ begin
     mText.Hide;
     bDetach.Hide;
     cbAnimationType.Hide;
+    cbParticleType.Hide;
+    cbEmitterShape.Hide;
     bBringToFront.Enabled := True;
     bSendToBack.Enabled := True;
   end;
@@ -275,6 +336,13 @@ begin
       TLightToken(LinkedToken).MaxStrength := fseMaxStrength.Value;
       TLightToken(LinkedToken).AnimationType := TLightAnimationType(cbAnimationType.ItemIndex);
       TLightToken(LinkedToken).AnimationSpeed := seSectorAngle.Value;
+    end;
+    if LinkedToken is TParticleEmitterToken then
+    begin
+      TParticleEmitterToken(LinkedToken).Active := cbVisible.Checked;
+      TParticleEmitterToken(LinkedToken).ParticleName := cbParticleType.Items[cbParticleType.ItemIndex];
+      TParticleEmitterToken(LinkedToken).Shape := TParticleEmitterShape(cbEmitterShape.ItemIndex);
+      //TParticle
     end;
     LinkedToken.UpdateAttached;
     LinkedToken := nil;
@@ -324,6 +392,20 @@ begin
   end;
 end;
 
+procedure TfmTokenSettings.FormCreate(Sender: TObject);
+var i: Integer;
+begin
+  // Light animations
+  for i := Low(LIGHTANIMATIONSTR) to High(LIGHTANIMATIONSTR) do
+    cbAnimationType.Items.Add(GetString(LangStrings.LanguageID, LIGHTANIMATIONSTR[i]));
+  // Particle Types
+  for i := 0 to fmController.ParticleManager.GetParticleCount - 1 do
+    cbParticleType.Items.Add(fmController.ParticleManager.ParticleNameByIdx(i));
+  // Emitter shapes
+  for i := Low(PARTICLEEMITTERSHAPES) to High(PARTICLEEMITTERSHAPES) do
+    cbEmitterShape.Items.Add(GetString(LangStrings.LanguageID, PARTICLEEMITTERSHAPES[i]));
+end;
+
 procedure TfmTokenSettings.bDeleteClick(Sender: TObject);
 begin
   fmController.RemoveToken(LinkedToken);
@@ -344,6 +426,7 @@ var
   i, PrevIdx: Integer;
   AniType: TLightAnimationType;
   ContentList: TStringList;
+  tmp: string;
 begin
   Caption := GetString(LangStrings.LanguageID, 'TokenSettingsCaption');
   cbVisible.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsVisible');
@@ -370,20 +453,12 @@ begin
     Label5.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsLightAnimation');
     Label6.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsColor');
     Label7.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsAnimationSpeed');
-
-    i := cbAnimationType.ItemIndex;
-    cbAnimationType.Items.Clear;
-    // Make sure we have the correct amount of items
-    for AniType := Low(TLightAnimationType) to High(TLightANimationType) do
-      cbAnimationType.Items.Add('');
-    cbAnimationType.Items[0] := GetString(LangStrings.LanguageID, 'TokenSettingsLightNone');
-    cbAnimationType.Items[1] := GetString(LangStrings.LanguageID, 'TokenSettingsLightFlicker');
-    cbAnimationType.Items[2] := GetString(LangStrings.LanguageID, 'TokenSettingsLightPulse');
-    cbAnimationType.Items[3] := GetString(LangStrings.LanguageID, 'TokenSettingsLightFlash');
-    cbAnimationType.Items[4] := GetString(LangStrings.LanguageID, 'TokenSettingsLightUnstable');
-    cbAnimationType.Items[5] := GetString(LangStrings.LanguageID, 'TokenSettingsLightRampUp');
-    cbAnimationType.Items[6] := GetString(LangStrings.LanguageID, 'TokenSettingsLightRampDown');
-    cbAnimationType.ItemIndex := i;
+  end
+  else if LinkedToken is TParticleEmitterToken then
+  begin
+    cbVisible.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterActive');
+    Label5.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterParticleType');
+    Label7.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterShape');
   end
   else
   begin
@@ -403,6 +478,7 @@ begin
   cbOverlay.Items.Clear;
   cbOverlay.Items.Add('-');
   cbOverlay.ItemIndex := 0;
+
   ContentList := TStringList.Create;
   try
     ContentList.Delimiter := '|';
