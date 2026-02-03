@@ -21,7 +21,8 @@ interface
 uses
   Classes, Graphics, SysUtils, BGRABitmap, IniFiles,
   WallManager,
-  Particles;
+  Particles,
+  RPGUtils;
   
  const
   MAXTOKENANIMSTEPS = 20;
@@ -277,10 +278,18 @@ type
   TParticleEmitterToken = class(TAttachableToken)
   private
     FParticleManager: TParticleManager;
+    FRNG: TCustomRNG;
     FParticleName: string;
     FParticle: TParticle;
     FActive: Boolean;
     FShape: TParticleEmitterShape;
+
+    FCentralAngle, FAngleRange: Double;
+    FCentralSpeed, FSpeedRange: Double;
+    FAngleDistribution, FSpeedDistribution: TRandomDistribution;
+    // Need similar stuff for rotation and ttl
+    // Maybe move TTL to particle definition?
+
     procedure SetParticleName(pName: string);
     procedure SetShape(val: TParticleEmitterShape);
     function GetNextPoint: TPoint;
@@ -290,6 +299,7 @@ type
     procedure SetHeight(Val: Integer); override;
   public
     constructor Create(X, Y: Integer);
+    destructor Destroy; override;
     procedure RedrawGlyph; override;
     procedure DoAnimationStep(var NeedsUpdate: Boolean); override;
 
@@ -306,8 +316,7 @@ uses
   BGRABitmapTypes,
   BGRATextFX,
   BGRAGradientScanner,
-  DisplayConst,
-  RPGUtils;
+  DisplayConst;
 
 { TGridData }
 
@@ -1654,6 +1663,20 @@ begin
   FActive := True;
   FShape := esPoint;
   RedrawGlyph;
+
+  FCentralAngle      := 0;
+  FAngleRange        := 5;
+  FCentralSpeed      := 2;
+  FSpeedRange        := 0;
+  FAngleDistribution := rdUniform;
+  FSpeedDistribution := rdUniform;
+  FRNG := TMRandom.Create;
+end;
+
+destructor TParticleEmitterToken.Destroy;
+begin
+  FRNG.Free;
+  inherited;
 end;
 
 procedure TParticleEmitterToken.SetParticleName(pName: string);
@@ -1733,16 +1756,18 @@ end;
 
 procedure TParticleEmitterToken.DoAnimationStep(var NeedsUpdate: Boolean);
 var
-  ang: Double;
+  ang, speed: Double;
   pnt: TPoint;
 begin
   inherited;
-  // Hier Partikel erzeugen
+  // Create particles
+
   if Assigned(FParticle) and FActive then
   begin
-    Ang := Random(360);
+    Ang := FCentralAngle + FRNG.RandomDist(FAngleDistribution) * FAngleRange;
+    speed := FCentralSpeed + FRNG.RandomDist(FSpeedDistribution) * FSpeedRange;
     pnt := GetNextPoint;
-    FParticle.AddParticle(pnt.X, pnt.y, 0, Sin(DegToRad(ang)) * 2, Cos(DegToRad(ang)) * 2, 2, 50);
+    FParticle.AddParticle(pnt.X, pnt.y, 0, Sin(DegToRad(ang)) * speed, Cos(DegToRad(ang)) * speed, 0, 50);
   end;
   NeedsUpdate := True;
 end;

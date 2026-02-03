@@ -63,11 +63,15 @@ type
     {FPosXMin, FPosXMax, FPosYMin, FPosYMax: Double;
     FRotMin, FRotMax: Double;
     FDPosXMin, FDPosXMax, FDPosYMin, FDPosYMax: Double;
-    FDRotMin, FDRotMax: Double;
-    FTTLMin, FTTLMax: Integer;}
+    FDRotMin, FDRotMax: Double;}
+
+    FTTLMin, FTTLMax: Integer;
 
     // Set particle rotation by movement direction
     FSetRByDir: Boolean;
+
+    // Draw particle independently of screen movement
+    FScreenStatic: Boolean;
 
   public
     constructor Create(DefFileName: string);
@@ -144,6 +148,10 @@ begin
     FMaxIdx := 0;
 
     FSetRByDir := particleFile.ReadBool('Particle', 'RByDir', False);
+    FScreenStatic := particleFile.ReadBool('Particle', 'ScreenStatic', False);
+
+    FTTLMin := particleFile.ReadInteger('Particle', 'TTLMin', 100);
+    FTTLMax := particleFile.ReadInteger('Particle', 'TTLMax', 100);
 
     SetLength(FData, FMaxCount);
   finally
@@ -163,7 +171,10 @@ var
   i: Integer;
   fixMat, tmpMat: TAffineMatrix;
 begin
-  fixMat := AffineMatrixTranslation(-OffsetX, -OffsetY) * AffineMatrixScale(ZoomFactor, ZoomFactor);
+  if FScreenStatic then
+    fixMat := AffineMatrixScale(ZoomFactor, ZoomFactor)
+  else
+    fixMat := AffineMatrixTranslation(-OffsetX, -OffsetY) * AffineMatrixScale(ZoomFactor, ZoomFactor);
   for i := 0 to FMaxIdx - 1 do
   begin
     tmpMat := fixMat * AffineMatrixTranslation(FData[i].PosX, FData[i].PosY);
@@ -221,7 +232,7 @@ begin
     tmpData.DX   := DX;
     tmpData.DY   := DY;
     tmpData.DRot := DR;
-    tmpData.TTL  := TTL;
+    tmpData.TTL  := FTTLMin + Random(FTTLMax - FTTLMin);
     tmpData.RByDir := FSetRByDir;
     FData[FMaxIdx] := tmpData;
   end;
