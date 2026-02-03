@@ -1,4 +1,4 @@
-{Copyright (c) 2023-2025 Stephan Breer
+{Copyright (c) 2023-2026 Stephan Breer
 
 This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
 
@@ -20,6 +20,38 @@ interface
 uses
   Classes, SysUtils,
   BGRABitmapTypes;
+
+type
+    
+TRandomDistribution = (rdUniform, rdGaussian, rdArcSine);
+
+TCustomRNG = class
+private
+  NextGauss: Double;
+  HasNextGauss: Boolean;
+protected
+  procedure SetSeed(pSeed: Cardinal); virtual; abstract;
+  function NextValue: Cardinal; virtual; abstract;
+public
+  //constructor Create;
+  function Random(val: Cardinal): Cardinal; overload;
+  function Random: Double; overload;
+  function RandomDist(dist: TRandomDistribution): Double;
+  function RandomGauss: Double;
+  function RandomArcSine: Double;
+  property Seed: Cardinal write SetSeed;
+end;
+  
+// Marsaglias KISS-PRNG
+TMRandom = class(TCustomRNG)
+private
+  x, y, z, c: Longword;
+protected
+  procedure SetSeed(pSeed: Cardinal); override;
+  function NextValue: Cardinal; override;
+public
+  constructor Create(pSeed: Cardinal = 123456789);
+end;
 
 function Map(Val, InValStart, InValEnd, OutValStart, OutValEnd: Double): Double;
 
@@ -87,6 +119,91 @@ implementation
 
 uses
   Math;
+
+
+{ TCustomRNG }
+
+function TCustomRNG.Random(val: Cardinal): Cardinal;
+begin
+  Result := NextValue mod val;
+end;
+
+function TCustomRNG.Random: Double;
+begin
+  Result := NextValue / $FFFFFFFF;
+end;
+
+function TCustomRNG.RandomDist(dist: TRandomDistribution): Double;
+begin
+  if dist = rdUniform then
+    Result := Random * 2 - 1
+  else if dist = rdGaussian then
+    Result := RandomGauss
+  else if dist = rdArcSine then
+    Result := RandomArcSine * 2 - 1;
+end;
+
+function TCustomRNG.RandomGauss: Double;
+var v1, v2, s, mult: Double;
+begin
+  if HasNextGauss then
+  begin
+    HasNextGauss := False;
+    Exit(NextGauss);
+  end;
+
+  // Polar-Method
+  repeat
+    v1 := 2 * self.Random - 1;
+    v2 := 2 * self.Random - 1;
+    s := Sqr(v1) + Sqr(v2);
+  until InRange(s, 0, 1);
+
+  mult := Sqrt(-2 * Lnxp1(s - 1) / s);
+  Result := v1 * mult;
+  NextGauss := v2 * mult;
+  HasNextGauss := True;
+end;
+
+function TCustomRNG.RandomArcSine: Double;
+begin
+  Result := Sqr(Sin(0.5 * PI * self.Random));
+end;
+
+{ TMRandom }
+
+constructor TMRandom.Create(pSeed: Cardinal = 123456789);
+begin
+  Seed := pSeed;
+end;
+
+procedure TMRandom.SetSeed(pSeed: Cardinal);
+begin
+  x := pSeed;
+  y := 362436000;
+  z := 521288629;
+  c := 7654321;
+end;
+
+function TMRandom.NextValue: Cardinal;
+var
+  t: Int64;
+begin
+  // Linear Congruential Generator
+  x := LongWord(69069 * x + 12345);
+
+  // XOR-Shift
+  y := y xor (y shl 13);
+  y := y xor (y shr 17);
+  y := y xor (y shl 5);
+
+  // Multiply-with-Carry
+  t := 698769069 * Int64(z) + Int64(c);
+  c := t shr 32;
+  z := t and $FFFFFFFF;
+
+  Result := LongWord(x + y + z);
+end;
 
 
 function Map(Val, InValStart, InValEnd, OutValStart, OutValEnd: Double): Double;
