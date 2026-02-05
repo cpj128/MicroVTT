@@ -25,7 +25,7 @@ uses
   RPGUtils;
   
  const
-  MAXTOKENANIMSTEPS = 20;
+  MAXTOKENANIMSTEPS = 2;
 
 type
 
@@ -87,7 +87,7 @@ type
       FVisible: Boolean;
       FLockPos: Boolean;
       FGridSlotsX, FGridSlotsY: Integer;
-      FCurAnimationStep: Integer;
+      FCurAnimationStep: Double;
       FIsMoving: Boolean;
       FAttached: TList;
     protected
@@ -114,7 +114,7 @@ type
       function GetCellsAtPosition(PosX, PosY: Integer; GridData: TGridData): TRect;
       procedure StartAnimation;
       procedure StopAnimation;
-      procedure DoAnimationStep(var NeedsUpdate: Boolean); virtual;
+      procedure DoAnimationStep(var NeedsUpdate: Boolean; DeltaT: Double); virtual;
       function GetBoundingRect: TRect;
       procedure Attach(token: TToken);
       function GetAttached(idx: Integer): TToken;
@@ -239,14 +239,14 @@ type
     FWallManager: TWallManager;
     FLightPic, FPlayerGlyph: TBGRABitmap;
     FAnimationType: TLightAnimationType;
-    FAnimationStep: Integer;
+    FAnimationStep: Double;
     FAnimationSpeed: Integer;
     FLastFlickerVal, FCurFlickerVal: Double;
     procedure SetColor(val: TColor);
     procedure SetRange(val: Integer);
     procedure SetMaxStrength(val: Double);
     function GetRange: Integer;
-    function GetCurrentLightStrength(step: Integer): Double;
+    function GetCurrentLightStrength(step: Double): Double;
   protected   
     procedure SetWidth(Val: Integer); override;
     procedure SetHeight(Val: Integer); override;
@@ -259,7 +259,7 @@ type
   public
     constructor Create(X, Y, pRange: Integer);
     destructor Destroy; override;
-    procedure DoAnimationStep(var NeedsUpdate: Boolean); override;
+    procedure DoAnimationStep(var NeedsUpdate: Boolean; DeltaT: Double); override;
     procedure SaveToIni(SaveFile: TIniFile; idx: Integer); override;
     procedure RedrawGlyph; override;
     procedure RedrawPlayerGlyph;
@@ -283,6 +283,8 @@ type
     FParticle: TParticle;
     FActive: Boolean;
     FShape: TParticleEmitterShape;
+    FParticlesPerSecond: Double;
+    FParticleQueue: Double;
 
     FCentralAngle, FAngleRange: Double;
     FCentralSpeed, FSpeedRange: Double;
@@ -301,7 +303,7 @@ type
     constructor Create(X, Y: Integer);
     destructor Destroy; override;
     procedure RedrawGlyph; override;
-    procedure DoAnimationStep(var NeedsUpdate: Boolean); override;
+    procedure DoAnimationStep(var NeedsUpdate: Boolean; DeltaT: Double); override;
 
     property ParticleManager: TParticleManager read FParticleManager write FParticleManager;
     property ParticleName: string read FParticleName write SetParticleName;
@@ -731,14 +733,14 @@ begin
   FYStartPos := FYPos;
 end;
 
-procedure TToken.DoAnimationStep(var NeedsUpdate: Boolean);
+procedure TToken.DoAnimationStep(var NeedsUpdate: Boolean; DeltaT: Double);
 begin
   if not FIsMoving then
   begin
     NeedsUpdate := False;
     Exit;
   end;
-  if FCurAnimationStep = MAXTOKENANIMSTEPS then
+  if SameValue(FCurAnimationStep, MAXTOKENANIMSTEPS) then
   begin
     FXPos := FXTargetPos;
     FYPos := FYTargetPos;
@@ -748,7 +750,7 @@ begin
   end
   else
   begin
-    Inc(FCurAnimationStep);
+    FCurAnimationStep := Min(FCurAnimationStep + DeltaT, MAXTOKENANIMSTEPS);
     FXPos := Round(Ease(FCurAnimationStep, FXStartPos, FXTargetPos - FXStartPos, MAXTOKENANIMSTEPS, etOutQuad));
     FYPos := Round(Ease(FCurAnimationStep, FYStartPos, FYTargetPos - FYStartPos, MAXTOKENANIMSTEPS, etOutQuad));
   end;
@@ -1371,7 +1373,7 @@ begin
   FAttached := TList.Create;
   FAnimationType := latNone;
   FAnimationStep := 0;
-  FAnimationSpeed := 10;
+  FAnimationSpeed := 90;
   FLastFlickerVal := 0.7;
   FCurFlickerVal := 0.7 + Random * 0.3;
 end;
@@ -1392,13 +1394,13 @@ begin
   SaveFile.WriteInteger(SAVESECTIONTOKENS, 'Animation' + IntToStr(idx), Ord(FAnimationType));
 end;
 
-procedure TLightToken.DoAnimationStep(var NeedsUpdate: Boolean);
+procedure TLightToken.DoAnimationStep(var NeedsUpdate: Boolean; DeltaT: Double);
 var
-  LastAniStep: Integer;
+  LastAniStep: Double;
 begin
   inherited;
   LastAniStep := FAnimationStep;
-  FAnimationStep := FAnimationStep + FAnimationSpeed;
+  FAnimationStep := FAnimationStep + FAnimationSpeed * DeltaT;
   if FAnimationStep >= 360 then
   begin
     FAnimationStep := FAnimationStep mod 360;
@@ -1552,7 +1554,7 @@ end;
 
 procedure TLightToken.SetAnimationSpeed(val: Integer);
 begin
-  FAnimationSpeed := EnsureRange(val, 0, 180);
+  FAnimationSpeed := EnsureRange(val, 0, 360);
 end;
 
 function TLightToken.GetRange: Integer;
@@ -1560,7 +1562,7 @@ begin
   Result := FRange;
 end;
 
-function TLightToken.GetCurrentLightStrength(step: Integer): Double;
+function TLightToken.GetCurrentLightStrength(step: Double): Double;
 const
   RKSINSCALER = 0.9;
   RKSINNORMALIZE = 1.1197695149986342;
@@ -1671,6 +1673,9 @@ begin
   FAngleDistribution := rdUniform;
   FSpeedDistribution := rdUniform;
   FRNG := TMRandom.Create;
+
+  FParticlesPerSecond := 10;
+  FParticleQueue := 0;
 end;
 
 destructor TParticleEmitterToken.Destroy;
@@ -1737,24 +1742,24 @@ var APos, BPos: Double;
 begin
   if FShape = esPoint then
   begin
-    Result := Point(FXPos, FYPos);
+    Result := Point(XPos, YPos);
   end
   else if FShape = esRect then
   begin
-    APos := FWidth * (Random - 0.5) + FXPos;
-    BPos := FHeight * (Random - 0.5) + FYPos;
+    APos := FWidth * (Random - 0.5) + XPos;
+    BPos := FHeight * (Random - 0.5) + YPos;
     Result := Point(Round(APos), Round(BPos));
   end
   else if FShape = esEllipse then
   begin
     APos := Random * 2 * PI;
     BPos := Sqrt(Random);
-    Result := Point(Round(FXPos + Sin(APos) * BPos * FWidth / 2),
-                    Round(FYPos + Cos(APos) * BPos * FHeight / 2));
+    Result := Point(Round(XPos + Sin(APos) * BPos * FWidth / 2),
+                    Round(YPos + Cos(APos) * BPos * FHeight / 2));
   end;
 end;
 
-procedure TParticleEmitterToken.DoAnimationStep(var NeedsUpdate: Boolean);
+procedure TParticleEmitterToken.DoAnimationStep(var NeedsUpdate: Boolean; DeltaT: Double);
 var
   ang, speed: Double;
   pnt: TPoint;
@@ -1764,10 +1769,16 @@ begin
 
   if Assigned(FParticle) and FActive then
   begin
-    Ang := FCentralAngle + FRNG.RandomDist(FAngleDistribution) * FAngleRange;
-    speed := FCentralSpeed + FRNG.RandomDist(FSpeedDistribution) * FSpeedRange;
-    pnt := GetNextPoint;
-    FParticle.AddParticle(pnt.X, pnt.y, 0, Sin(DegToRad(ang)) * speed, Cos(DegToRad(ang)) * speed, 0, 50);
+    FParticleQueue := FParticleQueue + FParticlesPerSecond * DeltaT;
+    while FParticleQueue > 1 do
+    begin
+
+      Ang := FCentralAngle + FRNG.RandomDist(FAngleDistribution) * FAngleRange;
+      speed := FCentralSpeed + FRNG.RandomDist(FSpeedDistribution) * FSpeedRange;
+      pnt := GetNextPoint;
+      FParticle.AddParticle(pnt.X, pnt.y, 0, Sin(DegToRad(ang)) * speed, Cos(DegToRad(ang)) * speed, 0, 50);
+      FParticleQueue := FParticleQueue - 1;
+    end;
   end;
   NeedsUpdate := True;
 end;

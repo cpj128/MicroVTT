@@ -62,6 +62,7 @@ type
     FCurTokenRect: TRect;
     FDraggedTokenPos: TPoint;
     FLoSMap: TBGRABitmap;
+    FPrevTicks: QWORD;
 
     procedure SetMapFile(FileName: string);
     procedure SetMapZoom(val: Double);
@@ -151,6 +152,7 @@ end;
 procedure TfmDisplay.FormCreate(Sender: TObject);
 begin        
   FMapZoom := 1;
+  FPrevTicks := 0;
   FCombatMode := False;
   DraggedTokenPos := Point(-1, -1);
   FGridData.GridSizeX := 100;
@@ -827,8 +829,13 @@ var
   i: Integer;
   CurToken: TToken;
   AnyTokenMoving, NeedsUpdate: Boolean;
+  DeltaT: QWORD;
 begin
-   // Move Tokens
+  // Works better this way, but still, the timer has got to go
+  DeltaT := GetTickCount64 - FPrevTicks;
+  FPrevTicks := GetTickCount64;
+
+  // Move Tokens
   AnyTokenMoving := False;
   NeedsUpdate := False;
   for i := 0 to fmController.GetTokenCount - 1 do
@@ -836,7 +843,7 @@ begin
     CurToken := fmController.GetToken(i);
     if Assigned(CurToken) then
     begin
-      CurToken.DoAnimationStep(NeedsUpdate);
+      CurToken.DoAnimationStep(NeedsUpdate, DeltaT / 1000);
       AnyTokenMoving := AnyTokenMoving or NeedsUpdate;
     end;
   end;
