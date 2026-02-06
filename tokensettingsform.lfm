@@ -12,339 +12,770 @@ object fmTokenSettings: TfmTokenSettings
   OnDeactivate = FormDeactivate
   OnShow = FormShow
   LCLVersion = '2.2.4.0'
-  object mText: TMemo
-    Left = 86
-    Height = 107
-    Top = 147
-    Width = 96
-    Lines.Strings = (
-      'mText'
-    )
-    TabOrder = 22
-  end
-  object cbVisible: TCheckBox
-    Left = 8
-    Height = 19
-    Top = 8
-    Width = 54
-    Caption = 'Visible'
+  object pRight: TPanel
+    Left = 187
+    Height = 267
+    Top = 0
+    Width = 116
+    Align = alRight
+    ClientHeight = 267
+    ClientWidth = 116
     TabOrder = 0
+    object bOk: TButton
+      Left = 1
+      Height = 25
+      Top = 7
+      Width = 115
+      Anchors = [akTop, akRight]
+      Caption = 'Ok'
+      OnClick = bOkClick
+      TabOrder = 0
+    end
+    object bCancel: TButton
+      Left = 1
+      Height = 25
+      Top = 35
+      Width = 115
+      Anchors = [akTop, akRight]
+      Cancel = True
+      Caption = 'Cancel'
+      OnClick = bCancelClick
+      TabOrder = 1
+    end
+    object bDelete: TButton
+      Left = 1
+      Height = 25
+      Top = 63
+      Width = 115
+      Anchors = [akTop, akRight]
+      Caption = 'Delete'
+      OnClick = bDeleteClick
+      TabOrder = 2
+    end
+    object bAddToInitiative: TButton
+      Left = 1
+      Height = 25
+      Top = 91
+      Width = 115
+      Anchors = [akTop, akRight]
+      Caption = 'Add to Initiative'
+      OnClick = bAddToInitiativeClick
+      TabOrder = 3
+    end
+    object bBringToFront: TButton
+      Left = 1
+      Height = 25
+      Top = 119
+      Width = 115
+      Anchors = [akTop, akRight]
+      Caption = 'Bring to Front'
+      OnClick = bBringToFrontClick
+      TabOrder = 4
+    end
+    object bSendToBack: TButton
+      Left = 1
+      Height = 25
+      Top = 147
+      Width = 115
+      Anchors = [akTop, akRight]
+      Caption = 'Send to Back'
+      OnClick = bSendToBackClick
+      TabOrder = 5
+    end
+    object bDetach: TButton
+      Left = 1
+      Height = 25
+      Top = 175
+      Width = 115
+      Anchors = [akTop, akRight]
+      Caption = 'Detach'
+      OnClick = bDetachClick
+      TabOrder = 6
+    end
   end
-  object eWidth: TEdit
-    Left = 85
-    Height = 23
-    Top = 63
-    Width = 79
+  object pcSettings: TPageControl
+    Left = 0
+    Height = 267
+    Top = 0
+    Width = 187
+    ActivePage = tsCharacter
+    Align = alClient
+    ShowTabs = False
+    TabIndex = 0
     TabOrder = 1
-    Text = 'eWidth'
-  end
-  object Label1: TLabel
-    Left = 8
-    Height = 15
-    Top = 67
-    Width = 35
-    Caption = 'Width:'
-    ParentColor = False
-  end
-  object udWidth: TUpDown
-    Left = 164
-    Height = 23
-    Top = 63
-    Width = 17
-    Associate = eWidth
-    Max = 1000
-    Min = 0
-    Position = 100
-    TabOrder = 8
-  end
-  object Label2: TLabel
-    Left = 8
-    Height = 15
-    Top = 95
-    Width = 39
-    Caption = 'Height:'
-    ParentColor = False
-  end
-  object eHeight: TEdit
-    Left = 86
-    Height = 23
-    Top = 91
-    Width = 79
-    TabOrder = 2
-    Text = 'eHeight'
-  end
-  object udHeight: TUpDown
-    Left = 165
-    Height = 23
-    Top = 91
-    Width = 17
-    Associate = eHeight
-    Max = 1000
-    Min = 0
-    Position = 100
-    TabOrder = 9
-  end
-  object bDelete: TButton
-    Left = 184
-    Height = 25
-    Top = 63
-    Width = 115
-    Caption = 'Delete'
-    OnClick = bDeleteClick
-    TabOrder = 5
-  end
-  object bCancel: TButton
-    Left = 184
-    Height = 25
-    Top = 35
-    Width = 115
-    Cancel = True
-    Caption = 'Cancel'
-    OnClick = bCancelClick
-    TabOrder = 7
-  end
-  object bOk: TButton
-    Left = 184
-    Height = 25
-    Top = 7
-    Width = 115
-    Caption = 'Ok'
-    OnClick = bOkClick
-    TabOrder = 6
-  end
-  object Label3: TLabel
-    Left = 8
-    Height = 15
-    Top = 207
-    Width = 63
-    Caption = 'Grid Slots X:'
-    ParentColor = False
-  end
-  object eGridSlotsX: TEdit
-    Left = 86
-    Height = 23
-    Top = 203
-    Width = 79
-    TabOrder = 3
-    Text = 'eGridSlotsX'
-  end
-  object udGridSlotsX: TUpDown
-    Left = 165
-    Height = 23
-    Top = 203
-    Width = 17
-    Associate = eGridSlotsX
-    Max = 1000
-    Min = 1
-    MinRepeatInterval = 25
-    Position = 1
-    TabOrder = 10
-  end
-  object Label4: TLabel
-    Left = 8
-    Height = 15
-    Top = 235
-    Width = 63
-    Caption = 'Grid Slots Y:'
-    ParentColor = False
-  end
-  object eGridSlotsY: TEdit
-    Left = 86
-    Height = 23
-    Top = 231
-    Width = 79
-    TabOrder = 4
-    Text = 'eGridSlotsY'
-  end
-  object udGridSlotsY: TUpDown
-    Left = 165
-    Height = 23
-    Top = 231
-    Width = 17
-    Associate = eGridSlotsY
-    Max = 1000
-    Min = 1
-    MinRepeatInterval = 25
-    Position = 1
-    TabOrder = 11
-  end
-  object Label5: TLabel
-    Left = 8
-    Height = 15
-    Top = 123
-    Width = 48
-    Caption = 'Rotation:'
-    ParentColor = False
-  end
-  object fseRotation: TFloatSpinEdit
-    Left = 86
-    Height = 23
-    Top = 119
-    Width = 96
-    MaxValue = 360
-    MinValue = -360
-    TabOrder = 12
-  end
-  object Label6: TLabel
-    Left = 8
-    Height = 15
-    Top = 179
-    Width = 43
-    Caption = 'Overlay:'
-    ParentColor = False
-  end
-  object cbOverlay: TComboBox
-    Left = 85
-    Height = 23
-    Top = 175
-    Width = 96
-    ItemHeight = 15
-    Items.Strings = (
-      '-'
-    )
-    Style = csDropDownList
-    TabOrder = 13
-  end
-  object Label7: TLabel
-    Left = 8
-    Height = 15
-    Top = 151
-    Width = 47
-    Caption = 'Number:'
-    ParentColor = False
-  end
-  object seNumber: TSpinEditEx
-    Left = 86
-    Height = 23
-    Top = 147
-    Width = 96
-    MaxLength = 0
-    NumbersOnly = True
-    TabOrder = 14
-    MaxValue = 999
-    NullValue = 0
-    NullValueBehaviour = nvbInitialValue
-    Value = 0
-  end
-  object bAddToInitiative: TButton
-    Left = 184
-    Height = 25
-    Top = 91
-    Width = 115
-    Caption = 'Add to Initiative'
-    OnClick = bAddToInitiativeClick
-    TabOrder = 15
-  end
-  object bBringToFront: TButton
-    Left = 184
-    Height = 25
-    Top = 119
-    Width = 115
-    Caption = 'Bring to Front'
-    OnClick = bBringToFrontClick
-    TabOrder = 16
-  end
-  object bSendToBack: TButton
-    Left = 184
-    Height = 25
-    Top = 147
-    Width = 115
-    Caption = 'Send to Back'
-    OnClick = bSendToBackClick
-    TabOrder = 17
-  end
-  object seSectorAngle: TSpinEditEx
-    Left = 86
-    Height = 23
-    Top = 147
-    Width = 96
-    MaxLength = 0
-    TabOrder = 18
-    MaxValue = 360
-    NullValue = 0
-    Value = 90
-  end
-  object pnColor: TPanel
-    Left = 86
-    Height = 23
-    Top = 175
-    Width = 96
-    TabOrder = 19
-    OnClick = pnColorClick
-  end
-  object seAlpha: TSpinEditEx
-    Left = 86
-    Height = 23
-    Top = 203
-    Width = 96
-    MaxLength = 0
-    TabOrder = 20
-    MaxValue = 255
-    NullValue = 0
-    Value = 0
-  end
-  object bDetach: TButton
-    Left = 184
-    Height = 25
-    Top = 175
-    Width = 115
-    Caption = 'Detach'
-    OnClick = bDetachClick
-    TabOrder = 21
-  end
-  object fseMaxStrength: TFloatSpinEdit
-    Left = 86
-    Height = 23
-    Top = 91
-    Width = 96
-    Increment = 0.1
-    MaxValue = 1
-    MinValue = 0.1
-    TabOrder = 23
-    Value = 0.1
-  end
-  object cbShowLoS: TCheckBox
-    Left = 85
-    Height = 19
-    Top = 8
-    Width = 71
-    Caption = 'Show LoS'
-    TabOrder = 24
-  end
-  object cbAnimationType: TComboBox
-    Left = 86
-    Height = 23
-    Top = 119
-    Width = 96
-    ItemHeight = 15
-    Style = csDropDownList
-    TabOrder = 25
-  end
-  object cbLockPosition: TCheckBox
-    Left = 8
-    Height = 19
-    Top = 36
-    Width = 91
-    Caption = 'Lock Position'
-    TabOrder = 26
-  end
-  object cbParticleType: TComboBox
-    Left = 86
-    Height = 23
-    Top = 119
-    Width = 96
-    ItemHeight = 15
-    Style = csDropDownList
-    TabOrder = 27
-  end
-  object cbEmitterShape: TComboBox
-    Left = 86
-    Height = 23
-    Top = 147
-    Width = 96
-    ItemHeight = 15
-    Style = csDropDownList
-    TabOrder = 28
+    object tsCharacter: TTabSheet
+      Caption = 'tsCharacter'
+      ClientHeight = 259
+      ClientWidth = 179
+      object cbVisible1: TCheckBox
+        Left = 8
+        Height = 19
+        Top = 8
+        Width = 54
+        Caption = 'Visible'
+        TabOrder = 0
+      end
+      object eWidth1: TEdit
+        Left = 76
+        Height = 23
+        Top = 63
+        Width = 79
+        TabOrder = 1
+        Text = 'eWidth1'
+      end
+      object lWidth1: TLabel
+        Left = 8
+        Height = 15
+        Top = 67
+        Width = 35
+        Caption = 'Width:'
+        ParentColor = False
+      end
+      object udWidth1: TUpDown
+        Left = 155
+        Height = 23
+        Top = 63
+        Width = 17
+        Associate = eWidth1
+        Max = 1000
+        Min = 0
+        Position = 100
+        TabOrder = 2
+      end
+      object lHeight1: TLabel
+        Left = 8
+        Height = 15
+        Top = 95
+        Width = 39
+        Caption = 'Height:'
+        ParentColor = False
+      end
+      object eHeight1: TEdit
+        Left = 76
+        Height = 23
+        Top = 91
+        Width = 79
+        TabOrder = 3
+        Text = 'eHeight1'
+      end
+      object udHeight1: TUpDown
+        Left = 155
+        Height = 23
+        Top = 91
+        Width = 17
+        Associate = eHeight1
+        Max = 1000
+        Min = 0
+        Position = 100
+        TabOrder = 4
+      end
+      object lGridSlotsX1: TLabel
+        Left = 8
+        Height = 15
+        Top = 207
+        Width = 63
+        Caption = 'Grid Slots X:'
+        ParentColor = False
+      end
+      object eGridSlotsX1: TEdit
+        Left = 86
+        Height = 23
+        Top = 203
+        Width = 79
+        TabOrder = 5
+        Text = 'eGridSlotsX1'
+      end
+      object udGridSlotsX1: TUpDown
+        Left = 155
+        Height = 23
+        Top = 203
+        Width = 17
+        Associate = eGridSlotsX1
+        Max = 1000
+        Min = 1
+        MinRepeatInterval = 25
+        Position = 1
+        TabOrder = 6
+      end
+      object lGridSlotsY1: TLabel
+        Left = 8
+        Height = 15
+        Top = 235
+        Width = 63
+        Caption = 'Grid Slots Y:'
+        ParentColor = False
+      end
+      object eGridSlotsY1: TEdit
+        Left = 86
+        Height = 23
+        Top = 231
+        Width = 79
+        TabOrder = 7
+        Text = 'eGridSlotsY1'
+      end
+      object udGridSlotsY1: TUpDown
+        Left = 155
+        Height = 23
+        Top = 231
+        Width = 17
+        Associate = eGridSlotsY1
+        Max = 1000
+        Min = 1
+        MinRepeatInterval = 25
+        Position = 1
+        TabOrder = 8
+      end
+      object lRotation1: TLabel
+        Left = 8
+        Height = 15
+        Top = 123
+        Width = 48
+        Caption = 'Rotation:'
+        ParentColor = False
+      end
+      object fseRotation1: TFloatSpinEdit
+        Left = 76
+        Height = 23
+        Top = 119
+        Width = 96
+        MaxValue = 360
+        MinValue = -360
+        TabOrder = 9
+      end
+      object lOverlay1: TLabel
+        Left = 8
+        Height = 15
+        Top = 179
+        Width = 43
+        Caption = 'Overlay:'
+        ParentColor = False
+      end
+      object cbOverlay1: TComboBox
+        Left = 76
+        Height = 23
+        Top = 175
+        Width = 96
+        ItemHeight = 15
+        Items.Strings = (
+          '-'
+        )
+        Style = csDropDownList
+        TabOrder = 10
+      end
+      object lNumber1: TLabel
+        Left = 8
+        Height = 15
+        Top = 151
+        Width = 47
+        Caption = 'Number:'
+        ParentColor = False
+      end
+      object seNumber1: TSpinEditEx
+        Left = 76
+        Height = 23
+        Top = 147
+        Width = 96
+        MaxLength = 0
+        NumbersOnly = True
+        TabOrder = 11
+        MaxValue = 999
+        NullValue = 0
+        NullValueBehaviour = nvbInitialValue
+        Value = 0
+      end
+      object cbShowLoS1: TCheckBox
+        Left = 85
+        Height = 19
+        Top = 8
+        Width = 71
+        Caption = 'Show LoS'
+        TabOrder = 12
+      end
+      object cbLockPosition1: TCheckBox
+        Left = 8
+        Height = 19
+        Top = 36
+        Width = 91
+        Caption = 'Lock Position'
+        TabOrder = 13
+      end
+    end
+    object tsText: TTabSheet
+      Caption = 'tsText'
+      ClientHeight = 259
+      ClientWidth = 179
+      object cbVisible3: TCheckBox
+        Left = 8
+        Height = 19
+        Top = 8
+        Width = 54
+        Caption = 'Visible'
+        TabOrder = 0
+      end
+      object cbLockPosition3: TCheckBox
+        Left = 8
+        Height = 19
+        Top = 36
+        Width = 91
+        Caption = 'Lock Position'
+        TabOrder = 1
+      end
+      object lHeight3: TLabel
+        Left = 8
+        Height = 15
+        Top = 95
+        Width = 39
+        Caption = 'Height:'
+        ParentColor = False
+      end
+      object eHeight3: TEdit
+        Left = 76
+        Height = 23
+        Top = 91
+        Width = 79
+        TabOrder = 2
+        Text = 'eHeight3'
+      end
+      object udHeight3: TUpDown
+        Left = 155
+        Height = 23
+        Top = 91
+        Width = 17
+        Associate = eHeight3
+        Max = 1000
+        Min = 0
+        Position = 100
+        TabOrder = 3
+      end
+      object lRotation3: TLabel
+        Left = 8
+        Height = 15
+        Top = 123
+        Width = 48
+        Caption = 'Rotation:'
+        ParentColor = False
+      end
+      object fseRotation3: TFloatSpinEdit
+        Left = 76
+        Height = 23
+        Top = 119
+        Width = 96
+        MaxValue = 360
+        MinValue = -360
+        TabOrder = 4
+      end
+      object mText3: TMemo
+        Left = 76
+        Height = 107
+        Top = 147
+        Width = 96
+        Lines.Strings = (
+          'mText'
+        )
+        TabOrder = 5
+      end
+      object lText3: TLabel
+        Left = 8
+        Height = 15
+        Top = 151
+        Width = 24
+        Caption = 'Text:'
+        ParentColor = False
+      end
+      object lWidth3: TLabel
+        Left = 8
+        Height = 15
+        Top = 67
+        Width = 35
+        Caption = 'Width:'
+        ParentColor = False
+      end
+      object eWidth3: TEdit
+        Left = 76
+        Height = 23
+        Top = 63
+        Width = 79
+        TabOrder = 6
+        Text = 'eWidth3'
+      end
+      object udWidth3: TUpDown
+        Left = 155
+        Height = 23
+        Top = 63
+        Width = 17
+        Associate = eWidth3
+        Max = 1000
+        Min = 0
+        Position = 100
+        TabOrder = 7
+      end
+    end
+    object tsLight: TTabSheet
+      Caption = 'tsLight'
+      ClientHeight = 259
+      ClientWidth = 179
+      object cbVisible4: TCheckBox
+        Left = 8
+        Height = 19
+        Top = 8
+        Width = 54
+        Caption = 'Visible'
+        TabOrder = 0
+      end
+      object cbLockPosition4: TCheckBox
+        Left = 8
+        Height = 19
+        Top = 36
+        Width = 91
+        Caption = 'Lock Position'
+        TabOrder = 1
+      end
+      object lRange4: TLabel
+        Left = 8
+        Height = 15
+        Top = 67
+        Width = 36
+        Caption = 'Range:'
+        ParentColor = False
+      end
+      object eRange4: TEdit
+        Left = 88
+        Height = 23
+        Top = 63
+        Width = 67
+        TabOrder = 2
+        Text = 'eRange4'
+      end
+      object udRange4: TUpDown
+        Left = 155
+        Height = 23
+        Top = 63
+        Width = 17
+        Associate = eRange4
+        Max = 1000
+        Min = 0
+        Position = 100
+        TabOrder = 3
+      end
+      object lMaxStrength4: TLabel
+        Left = 8
+        Height = 15
+        Top = 95
+        Width = 74
+        Caption = 'Max Strength:'
+        ParentColor = False
+      end
+      object fseMaxStrength4: TFloatSpinEdit
+        Left = 88
+        Height = 23
+        Top = 91
+        Width = 84
+        Increment = 0.1
+        MaxValue = 1
+        MinValue = 0.1
+        TabOrder = 4
+        Value = 0.1
+      end
+      object lColor4: TLabel
+        Left = 8
+        Height = 15
+        Top = 179
+        Width = 32
+        Caption = 'Color:'
+        ParentColor = False
+      end
+      object pnColor4: TPanel
+        Left = 76
+        Height = 23
+        Top = 175
+        Width = 96
+        TabOrder = 5
+        OnClick = pnColor2Click
+      end
+      object lAnimationType4: TLabel
+        Left = 8
+        Height = 15
+        Top = 123
+        Width = 86
+        Caption = 'Animation Type:'
+        ParentColor = False
+      end
+      object cbAnimationType4: TComboBox
+        Left = 88
+        Height = 23
+        Top = 119
+        Width = 84
+        ItemHeight = 15
+        Style = csDropDownList
+        TabOrder = 6
+      end
+      object lAnimationSpeed4: TLabel
+        Left = 8
+        Height = 15
+        Top = 151
+        Width = 94
+        Caption = 'Animation Speed:'
+        ParentColor = False
+      end
+      object seAnimationSpeed4: TSpinEditEx
+        Left = 88
+        Height = 23
+        Top = 147
+        Width = 84
+        MaxLength = 0
+        TabOrder = 7
+        MaxValue = 360
+        NullValue = 0
+        Value = 90
+      end
+    end
+    object tsRangeIndicator: TTabSheet
+      Caption = 'tsRangeIndicator'
+      ClientHeight = 259
+      ClientWidth = 179
+      object cbLockPosition2: TCheckBox
+        Left = 8
+        Height = 19
+        Top = 36
+        Width = 91
+        Caption = 'Lock Position'
+        TabOrder = 0
+      end
+      object lSectorAngle2: TLabel
+        Left = 8
+        Height = 15
+        Top = 151
+        Width = 67
+        Caption = 'SectorAngle:'
+        ParentColor = False
+      end
+      object lColor2: TLabel
+        Left = 8
+        Height = 15
+        Top = 179
+        Width = 32
+        Caption = 'Color:'
+        ParentColor = False
+      end
+      object lAlpha2: TLabel
+        Left = 8
+        Height = 15
+        Top = 207
+        Width = 34
+        Caption = 'Alpha:'
+        ParentColor = False
+      end
+      object eHeight2: TEdit
+        Left = 76
+        Height = 23
+        Top = 91
+        Width = 79
+        TabOrder = 1
+        Text = 'eHeight2'
+      end
+      object udHeight2: TUpDown
+        Left = 155
+        Height = 23
+        Top = 91
+        Width = 17
+        Associate = eHeight2
+        Max = 1000
+        Min = 0
+        Position = 100
+        TabOrder = 2
+      end
+      object lHeight2: TLabel
+        Left = 8
+        Height = 15
+        Top = 95
+        Width = 39
+        Caption = 'Height:'
+        ParentColor = False
+      end
+      object lRotation2: TLabel
+        Left = 8
+        Height = 15
+        Top = 123
+        Width = 48
+        Caption = 'Rotation:'
+        ParentColor = False
+      end
+      object fseRotation2: TFloatSpinEdit
+        Left = 76
+        Height = 23
+        Top = 119
+        Width = 96
+        MaxValue = 360
+        MinValue = -360
+        TabOrder = 3
+      end
+      object cbVisible2: TCheckBox
+        Left = 8
+        Height = 19
+        Top = 8
+        Width = 54
+        Caption = 'Visible'
+        TabOrder = 4
+      end
+      object lWidth2: TLabel
+        Left = 8
+        Height = 15
+        Top = 67
+        Width = 35
+        Caption = 'Width:'
+        ParentColor = False
+      end
+      object eWidth2: TEdit
+        Left = 76
+        Height = 23
+        Top = 63
+        Width = 79
+        TabOrder = 5
+        Text = 'eWidth2'
+      end
+      object udWidth2: TUpDown
+        Left = 155
+        Height = 23
+        Top = 63
+        Width = 17
+        Associate = eWidth2
+        Max = 1000
+        Min = 0
+        Position = 100
+        TabOrder = 6
+      end
+      object seSectorAngle2: TSpinEditEx
+        Left = 76
+        Height = 23
+        Top = 147
+        Width = 96
+        MaxLength = 0
+        TabOrder = 7
+        MaxValue = 360
+        NullValue = 0
+        Value = 90
+      end
+      object pnColor2: TPanel
+        Left = 76
+        Height = 23
+        Top = 175
+        Width = 96
+        TabOrder = 8
+        OnClick = pnColor2Click
+      end
+      object seAlpha2: TSpinEditEx
+        Left = 76
+        Height = 23
+        Top = 203
+        Width = 96
+        MaxLength = 0
+        TabOrder = 9
+        MaxValue = 255
+        NullValue = 0
+        Value = 0
+      end
+    end
+    object tsParticleEmitter: TTabSheet
+      Caption = 'tsParticleEmitter'
+      ClientHeight = 259
+      ClientWidth = 179
+      object lShape5: TLabel
+        Left = 8
+        Height = 15
+        Top = 151
+        Width = 35
+        Caption = 'Shape:'
+        ParentColor = False
+      end
+      object lWidth5: TLabel
+        Left = 8
+        Height = 15
+        Top = 67
+        Width = 35
+        Caption = 'Width:'
+        ParentColor = False
+      end
+      object lHeight5: TLabel
+        Left = 8
+        Height = 15
+        Top = 95
+        Width = 39
+        Caption = 'Height:'
+        ParentColor = False
+      end
+      object eWidth5: TEdit
+        Left = 76
+        Height = 23
+        Top = 63
+        Width = 79
+        TabOrder = 0
+        Text = 'eWidth5'
+      end
+      object eHeight5: TEdit
+        Left = 76
+        Height = 23
+        Top = 91
+        Width = 79
+        TabOrder = 1
+        Text = 'eHeight5'
+      end
+      object udWidth5: TUpDown
+        Left = 155
+        Height = 23
+        Top = 63
+        Width = 17
+        Associate = eWidth5
+        Max = 1000
+        Min = 0
+        Position = 100
+        TabOrder = 2
+      end
+      object udHeight5: TUpDown
+        Left = 155
+        Height = 23
+        Top = 91
+        Width = 17
+        Associate = eHeight5
+        Max = 1000
+        Min = 0
+        Position = 100
+        TabOrder = 3
+      end
+      object cbActive5: TCheckBox
+        Left = 8
+        Height = 19
+        Top = 8
+        Width = 53
+        Caption = 'Active'
+        TabOrder = 4
+      end
+      object cbParticleType5: TComboBox
+        Left = 76
+        Height = 23
+        Top = 119
+        Width = 96
+        ItemHeight = 15
+        Style = csDropDownList
+        TabOrder = 5
+      end
+      object cbEmitterShape5: TComboBox
+        Left = 76
+        Height = 23
+        Top = 147
+        Width = 96
+        ItemHeight = 15
+        Style = csDropDownList
+        TabOrder = 6
+      end
+      object lParticleType5: TLabel
+        Left = 8
+        Height = 15
+        Top = 123
+        Width = 69
+        Caption = 'Particle Type:'
+        ParentColor = False
+      end
+    end
   end
   object cdIndicatorColor: TColorDialog
     Color = clBlack

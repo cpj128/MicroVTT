@@ -27,42 +27,93 @@ type
 
   TfmTokenSettings = class(TForm)
     bAddToInitiative: TButton;
-    bSendToBack: TButton;
-    bOk: TButton;
-    bDelete: TButton;
-    bCancel: TButton;
     bBringToFront: TButton;
+    bCancel: TButton;
+    bDelete: TButton;
     bDetach: TButton;
-    cbParticleType: TComboBox;
-    cbEmitterShape: TComboBox;
-    cbVisible: TCheckBox;
-    cbOverlay: TComboBox;
-    cbShowLoS: TCheckBox;
+    bOk: TButton;
+    bSendToBack: TButton;
+    cbAnimationType4: TComboBox;
+    cbEmitterShape5: TComboBox;
+    cbLockPosition1: TCheckBox;
+    cbLockPosition2: TCheckBox;
+    cbLockPosition3: TCheckBox;
+    cbLockPosition4: TCheckBox;
+    cbOverlay1: TComboBox;
+    cbParticleType5: TComboBox;
+    cbShowLoS1: TCheckBox;
+    cbVisible1: TCheckBox;
+    cbVisible2: TCheckBox;
+    cbVisible3: TCheckBox;
+    cbVisible4: TCheckBox;
+    cbActive5: TCheckBox;
     cdIndicatorColor: TColorDialog;
-    cbAnimationType: TComboBox;
-    cbLockPosition: TCheckBox;
-    eGridSlotsY: TEdit;
-    eWidth: TEdit;
-    eHeight: TEdit;
-    eGridSlotsX: TEdit;
-    fseRotation: TFloatSpinEdit;
-    fseMaxStrength: TFloatSpinEdit;
-    Label1: TLabel;
-    Label2: TLabel;
-    Label3: TLabel;
-    Label4: TLabel;
-    Label5: TLabel;
-    Label6: TLabel;
-    Label7: TLabel;
-    mText: TMemo;
-    pnColor: TPanel;
-    seNumber: TSpinEditEx;
-    seSectorAngle: TSpinEditEx;
-    seAlpha: TSpinEditEx;
-    udGridSlotsY: TUpDown;
-    udWidth: TUpDown;
-    udHeight: TUpDown;
-    udGridSlotsX: TUpDown;
+    eGridSlotsX1: TEdit;
+    eGridSlotsY1: TEdit;
+    eHeight1: TEdit;
+    eHeight2: TEdit;
+    eHeight3: TEdit;
+    eHeight5: TEdit;
+    eWidth1: TEdit;
+    eWidth2: TEdit;
+    eWidth3: TEdit;
+    eRange4: TEdit;
+    eWidth5: TEdit;
+    fseMaxStrength4: TFloatSpinEdit;
+    fseRotation1: TFloatSpinEdit;
+    fseRotation2: TFloatSpinEdit;
+    fseRotation3: TFloatSpinEdit;
+    lAlpha2: TLabel;
+    lHeight2: TLabel;
+    lHeight3: TLabel;
+    lHeight5: TLabel;
+    lMaxStrength4: TLabel;
+    lColor4: TLabel;
+    lAnimationType4: TLabel;
+    lAnimationSpeed4: TLabel;
+    lShape5: TLabel;
+    lParticleType5: TLabel;
+    lText3: TLabel;
+    lRotation2: TLabel;
+    lRotation3: TLabel;
+    lSectorAngle2: TLabel;
+    lColor2: TLabel;
+    lWidth1: TLabel;
+    lHeight1: TLabel;
+    lGridSlotsX1: TLabel;
+    lGridSlotsY1: TLabel;
+    lRotation1: TLabel;
+    lOverlay1: TLabel;
+    lNumber1: TLabel;
+    lWidth2: TLabel;
+    lWidth3: TLabel;
+    lRange4: TLabel;
+    lWidth5: TLabel;
+    mText3: TMemo;
+    pcSettings: TPageControl;
+    pnColor2: TPanel;
+    pnColor4: TPanel;
+    pRight: TPanel;
+    seAlpha2: TSpinEditEx;
+    seNumber1: TSpinEditEx;
+    seSectorAngle2: TSpinEditEx;
+    seAnimationSpeed4: TSpinEditEx;
+    tsParticleEmitter: TTabSheet;
+    tsLight: TTabSheet;
+    tsText: TTabSheet;
+    tsRangeIndicator: TTabSheet;
+    tsCharacter: TTabSheet;
+    udGridSlotsX1: TUpDown;
+    udGridSlotsY1: TUpDown;
+    udHeight1: TUpDown;
+    udHeight2: TUpDown;
+    udHeight3: TUpDown;
+    udHeight5: TUpDown;
+    udWidth1: TUpDown;
+    udWidth2: TUpDown;
+    udWidth3: TUpDown;
+    udRange4: TUpDown;
+    udWidth5: TUpDown;
     procedure bAddToInitiativeClick(Sender: TObject);
     procedure bBringToFrontClick(Sender: TObject);
     procedure bCancelClick(Sender: TObject);
@@ -73,7 +124,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDeactivate(Sender: TObject);
     procedure FormShow(Sender: TObject);
-    procedure pnColorClick(Sender: TObject);
+    procedure pnColor2Click(Sender: TObject);
   private
     FLinkedToken: TToken;
     procedure SetToken(token: TToken);
@@ -119,43 +170,19 @@ begin
   FLinkedToken := token;
   if not Assigned(token) then
     Exit;
-  cbVisible.Checked := token.Visible;
-  cbLockPosition.Checked := token.LockPos;
-  udWidth.Position  := token.Width;
-  udHeight.Position := token.Height;
-  fseRotation.Value := -RadToDeg(token.Angle);
-  udGridSlotsX.Position := token.GridSlotsX;
-  udGridSlotsY.Position := token.GridSlotsY;
 
   if token is TRangeIndicator then
-  begin               
-    cbShowLoS.Show;
-    cbLockPosition.Show;
-    fseMaxStrength.Hide;
-    seNumber.Hide;
-    cbOverlay.Hide;
-    eGridSlotsX.Hide;
-    Label4.Hide;
-    eGridSlotsY.Hide;
-    cbShowLoS.Hide;
-    cbAnimationType.Hide;
-    cbParticleType.Hide;
-    cbEmitterShape.Hide;
-                         
-    Label2.Show;
-    eHeight.Show;
-    Label5.Show;   
-    fseRotation.Show;
-    Label7.Show;
-    seSectorAngle.Show;
-    seSectorAngle.Value := Round(TRangeIndicator(token).SectorAngle);
-    Label3.Show;
-    Label6.Show;
-    pnColor.Show;
-    pnColor.Color := TRangeIndicator(token).Color;
-    seAlpha.Show;
-    seAlpha.Value := TRangeIndicator(token).Alpha;
-    mText.Hide;
+  begin
+    pcSettings.ActivePage := tsRangeIndicator;
+    cbVisible2.Checked := token.Visible;
+    cbLockPosition2.Checked := token.LockPos; 
+    udWidth2.Position  := token.Width;
+    udHeight2.Position := token.Height;
+    fseRotation2.Value := -RadToDeg(token.Angle);
+    seSectorAngle2.Value := Round(TRangeIndicator(token).SectorAngle);
+    pnColor2.Color := TRangeIndicator(token).Color;
+    seAlpha2.Value := TRangeIndicator(token).Alpha;
+
     bDetach.Show;
     bDetach.Enabled := TRangeIndicator(token).IsAttached;
     bBringToFront.Enabled := not TRangeIndicator(token).IsAttached;
@@ -163,134 +190,62 @@ begin
     bAddToInitiative.Enabled := False;
   end
   else if token is TTextToken then
-  begin          
-    cbShowLoS.Show;
-    cbLockPosition.Show;
-    fseMaxStrength.Hide;
-    seSectorAngle.Hide;
-    pnColor.Hide;
-    seAlpha.Hide;
+  begin                     
+    pcSettings.ActivePage := tsText;
+    cbVisible3.Checked := token.Visible;
+    cbLockPosition3.Checked := token.LockPos;
+    udWidth3.Position  := token.Width;
+    udHeight3.Position := token.Height;
+    fseRotation2.Value := -RadToDeg(token.Angle);
+    mText3.Text := TTextToken(token).Text;
+
     bDetach.Hide;
     bBringToFront.Enabled := True;
     bSendToBack.Enabled := True;
-    seNumber.Hide;
-    cbOverlay.Hide;
-    Label3.Hide;
-    Label6.Hide;
-    eGridSlotsX.Hide;
-    Label4.Hide;
-    eGridSlotsY.Hide;
-    cbShowLoS.Hide;
-    cbAnimationType.Hide;
-    cbParticleType.Hide;
-    cbEmitterShape.Hide;
-
-    Label2.Show;
-    eHeight.Show;
-    Label5.Show;
-    fseRotation.Show;
-    Label7.Show;
-    mText.Show;
-    mText.Text := TTextToken(token).Text;
     bAddToInitiative.Enabled := False;
   end
   else if token is TLightToken then
-  begin         
-    cbShowLoS.Show;
-    cbLockPosition.Show;
-    Label2.Show;
-    eHeight.Hide;
-    seNumber.Hide;
-    mText.Hide;
-    cbOverlay.Hide;
-    Label3.Hide;
-    eGridSlotsX.Hide;
-    seAlpha.Hide;
-    Label4.Hide;
-    eGridSlotsY.Hide;
-    cbShowLoS.Hide;
-    fseRotation.Hide;
-    cbParticleType.Hide;
-    cbEmitterShape.Hide;
-     
+  begin                                 
+    pcSettings.ActivePage := tsLight;
+    cbVisible4.Checked := token.Visible;
+    cbLockPosition4.Checked := token.LockPos;
+    udRange4.Position := TLightToken(token).Range;
+    fseMaxStrength4.Value := TLightToken(token).MaxStrength;
+    cbAnimationType4.ItemIndex := Ord(TLightToken(token).AnimationType);
+    seAnimationSpeed4.Value := TLightToken(token).AnimationSpeed; 
+    pnColor4.Color := TLightToken(token).Color;
+    
     bDetach.Show;
     bDetach.Enabled := TLightToken(token).IsAttached;
-    udWidth.Position := TLightToken(token).Range;
-    fseMaxStrength.Show;
-    fseMaxStrength.Value := TLightToken(token).MaxStrength;
-    Label6.Show;
-    pnColor.Show;
-    pnColor.Color := TLightToken(token).Color;  
-    Label5.Show;
-    cbAnimationType.Show;
-    cbAnimationType.ItemIndex := Ord(TLightToken(token).AnimationType);
-
-    Label7.Show; 
-    seSectorAngle.Show;
-    seSectorAngle.Value := TLightToken(token).AnimationSpeed;
-
     bAddToInitiative.Enabled := False;
   end
   else if token is TParticleEmitterToken then
-  begin
-    cbShowLoS.Hide;
-    cbLockPosition.Hide;
-    fseMaxStrength.Hide;
-    Label7.Show;
-    seSectorAngle.Hide;
-    seNumber.Hide;
-    Label6.Hide;
-    pnColor.Hide;
-    Label3.Hide;
-    Label4.Hide;
-    seAlpha.Hide;
-    eGridSlotsX.Hide;
-    eGridSLotsY.Hide;
-    mText.Hide;
-    cbOverlay.Hide;
-    cbAnimationType.Hide;
-    cbParticleType.Show;
-    cbParticleType.ItemIndex := cbParticleType.Items.IndexOf(TParticleEmitterToken(token).ParticleName);
-    cbEmitterShape.Show;
-    cbEmitterShape.ItemIndex := Ord(TParticleEmitterToken(token).Shape);
+  begin                                                  
+    pcSettings.ActivePage := tsParticleEMitter;
+    cbActive5.checked := TParticleEmitterToken(token).Active; 
+    udWidth5.Position  := token.Width;
+    udHeight5.Position := token.Height;
+    cbParticleType5.ItemIndex := cbParticleType5.Items.IndexOf(TParticleEmitterToken(token).ParticleName);
+    cbEmitterShape5.ItemIndex := Ord(TParticleEmitterToken(token).Shape);
+
     bAddToInitiative.Enabled := False;
-
-    eWidth.Show;
-    eHeight.Show;
-    cbVisible.Show;
-    cbVisible.Checked := TParticleEmitterToken(token).Active;
-
+    bDetach.Show;
+    bDetach.Enabled := TParticleEmitterToken(token).IsAttached;
   end
   else if token is TCharacterToken then
-  begin
-    cbShowLoS.Show;
-    cbLockPosition.Show;
-    Label2.Show;
-    eHeight.Show;  
-    Label5.Show;
-    fseRotation.Show;
-    Label7.Show;
-    seNumber.Show; 
-    seNumber.Value := TCharacterToken(token).Number;
-    cbOverlay.Show;  
-    cbOverlay.ItemIndex := TCharacterToken(token).OverlayIdx + 1;
-    Label3.Show;
-    Label6.Show;
-    eGridSlotsX.Show;
-    Label4.Show;
-    eGridSlotsY.Show;
-    cbShowLoS.Show;
-    cbShowLoS.Checked := TCharacterToken(token).ShowLoS;
-                      
-    fseMaxStrength.Hide;
-    seSectorAngle.Hide;
-    pnColor.Hide;
-    seAlpha.Hide;
-    mText.Hide;
-    bDetach.Hide;
-    cbAnimationType.Hide;
-    cbParticleType.Hide;
-    cbEmitterShape.Hide;
+  begin                   
+    pcSettings.ActivePage := tsCharacter;
+    cbVisible1.Checked := token.Visible;      
+    cbShowLoS1.Checked := TCharacterToken(token).ShowLoS;
+    cbLockPosition1.Checked := token.LockPos;  
+    udWidth1.Position  := token.Width;
+    udHeight1.Position := token.Height;  
+    fseRotation1.Value := -RadToDeg(token.Angle);
+    seNumber1.Value := TCharacterToken(token).Number;
+    cbOverlay1.ItemIndex := TCharacterToken(token).OverlayIdx + 1;
+    udGridSlotsX1.Position := token.GridSlotsX;
+    udGridSlotsY1.Position := token.GridSlotsY;
+
     bBringToFront.Enabled := True;
     bSendToBack.Enabled := True;
   end;
@@ -305,44 +260,58 @@ procedure TfmTokenSettings.bOkClick(Sender: TObject);
 begin
   if Assigned(LinkedToken) then
   begin
-    LinkedToken.Visible := cbVisible.Checked;
-    LinkedToken.LockPos := cbLockPosition.Checked;
-    LinkedToken.Width   := udWidth.Position;
-    LinkedToken.Height  := udHeight.Position;
-    LinkedToken.Angle   := -DegToRad(fseRotation.Value);
-    LinkedToken.GridSlotsX := udGridSlotsX.Position;
-    LinkedToken.GridSlotsY := udGridSlotsY.Position;
-    fmController.SnapTokenToGrid(LinkedToken);
     if LinkedToken is TCharacterToken then
-    begin
-      TCharacterToken(LinkedToken).Number := seNumber.Value; 
-      TCharacterToken(LinkedToken).OverlayIdx := cbOverlay.ItemIndex - 1;
-      TCharacterToken(LinkedToken).ShowLoS := cbShowLoS.Checked;
+    begin       
+      LinkedToken.Visible := cbVisible1.Checked;
+      TCharacterToken(LinkedToken).ShowLoS := cbShowLoS1.Checked;
+      LinkedToken.LockPos := cbLockPosition1.Checked;
+      LinkedToken.Width   := udWidth1.Position;
+      LinkedToken.Height  := udHeight1.Position;
+      LinkedToken.Angle   := -DegToRad(fseRotation1.Value); 
+      TCharacterToken(LinkedToken).Number := seNumber1.Value;
+      TCharacterToken(LinkedToken).OverlayIdx := cbOverlay1.ItemIndex - 1;
+      LinkedToken.GridSlotsX := udGridSlotsX1.Position;
+      LinkedToken.GridSlotsY := udGridSlotsY1.Position;
+      fmController.SnapTokenToGrid(LinkedToken);
     end;
     if LinkedToken is TRangeIndicator then
-    begin 
-      TRangeIndicator(LinkedToken).Color := pnColor.Color;
-      TRangeIndicator(LinkedToken).SectorAngle := seSectorAngle.Value;
-      TRangeIndicator(LinkedToken).Alpha := seAlpha.Value;
+    begin             
+      LinkedToken.Visible := cbVisible2.Checked;
+      LinkedToken.LockPos := cbLockPosition2.Checked;
+      LinkedToken.Width   := udWidth2.Position;
+      LinkedToken.Height  := udHeight2.Position;
+      LinkedToken.Angle   := -DegToRad(fseRotation2.Value);
+      TRangeIndicator(LinkedToken).SectorAngle := seSectorAngle2.Value;
+      TRangeIndicator(LinkedToken).Color := pnColor2.Color;
+      TRangeIndicator(LinkedToken).Alpha := seAlpha2.Value;
     end;
     if LinkedToken is TTextToken then
-    begin
-      TTextToken(LinkedToken).Text := mText.Text;
+    begin       
+      LinkedToken.Visible := cbVisible3.Checked;
+      LinkedToken.LockPos := cbLockPosition3.Checked; 
+      LinkedToken.Width   := udWidth3.Position;
+      LinkedToken.Height  := udHeight3.Position;
+      LinkedToken.Angle   := -DegToRad(fseRotation3.Value);
+      TTextToken(LinkedToken).Text := mText3.Text;
     end;
     if LinkedToken is TLightToken then
-    begin
-      TLightToken(LinkedToken).Color := pnColor.Color;
-      TLightToken(LinkedToken).Range := udWidth.Position;
-      TLightToken(LinkedToken).MaxStrength := fseMaxStrength.Value;
-      TLightToken(LinkedToken).AnimationType := TLightAnimationType(cbAnimationType.ItemIndex);
-      TLightToken(LinkedToken).AnimationSpeed := seSectorAngle.Value;
+    begin          
+      LinkedToken.Visible := cbVisible4.Checked;
+      LinkedToken.LockPos := cbLockPosition4.Checked;
+      TLightToken(LinkedToken).Range := udRange4.Position;
+      TLightToken(LinkedToken).MaxStrength := fseMaxStrength4.Value;
+      TLightToken(LinkedToken).AnimationType := TLightAnimationType(cbAnimationType4.ItemIndex);
+      TLightToken(LinkedToken).AnimationSpeed := seAnimationSpeed4.Value; 
+      TLightToken(LinkedToken).Color := pnColor4.Color;
     end;
     if LinkedToken is TParticleEmitterToken then
     begin
-      TParticleEmitterToken(LinkedToken).Active := cbVisible.Checked;
-      TParticleEmitterToken(LinkedToken).ParticleName := cbParticleType.Items[cbParticleType.ItemIndex];
-      TParticleEmitterToken(LinkedToken).Shape := TParticleEmitterShape(cbEmitterShape.ItemIndex);
-      //TParticle
+      TParticleEmitterToken(LinkedToken).Active := cbActive5.Checked; 
+      LinkedToken.Width   := udWidth5.Position;
+      LinkedToken.Height  := udHeight5.Position;
+      TParticleEmitterToken(LinkedToken).ParticleName := cbParticleType5.Items[cbParticleType5.ItemIndex];
+      TParticleEmitterToken(LinkedToken).Shape := TParticleEmitterShape(cbEmitterShape5.ItemIndex);
+
     end;
     LinkedToken.UpdateAttached;
     LinkedToken := nil;
@@ -366,7 +335,7 @@ begin
     fmSetInitiative.udRolledInitiative.Position := 1;
     fmSetInitiative.TokenName := LinkedToken.Name;
     fmSetInitiative.TokenPath := LinkedToken.Path;
-    fmSetInitiative.TokenNo := seNumber.Value;
+    fmSetInitiative.TokenNo := seNumber1.Value;
     bOkClick(self);
     fmSetInitiative.Show;
   end;
@@ -397,13 +366,13 @@ var i: Integer;
 begin
   // Light animations
   for i := Low(LIGHTANIMATIONSTR) to High(LIGHTANIMATIONSTR) do
-    cbAnimationType.Items.Add(GetString(LangStrings.LanguageID, LIGHTANIMATIONSTR[i]));
+    cbAnimationType4.Items.Add(GetString(LangStrings.LanguageID, LIGHTANIMATIONSTR[i]));
   // Particle Types
   for i := 0 to fmController.ParticleManager.GetParticleCount - 1 do
-    cbParticleType.Items.Add(fmController.ParticleManager.ParticleNameByIdx(i));
+    cbParticleType5.Items.Add(fmController.ParticleManager.ParticleNameByIdx(i));
   // Emitter shapes
   for i := Low(PARTICLEEMITTERSHAPES) to High(PARTICLEEMITTERSHAPES) do
-    cbEmitterShape.Items.Add(GetString(LangStrings.LanguageID, PARTICLEEMITTERSHAPES[i]));
+    cbEmitterShape5.Items.Add(GetString(LangStrings.LanguageID, PARTICLEEMITTERSHAPES[i]));
 end;
 
 procedure TfmTokenSettings.bDeleteClick(Sender: TObject);
@@ -429,43 +398,53 @@ var
   tmp: string;
 begin
   Caption := GetString(LangStrings.LanguageID, 'TokenSettingsCaption');
-  cbVisible.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsVisible');
-  cbLockPosition.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsLockPosition');
-  cbShowLoS.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsShowLoS');
-  Label1.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsWidth');
-  Label2.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsHeight');
-  Label5.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsRotation');
-  Label4.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsSlotsY');
-  if LinkedToken is TRangeIndicator then
-  begin                                                          
-    Label3.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsAlpha');
-    Label6.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsColor');
-    Label7.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsSectorAngle');
-  end
-  else if LinkedToken is TTextToken then
-  begin
-    Label7.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsText');
-  end
-  else if LinkedToken is TLightToken then
-  begin
-    Label1.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsRange');
-    Label2.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsMaxStrength');
-    Label5.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsLightAnimation');
-    Label6.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsColor');
-    Label7.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsAnimationSpeed');
-  end
-  else if LinkedToken is TParticleEmitterToken then
-  begin
-    cbVisible.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterActive');
-    Label5.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterParticleType');
-    Label7.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterShape');
-  end
-  else
-  begin
-    Label3.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsSlotsX');
-    Label6.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsOverlay');
-    Label7.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsNumber');
-  end;
+  // Character token
+  cbVisible1.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsVisible');
+  cbLockPosition1.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsLockPosition');
+  cbShowLoS1.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsShowLoS');
+  lWidth1.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsWidth');
+  lHeight1.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsHeight');
+  lRotation1.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsRotation'); 
+  lNumber1.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsNumber');      
+  lOverlay1.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsOverlay');
+  lGridSlotsX1.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsSlotsX');  
+  lGridSlotsY1.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsSlotsY');
+
+  // range indicator  
+  cbVisible2.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsVisible');
+  cbLockPosition2.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsLockPosition');
+  lWidth2.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsWidth');
+  lHeight2.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsHeight');
+  lRotation2.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsRotation');  
+  lSectorAngle2.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsSectorAngle');
+  lColor2.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsColor');
+  lAlpha2.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsAlpha');
+
+  // text token  
+  cbVisible3.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsVisible');
+  cbLockPosition3.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsLockPosition');
+  lWidth3.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsWidth');
+  lHeight3.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsHeight'); 
+  lRotation3.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsRotation'); 
+  lText3.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsText');
+
+  // light token     
+  cbVisible4.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsVisible');
+  cbLockPosition4.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsLockPosition'); 
+  lRange4.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsRange');
+  lMaxStrength4.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsMaxStrength');
+  lAnimationType4.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsLightAnimation');
+  lAnimationSpeed4.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsAnimationSpeed');  
+  lColor4.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsColor');
+
+  // particle emitter                                                          
+  cbActive5.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterActive');
+  lWidth5.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsWidth');
+  lHeight5.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsHeight');
+  lParticleType5.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterParticleType');
+  lShape5.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterShape');
+
+  // buttons
   bDelete.Caption := GetString(LangStrings.LanguageID, 'ButtonDelete');
   bCancel.Caption := GetString(LangStrings.LanguageID, 'ButtonCancel');
   bOk.Caption := GetString(LangStrings.LanguageID, 'ButtonOk');
@@ -474,10 +453,10 @@ begin
   bSendToBack.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsSendToBack');
   bDetach.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsDetach');
 
-  PrevIdx := cbOverlay.ItemIndex;
-  cbOverlay.Items.Clear;
-  cbOverlay.Items.Add('-');
-  cbOverlay.ItemIndex := 0;
+  PrevIdx := cbOverlay1.ItemIndex;
+  cbOverlay1.Items.Clear;
+  cbOverlay1.Items.Add('-');
+  cbOverlay1.ItemIndex := 0;
 
   ContentList := TStringList.Create;
   try
@@ -487,22 +466,24 @@ begin
     begin
       ContentList.DelimitedText := fmController.OverlayLib.ValueFromIndex[i];
       if ContentList.Count >= 1 then
-        cbOverlay.Items.Add(ContentList[0]);
+        cbOverlay1.Items.Add(ContentList[0]);
     end;
-    cbOverlay.ItemIndex := PrevIdx;
+    cbOverlay1.ItemIndex := PrevIdx;
   finally
     ContentList.Free;
   end;
+
+
 end;
 
-procedure TfmTokenSettings.pnColorClick(Sender: TObject);
+procedure TfmTokenSettings.pnColor2Click(Sender: TObject);
 begin
-  if not ((LinkedToken is TRangeIndicator) or (LinkedToken is TLightToken)) then
-    Exit;
-  cdIndicatorColor.Color := pnColor.Color;
+  //if not ((LinkedToken is TRangeIndicator) or (LinkedToken is TLightToken)) then
+  //  Exit;
+  cdIndicatorColor.Color := TPanel(Sender).Color;
   if cdIndicatorColor.Execute then
   begin
-    pnColor.Color := cdIndicatorColor.Color;
+    TPanel(Sender).Color := cdIndicatorColor.Color;
   end;
 end;
 
