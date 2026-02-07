@@ -33,6 +33,7 @@ type
     bDetach: TButton;
     bOk: TButton;
     bSendToBack: TButton;
+    bShowEmissionSettings: TButton;
     cbAnimationType4: TComboBox;
     cbEmitterShape5: TComboBox;
     cbLockPosition1: TCheckBox;
@@ -48,6 +49,7 @@ type
     cbVisible4: TCheckBox;
     cbActive5: TCheckBox;
     cdIndicatorColor: TColorDialog;
+    cbAngleDistribution: TComboBox;
     eGridSlotsX1: TEdit;
     eGridSlotsY1: TEdit;
     eHeight1: TEdit;
@@ -59,6 +61,8 @@ type
     eWidth3: TEdit;
     eRange4: TEdit;
     eWidth5: TEdit;
+    fseAngleRange: TFloatSpinEdit;
+    fseCenterAngle: TFloatSpinEdit;
     fseMaxStrength4: TFloatSpinEdit;
     fseRotation1: TFloatSpinEdit;
     fseRotation2: TFloatSpinEdit;
@@ -90,6 +94,7 @@ type
     lRange4: TLabel;
     lWidth5: TLabel;
     mText3: TMemo;
+    pcEmissionSettings: TPageControl;
     pcSettings: TPageControl;
     pnColor2: TPanel;
     pnColor4: TPanel;
@@ -98,6 +103,7 @@ type
     seNumber1: TSpinEditEx;
     seSectorAngle2: TSpinEditEx;
     seAnimationSpeed4: TSpinEditEx;
+    tsAngle: TTabSheet;
     tsParticleEmitter: TTabSheet;
     tsLight: TTabSheet;
     tsText: TTabSheet;
@@ -121,17 +127,18 @@ type
     procedure bDetachClick(Sender: TObject);
     procedure bOkClick(Sender: TObject);
     procedure bSendToBackClick(Sender: TObject);
+    procedure bShowEmissionSettingsClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDeactivate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure pnColor2Click(Sender: TObject);
   private
     FLinkedToken: TToken;
+    FCombatMode: Boolean;
     procedure SetToken(token: TToken);
-    procedure SetCombatMode(val: Boolean);
   public
     property LinkedToken: TToken read FLinkedToken write SetToken;
-    property CombatMode: Boolean write SetCombatMode;
+    property CombatMode: Boolean write FCombatMode;
   end;
 
 var
@@ -143,6 +150,7 @@ implementation
 
 uses
   Math,
+  RPGUtils,
   LangStrings,
   ControllerForm,
   DisplayForm,
@@ -159,11 +167,6 @@ const
                                                    'TokenSettingsEmitterShapeEllipse');
 
 { TfmTokenSettings }
-
-procedure TfmTokenSettings.SetCombatMode(val: Boolean);
-begin
-  bAddToInitiative.Enabled := not val;
-end;
 
 procedure TfmTokenSettings.SetToken(token: TToken);
 begin
@@ -217,20 +220,28 @@ begin
     
     bDetach.Show;
     bDetach.Enabled := TLightToken(token).IsAttached;
+    bBringToFront.Enabled := True;
+    bSendToBack.Enabled := True;
     bAddToInitiative.Enabled := False;
   end
   else if token is TParticleEmitterToken then
   begin                                                  
     pcSettings.ActivePage := tsParticleEMitter;
-    cbActive5.checked := TParticleEmitterToken(token).Active; 
+    cbActive5.Checked := TParticleEmitterToken(token).Active;
     udWidth5.Position  := token.Width;
     udHeight5.Position := token.Height;
     cbParticleType5.ItemIndex := cbParticleType5.Items.IndexOf(TParticleEmitterToken(token).ParticleName);
     cbEmitterShape5.ItemIndex := Ord(TParticleEmitterToken(token).Shape);
 
-    bAddToInitiative.Enabled := False;
+    fseCenterAngle.Value := TParticleEmitterToken(token).CentralAngle;
+    fseAngleRange.Value := TParticleEmitterToken(token).AngleRange;
+    cbAngleDistribution.ItemIndex := Ord(TParticleEmitterToken(token).AngleDistribution);
+
     bDetach.Show;
-    bDetach.Enabled := TParticleEmitterToken(token).IsAttached;
+    bDetach.Enabled := TParticleEmitterToken(token).IsAttached; 
+    bBringToFront.Enabled := False;
+    bSendToBack.Enabled := False;  
+    bAddToInitiative.Enabled := False;
   end
   else if token is TCharacterToken then
   begin                   
@@ -245,9 +256,11 @@ begin
     cbOverlay1.ItemIndex := TCharacterToken(token).OverlayIdx + 1;
     udGridSlotsX1.Position := token.GridSlotsX;
     udGridSlotsY1.Position := token.GridSlotsY;
-
+                                  
+    bDetach.Hide;
     bBringToFront.Enabled := True;
-    bSendToBack.Enabled := True;
+    bSendToBack.Enabled := True; 
+    bAddToInitiative.Enabled := not FCombatMode;
   end;
 end;
 
@@ -311,7 +324,10 @@ begin
       LinkedToken.Height  := udHeight5.Position;
       TParticleEmitterToken(LinkedToken).ParticleName := cbParticleType5.Items[cbParticleType5.ItemIndex];
       TParticleEmitterToken(LinkedToken).Shape := TParticleEmitterShape(cbEmitterShape5.ItemIndex);
-
+      
+      TParticleEmitterToken(LinkedToken).CentralAngle := fseCenterAngle.Value;
+      TParticleEmitterToken(LinkedToken).AngleRange := fseAngleRange.Value;
+      TParticleEmitterToken(LinkedToken).AngleDistribution := TRandomDistribution(cbAngleDistribution.ItemIndex);
     end;
     LinkedToken.UpdateAttached;
     LinkedToken := nil;
@@ -361,6 +377,20 @@ begin
   end;
 end;
 
+procedure TfmTokenSettings.bShowEmissionSettingsClick(Sender: TObject);
+begin
+  if pcEmissionSettings.Visible then
+  begin
+    Height := 267;
+    pcEmissionSettings.Hide;
+  end
+  else
+  begin
+    Height := 450;
+    pcEmissionSettings.Show;
+  end;
+end;
+
 procedure TfmTokenSettings.FormCreate(Sender: TObject);
 var i: Integer;
 begin
@@ -393,11 +423,10 @@ end;
 procedure TfmTokenSettings.FormShow(Sender: TObject);
 var
   i, PrevIdx: Integer;
-  AniType: TLightAnimationType;
   ContentList: TStringList;
-  tmp: string;
 begin
   Caption := GetString(LangStrings.LanguageID, 'TokenSettingsCaption');
+  Height := 267;
   // Character token
   cbVisible1.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsVisible');
   cbLockPosition1.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsLockPosition');
@@ -453,6 +482,7 @@ begin
   bSendToBack.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsSendToBack');
   bDetach.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsDetach');
 
+  // TODO: Move to FormCreate?
   PrevIdx := cbOverlay1.ItemIndex;
   cbOverlay1.Items.Clear;
   cbOverlay1.Items.Add('-');
@@ -478,8 +508,6 @@ end;
 
 procedure TfmTokenSettings.pnColor2Click(Sender: TObject);
 begin
-  //if not ((LinkedToken is TRangeIndicator) or (LinkedToken is TLightToken)) then
-  //  Exit;
   cdIndicatorColor.Color := TPanel(Sender).Color;
   if cdIndicatorColor.Execute then
   begin

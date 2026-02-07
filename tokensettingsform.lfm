@@ -1,11 +1,11 @@
 object fmTokenSettings: TfmTokenSettings
   Left = 299
-  Height = 267
+  Height = 429
   Top = 274
   Width = 303
   BorderStyle = bsNone
   Caption = 'Token Settings'
-  ClientHeight = 267
+  ClientHeight = 429
   ClientWidth = 303
   FormStyle = fsStayOnTop
   OnCreate = FormCreate
@@ -14,11 +14,11 @@ object fmTokenSettings: TfmTokenSettings
   LCLVersion = '2.2.4.0'
   object pRight: TPanel
     Left = 187
-    Height = 267
+    Height = 429
     Top = 0
     Width = 116
     Align = alRight
-    ClientHeight = 267
+    ClientHeight = 429
     ClientWidth = 116
     TabOrder = 0
     object bOk: TButton
@@ -95,17 +95,17 @@ object fmTokenSettings: TfmTokenSettings
   end
   object pcSettings: TPageControl
     Left = 0
-    Height = 267
+    Height = 429
     Top = 0
     Width = 187
-    ActivePage = tsCharacter
+    ActivePage = tsParticleEmitter
     Align = alClient
     ShowTabs = False
-    TabIndex = 0
+    TabIndex = 4
     TabOrder = 1
     object tsCharacter: TTabSheet
       Caption = 'tsCharacter'
-      ClientHeight = 259
+      ClientHeight = 421
       ClientWidth = 179
       object cbVisible1: TCheckBox
         Left = 8
@@ -186,7 +186,7 @@ object fmTokenSettings: TfmTokenSettings
         Text = 'eGridSlotsX1'
       end
       object udGridSlotsX1: TUpDown
-        Left = 155
+        Left = 165
         Height = 23
         Top = 203
         Width = 17
@@ -214,7 +214,7 @@ object fmTokenSettings: TfmTokenSettings
         Text = 'eGridSlotsY1'
       end
       object udGridSlotsY1: TUpDown
-        Left = 155
+        Left = 165
         Height = 23
         Top = 231
         Width = 17
@@ -302,7 +302,7 @@ object fmTokenSettings: TfmTokenSettings
     end
     object tsText: TTabSheet
       Caption = 'tsText'
-      ClientHeight = 259
+      ClientHeight = 421
       ClientWidth = 179
       object cbVisible3: TCheckBox
         Left = 8
@@ -412,7 +412,7 @@ object fmTokenSettings: TfmTokenSettings
     end
     object tsLight: TTabSheet
       Caption = 'tsLight'
-      ClientHeight = 259
+      ClientHeight = 421
       ClientWidth = 179
       object cbVisible4: TCheckBox
         Left = 8
@@ -439,10 +439,10 @@ object fmTokenSettings: TfmTokenSettings
         ParentColor = False
       end
       object eRange4: TEdit
-        Left = 88
+        Left = 104
         Height = 23
         Top = 63
-        Width = 67
+        Width = 51
         TabOrder = 2
         Text = 'eRange4'
       end
@@ -466,10 +466,10 @@ object fmTokenSettings: TfmTokenSettings
         ParentColor = False
       end
       object fseMaxStrength4: TFloatSpinEdit
-        Left = 88
+        Left = 104
         Height = 23
         Top = 91
-        Width = 84
+        Width = 68
         Increment = 0.1
         MaxValue = 1
         MinValue = 0.1
@@ -501,10 +501,10 @@ object fmTokenSettings: TfmTokenSettings
         ParentColor = False
       end
       object cbAnimationType4: TComboBox
-        Left = 88
+        Left = 104
         Height = 23
         Top = 119
-        Width = 84
+        Width = 68
         ItemHeight = 15
         Style = csDropDownList
         TabOrder = 6
@@ -518,20 +518,20 @@ object fmTokenSettings: TfmTokenSettings
         ParentColor = False
       end
       object seAnimationSpeed4: TSpinEditEx
-        Left = 88
+        Left = 104
         Height = 23
         Top = 147
-        Width = 84
+        Width = 68
         MaxLength = 0
         TabOrder = 7
-        MaxValue = 360
+        MaxValue = 1000
         NullValue = 0
-        Value = 90
+        Value = 100
       end
     end
     object tsRangeIndicator: TTabSheet
       Caption = 'tsRangeIndicator'
-      ClientHeight = 259
+      ClientHeight = 421
       ClientWidth = 179
       object cbLockPosition2: TCheckBox
         Left = 8
@@ -677,12 +677,12 @@ object fmTokenSettings: TfmTokenSettings
     end
     object tsParticleEmitter: TTabSheet
       Caption = 'tsParticleEmitter'
-      ClientHeight = 259
+      ClientHeight = 421
       ClientWidth = 179
       object lShape5: TLabel
         Left = 8
         Height = 15
-        Top = 151
+        Top = 123
         Width = 35
         Caption = 'Shape:'
         ParentColor = False
@@ -690,7 +690,7 @@ object fmTokenSettings: TfmTokenSettings
       object lWidth5: TLabel
         Left = 8
         Height = 15
-        Top = 67
+        Top = 39
         Width = 35
         Caption = 'Width:'
         ParentColor = False
@@ -698,7 +698,7 @@ object fmTokenSettings: TfmTokenSettings
       object lHeight5: TLabel
         Left = 8
         Height = 15
-        Top = 95
+        Top = 67
         Width = 39
         Caption = 'Height:'
         ParentColor = False
@@ -706,7 +706,7 @@ object fmTokenSettings: TfmTokenSettings
       object eWidth5: TEdit
         Left = 76
         Height = 23
-        Top = 63
+        Top = 35
         Width = 79
         TabOrder = 0
         Text = 'eWidth5'
@@ -714,7 +714,7 @@ object fmTokenSettings: TfmTokenSettings
       object eHeight5: TEdit
         Left = 76
         Height = 23
-        Top = 91
+        Top = 63
         Width = 79
         TabOrder = 1
         Text = 'eHeight5'
@@ -722,7 +722,7 @@ object fmTokenSettings: TfmTokenSettings
       object udWidth5: TUpDown
         Left = 155
         Height = 23
-        Top = 63
+        Top = 35
         Width = 17
         Associate = eWidth5
         Max = 1000
@@ -733,7 +733,7 @@ object fmTokenSettings: TfmTokenSettings
       object udHeight5: TUpDown
         Left = 155
         Height = 23
-        Top = 91
+        Top = 63
         Width = 17
         Associate = eHeight5
         Max = 1000
@@ -752,7 +752,7 @@ object fmTokenSettings: TfmTokenSettings
       object cbParticleType5: TComboBox
         Left = 76
         Height = 23
-        Top = 119
+        Top = 91
         Width = 96
         ItemHeight = 15
         Style = csDropDownList
@@ -761,7 +761,7 @@ object fmTokenSettings: TfmTokenSettings
       object cbEmitterShape5: TComboBox
         Left = 76
         Height = 23
-        Top = 147
+        Top = 119
         Width = 96
         ItemHeight = 15
         Style = csDropDownList
@@ -770,10 +770,66 @@ object fmTokenSettings: TfmTokenSettings
       object lParticleType5: TLabel
         Left = 8
         Height = 15
-        Top = 123
+        Top = 95
         Width = 69
         Caption = 'Particle Type:'
         ParentColor = False
+      end
+      object bShowEmissionSettings: TButton
+        Left = 76
+        Height = 25
+        Top = 208
+        Width = 96
+        Caption = 'Emission Settings'
+        OnClick = bShowEmissionSettingsClick
+        TabOrder = 7
+      end
+      object pcEmissionSettings: TPageControl
+        Left = 0
+        Height = 192
+        Top = 232
+        Width = 184
+        ActivePage = tsAngle
+        TabIndex = 0
+        TabOrder = 8
+        Visible = False
+        object tsAngle: TTabSheet
+          Caption = 'Angle'
+          ClientHeight = 164
+          ClientWidth = 176
+          object cbAngleDistribution: TComboBox
+            Left = 87
+            Height = 23
+            Top = 69
+            Width = 81
+            ItemHeight = 15
+            ItemIndex = 0
+            Items.Strings = (
+              'Uniform'
+              'Gaussian'
+              'ArcSine'
+            )
+            Style = csDropDownList
+            TabOrder = 0
+            Text = 'Uniform'
+          end
+          object fseCenterAngle: TFloatSpinEdit
+            Left = 87
+            Height = 23
+            Top = 13
+            Width = 82
+            MaxValue = 360
+            TabOrder = 1
+          end
+          object fseAngleRange: TFloatSpinEdit
+            Left = 87
+            Height = 23
+            Top = 41
+            Width = 81
+            MaxValue = 180
+            TabOrder = 2
+          end
+        end
       end
     end
   end

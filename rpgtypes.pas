@@ -309,6 +309,10 @@ type
     property ParticleName: string read FParticleName write SetParticleName;
     property Active: Boolean read FActive write FActive;
     property Shape: TParticleEmitterShape read FShape write SetShape;
+
+    property CentralAngle: Double read FCentralAngle write FCentralAngle;
+    property AngleRange: Double read FAngleRange write FAngleRange;
+    property AngleDistribution: TRandomDistribution read FAngleDistribution write FAngleDistribution;
   end;
 
 implementation
@@ -1672,7 +1676,7 @@ begin
   FSpeedRange        := 0;
   FAngleDistribution := rdUniform;
   FSpeedDistribution := rdUniform;
-  FRNG := TMRandom.Create;
+  FRNG := TMRandom.Create(GetTickCount);
 
   FParticlesPerSecond := 10;
   FParticleQueue := 0;
@@ -1776,7 +1780,7 @@ begin
       Ang := FCentralAngle + FRNG.RandomDist(FAngleDistribution) * FAngleRange;
       speed := FCentralSpeed + FRNG.RandomDist(FSpeedDistribution) * FSpeedRange;
       pnt := GetNextPoint;
-      FParticle.AddParticle(pnt.X, pnt.y, 0, Sin(DegToRad(ang)) * speed, Cos(DegToRad(ang)) * speed, 0, 50);
+      FParticle.AddParticle(pnt.X, pnt.y, 0, 100, Sin(DegToRad(ang)) * speed, Cos(DegToRad(ang)) * speed, 0, 5, 50);
       FParticleQueue := FParticleQueue - 1;
     end;
   end;

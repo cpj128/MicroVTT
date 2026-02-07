@@ -32,12 +32,18 @@ type
     Rot: Single;
     // Set Rotation to movement direction
     RByDir: Boolean;
-    // Delta-X/Y/Rotation of the particles
-    DX, DY, DRot: Single;  
+    // Size (in %)
+    Size: Single;
+    // Transparency
+    Alpha: LongInt;
+    // Delta-X/Y/Rotation/Size/Alpha of the particles
+    DX, DY, DRot, DSize: Single;
+    DAlpha: LongInt;
     // Time to life per particle, in frames
     TTL: Integer;
+    // Going to need emitter settings for every single one of these...
   public
-    procedure DoTick;
+    procedure DoTick(dTime: Double);
   end;
 
   TParticle = class
@@ -55,7 +61,6 @@ type
     // Future extensions:
     // Transparency + delta
     // Color modulation H/S/L + delta
-    // Size delta
     // Animation...
 
     // Particle value initialization ranges
@@ -77,8 +82,8 @@ type
     constructor Create(DefFileName: string);
     destructor Destroy; override;
     procedure Draw(target: TBGRABitmap; ZoomFactor, OffsetX, OffsetY: Double);
-    procedure DoTick;
-    procedure AddParticle(X, Y, R, DX, DY, DR: Double; TTL: Integer);
+    procedure DoTick(DeltaT: Double);
+    procedure AddParticle(X, Y, R, S, DX, DY, DR, DS: Single; TTL: Integer);
   end;
 
 TParticleManager = class
@@ -94,7 +99,7 @@ TParticleManager = class
   public
     constructor Create(ParticleDir: string);
     destructor Destroy; override;
-    procedure DoTick;
+    procedure DoTick(DeltaT: Double);
     procedure Draw(target: TBGRABitmap; ZoomFactor, OffsetX, OffsetY: Double);
 
     function HasParticle(name: string): Boolean;
@@ -115,7 +120,7 @@ uses
 
   { TParticleData }
 
-procedure TParticleData.DoTick;
+procedure TParticleData.DoTick(dTime: Double);
 begin
   PosX := PosX + DX;
   PosY := PosY + DY;
@@ -123,7 +128,12 @@ begin
     Rot := RadToDeg(ArcTan2(DY, DX))
   else
     Rot  := Rot  + DRot;
-  TTL  := TTL  - 1;
+  Size := Size + DSize;
+  Alpha := EnsureRange(Alpha + DAlpha, 0, 255);
+  if (Alpha <= 0) or (Size <= 0) then
+    TTL := 0
+  else
+    TTL  := TTL  - 1;
 end;
 
   { TParticle }
@@ -178,18 +188,19 @@ begin
   for i := 0 to FMaxIdx - 1 do
   begin
     tmpMat := fixMat * AffineMatrixTranslation(FData[i].PosX, FData[i].PosY);
-    tmpMat := tmpMat * AffineMatrixRotationDeg(FData[i].Rot);
-    target.PutImageAffine(tmpMat, FGraphic);
+    tmpMat := tmpMat * AffineMatrixRotationDeg(FData[i].Rot); 
+    tmpMat := tmpMat * AffineMatrixScale(FData[i].Size / 100, FData[i].Size / 100);
+    target.PutImageAffine(tmpMat, FGraphic, FData[i].Alpha);
   end;
 end;
 
-procedure TParticle.DoTick;
+procedure TParticle.DoTick(DeltaT: Double);
 var i, IdxOffset: Integer;
 begin
   IdxOffset := 0;
   i := 0;
 
-  while i < FMaxIdx do
+  while (i {+ IdxOffset}) < FMaxIdx do
   begin
     if FData[i + IdxOffset].TTL <= 0 then
     begin
@@ -205,7 +216,7 @@ begin
     end;
 
     // Set data for the next step
-    FData[i].DoTick;
+    FData[i].DoTick(DeltaT);
     Inc(i);
   end;
 
@@ -213,7 +224,7 @@ begin
   FMaxIdx := FMaxIdx - IdxOffset;
 end;
 
-procedure TParticle.AddParticle(X, Y, R, DX, DY, DR: Double; TTL: Integer);
+procedure TParticle.AddParticle(X, Y, R, S, DX, DY, DR, DS: Single; TTL: Integer);
 var
   CanCreate: Boolean;
   tmpData: TParticleData;
@@ -226,13 +237,17 @@ begin
   if CanCreate then
   begin
     Inc(FMaxIdx);
-    tmpData.PosX := X;
-    tmpData.PosY := Y;
-    tmpData.Rot  := R;
-    tmpData.DX   := DX;
-    tmpData.DY   := DY;
-    tmpData.DRot := DR;
-    tmpData.TTL  := FTTLMin + Random(FTTLMax - FTTLMin);
+    tmpData.PosX   := X;
+    tmpData.PosY   := Y;
+    tmpData.Rot    := R;
+    tmpData.Size   := S;
+    tmpData.Alpha  := 255;
+    tmpData.DX     := DX;
+    tmpData.DY     := DY;
+    tmpData.DRot   := DR;
+    tmpData.DSize  := DS;
+    tmpData.DAlpha := -2;
+    tmpData.TTL    := FTTLMin + Random(FTTLMax - FTTLMin);
     tmpData.RByDir := FSetRByDir;
     FData[FMaxIdx] := tmpData;
   end;
@@ -286,11 +301,11 @@ begin
   end;
 end;
 
-procedure TParticleManager.DoTick;
+procedure TParticleManager.DoTick(DeltaT: Double);
 var i: Integer;
 begin
   for i := 0 to FParticleList.Count - 1 do
-    TParticle(FParticleList.Objects[i]).DoTick;
+    TParticle(FParticleList.Objects[i]).DoTick(DeltaT);
 end;
 
 procedure TParticleManager.Draw(target: TBGRABitmap; ZoomFactor, OffsetX, OffsetY: Double);

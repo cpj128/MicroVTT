@@ -867,7 +867,7 @@ begin
   end;
 
   // Move Particles
-  fmController.ParticleManager.DoTick;
+  fmController.ParticleManager.DoTick(DeltaT / 1000);
 
   if AnyTokenMoving or FAnimateMap then
     Invalidate;
