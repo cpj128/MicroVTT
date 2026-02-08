@@ -789,13 +789,15 @@ object fmTokenSettings: TfmTokenSettings
         Height = 192
         Top = 232
         Width = 184
-        ActivePage = tsAngle
-        TabIndex = 0
+        ActivePage = tsRotationDir
+        MultiLine = True
+        TabIndex = 3
         TabOrder = 8
         Visible = False
+        Options = [nboMultiLine]
         object tsAngle: TTabSheet
           Caption = 'Angle'
-          ClientHeight = 164
+          ClientHeight = 144
           ClientWidth = 176
           object cbAngleDistribution: TComboBox
             Left = 87
@@ -828,6 +830,213 @@ object fmTokenSettings: TfmTokenSettings
             Width = 81
             MaxValue = 180
             TabOrder = 2
+          end
+          object lCenterAngle: TLabel
+            Left = 3
+            Height = 15
+            Top = 17
+            Width = 72
+            Caption = 'Center Angle:'
+            ParentColor = False
+          end
+          object lAngleRange: TLabel
+            Left = 3
+            Height = 15
+            Top = 45
+            Width = 70
+            Caption = 'Angle Range:'
+            ParentColor = False
+          end
+          object lAngleDistribution: TLabel
+            Left = 3
+            Height = 15
+            Top = 73
+            Width = 65
+            Caption = 'Distribution:'
+            ParentColor = False
+          end
+        end
+        object tsSpeed: TTabSheet
+          Caption = 'Speed'
+          ClientHeight = 144
+          ClientWidth = 176
+          object lCenterSpeed: TLabel
+            Left = 3
+            Height = 15
+            Top = 17
+            Width = 73
+            Caption = 'Center Speed:'
+            ParentColor = False
+          end
+          object fseCenterSpeed: TFloatSpinEdit
+            Left = 87
+            Height = 23
+            Top = 13
+            Width = 82
+            MaxValue = 360
+            TabOrder = 0
+          end
+          object lSpeedRange: TLabel
+            Left = 3
+            Height = 15
+            Top = 45
+            Width = 71
+            Caption = 'Speed Range:'
+            ParentColor = False
+          end
+          object fseSpeedRange: TFloatSpinEdit
+            Left = 87
+            Height = 23
+            Top = 41
+            Width = 81
+            MaxValue = 180
+            TabOrder = 1
+          end
+          object lSpeedDistribution: TLabel
+            Left = 3
+            Height = 15
+            Top = 73
+            Width = 65
+            Caption = 'Distribution:'
+            ParentColor = False
+          end
+          object cbSpeedDistribution: TComboBox
+            Left = 87
+            Height = 23
+            Top = 69
+            Width = 81
+            ItemHeight = 15
+            ItemIndex = 0
+            Items.Strings = (
+              'Uniform'
+              'Gaussian'
+              'ArcSine'
+            )
+            Style = csDropDownList
+            TabOrder = 2
+            Text = 'Uniform'
+          end
+        end
+        object tsRotation: TTabSheet
+          Caption = 'Rotation'
+          ClientHeight = 144
+          ClientWidth = 176
+          object lCenterRotation: TLabel
+            Left = 3
+            Height = 15
+            Top = 17
+            Width = 86
+            Caption = 'Center Rotation:'
+            ParentColor = False
+          end
+          object fseCenterRotation: TFloatSpinEdit
+            Left = 87
+            Height = 23
+            Top = 13
+            Width = 82
+            MaxValue = 360
+            TabOrder = 0
+          end
+          object lRotationRange: TLabel
+            Left = 3
+            Height = 15
+            Top = 45
+            Width = 84
+            Caption = 'Rotation Range:'
+            ParentColor = False
+          end
+          object fseRotationRange: TFloatSpinEdit
+            Left = 87
+            Height = 23
+            Top = 41
+            Width = 81
+            MaxValue = 180
+            TabOrder = 1
+          end
+          object lRotationDistribution: TLabel
+            Left = 3
+            Height = 15
+            Top = 73
+            Width = 65
+            Caption = 'Distribution:'
+            ParentColor = False
+          end
+          object cbRotationDistribution: TComboBox
+            Left = 87
+            Height = 23
+            Top = 69
+            Width = 81
+            ItemHeight = 15
+            ItemIndex = 0
+            Items.Strings = (
+              'Uniform'
+              'Gaussian'
+              'ArcSine'
+            )
+            Style = csDropDownList
+            TabOrder = 2
+            Text = 'Uniform'
+          end
+        end
+        object tsRotationDir: TTabSheet
+          Caption = 'Rotation Dir'
+          ClientHeight = 144
+          ClientWidth = 176
+          object cbRotationDirDistribution: TComboBox
+            Left = 87
+            Height = 23
+            Top = 69
+            Width = 81
+            ItemHeight = 15
+            ItemIndex = 0
+            Items.Strings = (
+              'Uniform'
+              'Gaussian'
+              'ArcSine'
+            )
+            Style = csDropDownList
+            TabOrder = 0
+            Text = 'Uniform'
+          end
+          object lRotationDirDistribution: TLabel
+            Left = 3
+            Height = 15
+            Top = 73
+            Width = 65
+            Caption = 'Distribution:'
+            ParentColor = False
+          end
+          object fseRotationDirRange: TFloatSpinEdit
+            Left = 87
+            Height = 23
+            Top = 41
+            Width = 81
+            MaxValue = 180
+            TabOrder = 1
+          end
+          object lRotationDirRange: TLabel
+            Left = 3
+            Height = 15
+            Top = 45
+            Width = 53
+            Caption = 'Deviation:'
+            ParentColor = False
+          end
+          object fseCenterRotationDir: TFloatSpinEdit
+            Left = 87
+            Height = 23
+            Top = 13
+            Width = 82
+            MaxValue = 360
+            TabOrder = 2
+          end
+          object lCenterRotationDir: TLabel
+            Left = 3
+            Height = 15
+            Top = 17
+            Width = 33
+            Caption = 'Mean:'
+            ParentColor = False
           end
         end
       end

@@ -78,12 +78,19 @@ type
     // Draw particle independently of screen movement
     FScreenStatic: Boolean;
 
+  protected
+    function GetWidth: Integer;
+    function GetHeight: Integer;
+
   public
     constructor Create(DefFileName: string);
     destructor Destroy; override;
     procedure Draw(target: TBGRABitmap; ZoomFactor, OffsetX, OffsetY: Double);
     procedure DoTick(DeltaT: Double);
     procedure AddParticle(X, Y, R, S, DX, DY, DR, DS: Single; TTL: Integer);
+    property RByDir: Boolean read FSetRByDir;
+    property Width: Integer read GetWidth;
+    property Height: Integer read GetHeight;
   end;
 
 TParticleManager = class
@@ -176,6 +183,20 @@ begin
     FGraphic.Free;
 end;
 
+function TParticle.GetWidth: Integer;
+begin
+  Result := 0;
+  if Assigned(FGraphic) then
+    Result := FGraphic.Width;
+end;
+
+function TParticle.GetHeight: Integer;
+begin
+  Result := 0;
+  if Assigned(FGraphic) then
+    Result := FGraphic.Height;
+end;
+
 procedure TParticle.Draw(target: TBGRABitmap; ZoomFactor, OffsetX, OffsetY: Double);
 var
   i: Integer;
@@ -190,6 +211,7 @@ begin
     tmpMat := fixMat * AffineMatrixTranslation(FData[i].PosX, FData[i].PosY);
     tmpMat := tmpMat * AffineMatrixRotationDeg(FData[i].Rot); 
     tmpMat := tmpMat * AffineMatrixScale(FData[i].Size / 100, FData[i].Size / 100);
+    tmpMat := tmpMat * AffineMatrixTranslation(-Width / 2, -Height / 2);
     target.PutImageAffine(tmpMat, FGraphic, FData[i].Alpha);
   end;
 end;
@@ -200,7 +222,7 @@ begin
   IdxOffset := 0;
   i := 0;
 
-  while (i {+ IdxOffset}) < FMaxIdx do
+  while ((i + IdxOffset) < FMaxIdx) and (i < FMaxIdx) do
   begin
     if FData[i + IdxOffset].TTL <= 0 then
     begin

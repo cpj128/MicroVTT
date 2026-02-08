@@ -288,13 +288,16 @@ type
 
     FCentralAngle, FAngleRange: Double;
     FCentralSpeed, FSpeedRange: Double;
-    FAngleDistribution, FSpeedDistribution: TRandomDistribution;
-    // Need similar stuff for rotation and ttl
-    // Maybe move TTL to particle definition?
+    FCentralRotation, FRotationRange: Double;
+    FCentralRotationDir, FRotationDirRange: Double;
+    FAngleDistribution, FSpeedDistribution,
+    FRotationDistribution, FRotationDirDistribution: TRandomDistribution;
+    // Need similar stuff for rotation and others
 
     procedure SetParticleName(pName: string);
     procedure SetShape(val: TParticleEmitterShape);
     function GetNextPoint: TPoint;
+    function GetIsRByDir: Boolean;
   protected
     function GetVisible: Boolean; override; 
     procedure SetWidth(Val: Integer); override;
@@ -303,16 +306,33 @@ type
     constructor Create(X, Y: Integer);
     destructor Destroy; override;
     procedure RedrawGlyph; override;
-    procedure DoAnimationStep(var NeedsUpdate: Boolean; DeltaT: Double); override;
+    procedure DoAnimationStep(var NeedsUpdate: Boolean; DeltaT: Double); override; 
+    procedure SaveToIni(SaveFile: TIniFile; idx: Integer); override;
+
+    function SettingsToString: string;
+    procedure SettingsFromString(str: string);
 
     property ParticleManager: TParticleManager read FParticleManager write FParticleManager;
     property ParticleName: string read FParticleName write SetParticleName;
     property Active: Boolean read FActive write FActive;
     property Shape: TParticleEmitterShape read FShape write SetShape;
+    property IsRByDir: Boolean read GetIsRByDir;
 
     property CentralAngle: Double read FCentralAngle write FCentralAngle;
     property AngleRange: Double read FAngleRange write FAngleRange;
     property AngleDistribution: TRandomDistribution read FAngleDistribution write FAngleDistribution;
+
+    property CentralSpeed: Double read FCentralSpeed write FCentralSpeed;
+    property SpeedRange: Double read FSpeedRange write FSpeedRange;
+    property SpeedDistribution: TRandomDistribution read FSpeedDistribution write FSpeedDistribution;
+
+    property CentralRotation: Double read FCentralRotation write FCentralRotation;
+    property RotationRange: Double read FRotationRange write FRotationRange;
+    property RotationDistribution: TRandomDistribution read FRotationDistribution write FRotationDistribution;
+
+    property CentralRotationDir: Double read FCentralRotationDir write FCentralRotationDir;
+    property RotationDirRange: Double read FRotationDirRange write FRotationDirRange;
+    property RotationDirDistribution: TRandomDistribution read FRotationDirDistribution write FRotationDirDistribution;
   end;
 
 implementation
@@ -931,6 +951,9 @@ begin
                                            saveFile.ReadInteger(SAVESECTIONTOKENS, 'YPos' + IntToStr(idx), 0));
     TParticleEmitterToken(Result).ParticleManager := ParticleManager;
     TParticleEmitterToken(Result).ParticleName := saveFile.ReadString(SAVESECTIONTOKENS, 'ParticleName' + IntToStr(idx), '');
+    TParticleEmitterToken(Result).Active := saveFile.ReadBool(SAVESECTIONTOKENS, 'Active' + IntToStr(idx), true);
+    TParticleEmitterToken(Result).Shape := TParticleEmitterShape(saveFile.ReadInteger(SAVESECTIONTOKENS, 'Shape' + IntToStr(idx), 0));
+    TParticleEmitterToken(Result).SettingsFromString(saveFile.ReadString(SAVESECTIONTOKENS, 'Settings' + IntToStr(idx), ''));
   end
   else if FileExists(path) then // Character token
   begin
@@ -1705,7 +1728,14 @@ function TParticleEmitterToken.GetVisible: Boolean;
 begin
   Result := False;
 end;
-  
+
+function TParticleEmitterToken.GetIsRByDir: Boolean;
+begin
+  Result := False;
+  if Assigned(FParticle) then
+    Result := FParticle.RByDir;
+end;
+
 procedure TParticleEmitterToken.SetWidth(Val: Integer);
 begin
   FWidth := val;
@@ -1765,7 +1795,7 @@ end;
 
 procedure TParticleEmitterToken.DoAnimationStep(var NeedsUpdate: Boolean; DeltaT: Double);
 var
-  ang, speed: Double;
+  ang, speed, rot, dRot: Double;
   pnt: TPoint;
 begin
   inherited;
@@ -1779,12 +1809,101 @@ begin
 
       Ang := FCentralAngle + FRNG.RandomDist(FAngleDistribution) * FAngleRange;
       speed := FCentralSpeed + FRNG.RandomDist(FSpeedDistribution) * FSpeedRange;
+      rot := FCentralRotation + FRNG.RandomDist(FRotationDistribution) * FRotationRange;
+      dRot := FCentralRotationDir + FRNG.RandomDist(FRotationDirDistribution) * FRotationDirRange;
       pnt := GetNextPoint;
-      FParticle.AddParticle(pnt.X, pnt.y, 0, 100, Sin(DegToRad(ang)) * speed, Cos(DegToRad(ang)) * speed, 0, 5, 50);
+      FParticle.AddParticle(pnt.X, pnt.y, rot, 100, Sin(DegToRad(ang)) * speed, Cos(DegToRad(ang)) * speed, dRot, 5, 50);
       FParticleQueue := FParticleQueue - 1;
     end;
   end;
   NeedsUpdate := True;
+end;
+
+procedure TParticleEmitterToken.SaveToIni(SaveFile: TIniFile; idx: Integer);
+begin
+  inherited SaveToIni(SaveFile, idx);
+
+  // Note that the active particles are not saved anywhere
+  SaveFile.WriteString(SAVESECTIONTOKENS, 'Path' + IntToStr(idx), '::particle');          
+  SaveFile.WriteBool(SAVESECTIONTOKENS, 'Active' + IntToStr(idx), Active);
+  SaveFile.WriteString(SAVESECTIONTOKENS, 'ParticleName' + IntToStr(idx), ParticleName);
+  SaveFile.WriteInteger(SAVESECTIONTOKENS, 'Shape' + IntToStr(idx), Ord(Shape));
+  SaveFile.WriteString(SAVESECTIONTOKENS, 'Settings' + IntToStr(idx), SettingsToString);
+
+end;
+
+function TParticleEmitterToken.SettingsToString: string;
+var
+  list: TStringList;
+  fs: TFormatSettings;
+begin
+  Result := '';
+  list := TStringList.Create;
+  list.Delimiter := '|';
+  list.StrictDelimiter := True;
+  fs := FormatSettings;
+  fs.DecimalSeparator := '.';
+  try
+    // Angle values
+    list.Add(FloatToStrF(FCentralAngle, ffNumber, 4, 4, fs));
+    list.Add(FloatToStrF(FAngleRange, ffNumber, 4, 4, fs));
+    list.Add(IntToStr(Ord(FAngleDistribution)));
+    // speed values
+    list.Add(FloatToStrF(FCentralSpeed, ffNumber, 4, 4, fs));
+    list.Add(FloatToStrF(FSpeedRange, ffNumber, 4, 4, fs));
+    list.Add(IntToStr(Ord(FSpeedDistribution)));     
+    // rotation values
+    list.Add(FloatToStrF(FCentralRotation, ffNumber, 4, 4, fs));
+    list.Add(FloatToStrF(FRotationRange, ffNumber, 4, 4, fs));
+    list.Add(IntToStr(Ord(FRotationDistribution)));
+    // rotation dir values
+    list.Add(FloatToStrF(FCentralRotationDir, ffNumber, 4, 4, fs));
+    list.Add(FloatToStrF(FRotationDirRange, ffNumber, 4, 4, fs));
+    list.Add(IntToStr(Ord(FRotationDirDistribution)));
+    //...
+
+    Result := list.DelimitedText;
+  finally
+    list.Free;
+  end;
+end;
+
+procedure TParticleEmitterToken.SettingsFromString(str: string);
+var
+  list: TStringList;
+  fs: TFormatSettings;
+begin   
+  fs := FormatSettings;
+  fs.DecimalSeparator := '.';
+
+  list := TStringList.Create;
+  list.Delimiter := '|';
+  list.StrictDelimiter := True;
+  list.DelimitedText := str;
+  try
+    if List.Count >= 9 then // change this when adding more parameters
+    begin
+      // angle values
+      FCentralAngle      := StrToFloat(list[0], fs);
+      FAngleRange        := StrToFloat(list[1], fs);
+      FAngleDistribution := TRandomDistribution(StrToInt(list[2]));
+      // speed values
+      FCentralSpeed      := StrToFloat(list[3], fs);
+      FSpeedRange        := StrToFloat(list[4], fs);
+      FSpeedDistribution := TRandomDistribution(StrToInt(list[5]));      
+      // rotation values
+      FCentralRotation   := StrToFloat(list[6], fs);
+      FRotationRange     := StrToFloat(list[7], fs);
+      FRotationDistribution := TRandomDistribution(StrToInt(list[8]));
+      // rotation dir values
+      FCentralRotationDir   := StrToFloat(list[9], fs);
+      FRotationDirRange     := StrToFloat(list[10], fs);
+      FRotationDirDistribution := TRandomDistribution(StrToInt(list[11]));
+      // ...
+    end;
+  finally
+    list.Free;
+  end;
 end;
 
 end.
