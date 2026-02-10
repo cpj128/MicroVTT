@@ -35,7 +35,7 @@ type
     // Size (in %)
     Size: Single;
     // Transparency
-    Alpha: LongInt;
+    Alpha: Single;
     // Delta-X/Y/Rotation/Size/Alpha of the particles
     DX, DY, DRot, DSize: Single;
     DAlpha: LongInt;
@@ -129,14 +129,14 @@ uses
 
 procedure TParticleData.DoTick(dTime: Double);
 begin
-  PosX := PosX + DX;
-  PosY := PosY + DY;
+  PosX := PosX + DX * dTime;
+  PosY := PosY + DY * dTime;
   if RByDir then
     Rot := RadToDeg(ArcTan2(DY, DX))
   else
-    Rot  := Rot  + DRot;
-  Size := Size + DSize;
-  Alpha := EnsureRange(Alpha + DAlpha, 0, 255);
+    Rot  := Rot + DRot * dTime;
+  Size := Size + DSize * dTime;
+  Alpha := EnsureRange(Alpha + DAlpha * dTime, 0, 255);
   if (Alpha <= 0) or (Size <= 0) then
     TTL := 0
   else
@@ -212,7 +212,7 @@ begin
     tmpMat := tmpMat * AffineMatrixRotationDeg(FData[i].Rot); 
     tmpMat := tmpMat * AffineMatrixScale(FData[i].Size / 100, FData[i].Size / 100);
     tmpMat := tmpMat * AffineMatrixTranslation(-Width / 2, -Height / 2);
-    target.PutImageAffine(tmpMat, FGraphic, FData[i].Alpha);
+    target.PutImageAffine(tmpMat, FGraphic, Round(FData[i].Alpha));
   end;
 end;
 
@@ -222,7 +222,7 @@ begin
   IdxOffset := 0;
   i := 0;
 
-  while ((i + IdxOffset) < FMaxIdx) and (i < FMaxIdx) do
+  while {((i + IdxOffset) < FMaxIdx) and} (i < FMaxIdx) do
   begin
     if FData[i + IdxOffset].TTL <= 0 then
     begin

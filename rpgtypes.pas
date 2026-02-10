@@ -1695,7 +1695,7 @@ begin
 
   FCentralAngle      := 0;
   FAngleRange        := 5;
-  FCentralSpeed      := 2;
+  FCentralSpeed      := 50;
   FSpeedRange        := 0;
   FAngleDistribution := rdUniform;
   FSpeedDistribution := rdUniform;

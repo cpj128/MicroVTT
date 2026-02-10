@@ -34,6 +34,8 @@ type
     bOk: TButton;
     bSendToBack: TButton;
     bShowEmissionSettings: TButton;
+    cbRotationDirDistribution: TComboBox;
+    cbSpeedDistribution: TComboBox;
     cbAnimationType4: TComboBox;
     cbEmitterShape5: TComboBox;
     cbLockPosition1: TCheckBox;
@@ -43,6 +45,7 @@ type
     cbOverlay1: TComboBox;
     cbParticleType5: TComboBox;
     cbShowLoS1: TCheckBox;
+    cbRotationDistribution: TComboBox;
     cbVisible1: TCheckBox;
     cbVisible2: TCheckBox;
     cbVisible3: TCheckBox;
@@ -62,12 +65,31 @@ type
     eRange4: TEdit;
     eWidth5: TEdit;
     fseAngleRange: TFloatSpinEdit;
+    fseCenterRotation: TFloatSpinEdit;
+    fseCenterRotationDir: TFloatSpinEdit;
+    fseRotationDirRange: TFloatSpinEdit;
+    fseSpeedRange: TFloatSpinEdit;
     fseCenterAngle: TFloatSpinEdit;
+    fseCenterSpeed: TFloatSpinEdit;
     fseMaxStrength4: TFloatSpinEdit;
     fseRotation1: TFloatSpinEdit;
     fseRotation2: TFloatSpinEdit;
     fseRotation3: TFloatSpinEdit;
+    fseRotationRange: TFloatSpinEdit;
+    lCenterRotation: TLabel;
+    lCenterRotationDir: TLabel;
+    lInitialRotation: TLabel;
+    lChangeRate: TLabel;
+    lRotationDirDistribution: TLabel;
+    lRotationDirRange: TLabel;
+    lSpeedDistribution: TLabel;
+    lRotationDistribution: TLabel;
+    lSpeedRange: TLabel;
+    lCenterAngle: TLabel;
     lAlpha2: TLabel;
+    lAngleRange: TLabel;
+    lAngleDistribution: TLabel;
+    lCenterSpeed: TLabel;
     lHeight2: TLabel;
     lHeight3: TLabel;
     lHeight5: TLabel;
@@ -77,6 +99,7 @@ type
     lAnimationSpeed4: TLabel;
     lShape5: TLabel;
     lParticleType5: TLabel;
+    lRotationRange: TLabel;
     lText3: TLabel;
     lRotation2: TLabel;
     lRotation3: TLabel;
@@ -103,6 +126,8 @@ type
     seNumber1: TSpinEditEx;
     seSectorAngle2: TSpinEditEx;
     seAnimationSpeed4: TSpinEditEx;
+    tsRotation: TTabSheet;
+    tsSpeed: TTabSheet;
     tsAngle: TTabSheet;
     tsParticleEmitter: TTabSheet;
     tsLight: TTabSheet;
@@ -237,11 +262,25 @@ begin
     fseAngleRange.Value := TParticleEmitterToken(token).AngleRange;
     cbAngleDistribution.ItemIndex := Ord(TParticleEmitterToken(token).AngleDistribution);
 
+    fseCenterSpeed.Value := TParticleEmitterToken(token).CentralSpeed;
+    fseSpeedRange.Value := TParticleEmitterToken(token).SpeedRange;
+    cbSpeedDistribution.ItemIndex := Ord(TParticleEmitterToken(token).SpeedDistribution);
+
+    fseCenterRotation.Value := TParticleEmitterToken(token).CentralRotation;
+    fseRotationRange.Value := TParticleEmitterToken(token).RotationRange;
+    cbRotationDistribution.ItemIndex := Ord(TParticleEmitterToken(token).RotationDistribution);
+
+    fseCenterRotationDir.Value := TParticleEmitterToken(token).CentralRotationDir;
+    fseRotationDirRange.Value := TParticleEmitterToken(token).RotationDirRange;
+    cbRotationDirDistribution.ItemIndex := Ord(TParticleEmitterToken(token).RotationDirDistribution);
+
     bDetach.Show;
     bDetach.Enabled := TParticleEmitterToken(token).IsAttached; 
     bBringToFront.Enabled := False;
     bSendToBack.Enabled := False;  
     bAddToInitiative.Enabled := False;
+
+    tsRotation.TabVisible := not TParticleEmitterToken(Token).IsRByDir;
   end
   else if token is TCharacterToken then
   begin                   
@@ -328,6 +367,18 @@ begin
       TParticleEmitterToken(LinkedToken).CentralAngle := fseCenterAngle.Value;
       TParticleEmitterToken(LinkedToken).AngleRange := fseAngleRange.Value;
       TParticleEmitterToken(LinkedToken).AngleDistribution := TRandomDistribution(cbAngleDistribution.ItemIndex);
+
+      TParticleEmitterToken(LinkedToken).CentralSpeed := fseCenterSpeed.Value;
+      TParticleEmitterToken(LinkedToken).SpeedRange := fseSpeedRange.Value;
+      TParticleEmitterToken(LinkedToken).SpeedDistribution := TRandomDistribution(cbSpeedDistribution.ItemIndex);
+
+      TParticleEmitterToken(LinkedToken).CentralRotation := fseCenterRotation.Value;
+      TParticleEmitterToken(LinkedToken).RotationRange := fseRotationRange.Value;
+      TParticleEmitterToken(LinkedToken).RotationDistribution := TRandomDistribution(cbRotationDistribution.ItemIndex);
+
+      TParticleEmitterToken(LinkedToken).CentralRotationDir := fseCenterRotationDir.Value;
+      TParticleEmitterToken(LinkedToken).RotationDirRange := fseRotationDirRange.Value;
+      TParticleEmitterToken(LinkedToken).RotationDirDistribution := TRandomDistribution(cbRotationDirDistribution.ItemIndex);
     end;
     LinkedToken.UpdateAttached;
     LinkedToken := nil;
@@ -386,7 +437,7 @@ begin
   end
   else
   begin
-    Height := 450;
+    Height := 525;
     pcEmissionSettings.Show;
   end;
 end;
@@ -427,6 +478,7 @@ var
 begin
   Caption := GetString(LangStrings.LanguageID, 'TokenSettingsCaption');
   Height := 267;
+  pcEmissionSettings.Hide;
   // Character token
   cbVisible1.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsVisible');
   cbLockPosition1.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsLockPosition');
@@ -473,7 +525,28 @@ begin
   lParticleType5.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterParticleType');
   lShape5.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterShape');
 
-  // buttons
+  tsAngle.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterAngleTab');
+  lCenterAngle.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterAngleCenter');
+  lAngleRange.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterAngleRange');
+  lAngleDistribution.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterAngleDistribution');
+
+  tsSpeed.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterSpeedTab');
+  lCenterSpeed.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterSpeedCenter');
+  lSpeedRange.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterSpeedRange');
+  lSpeedDistribution.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterSpeedDistribution');
+
+  tsRotation.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterRotationTab');
+  lInitialRotation.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterInitialRotation');
+  lCenterRotation.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterRotationCenter');
+  lRotationRange.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterRotationRange');
+  lRotationDistribution.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterRotationDistribution');    
+  lChangeRate.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterRotationChangeRate');
+  lCenterRotationDir.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterRotationDirCenter');
+  lRotationDirRange.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterRotationDirRange');
+  lRotationDirDistribution.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterRotationDirDistribution');
+
+
+  // Buttons
   bDelete.Caption := GetString(LangStrings.LanguageID, 'ButtonDelete');
   bCancel.Caption := GetString(LangStrings.LanguageID, 'ButtonCancel');
   bOk.Caption := GetString(LangStrings.LanguageID, 'ButtonOk');

@@ -1,11 +1,11 @@
 object fmTokenSettings: TfmTokenSettings
   Left = 299
-  Height = 429
+  Height = 525
   Top = 274
   Width = 303
   BorderStyle = bsNone
   Caption = 'Token Settings'
-  ClientHeight = 429
+  ClientHeight = 525
   ClientWidth = 303
   FormStyle = fsStayOnTop
   OnCreate = FormCreate
@@ -14,11 +14,11 @@ object fmTokenSettings: TfmTokenSettings
   LCLVersion = '2.2.4.0'
   object pRight: TPanel
     Left = 187
-    Height = 429
+    Height = 525
     Top = 0
     Width = 116
     Align = alRight
-    ClientHeight = 429
+    ClientHeight = 525
     ClientWidth = 116
     TabOrder = 0
     object bOk: TButton
@@ -95,7 +95,7 @@ object fmTokenSettings: TfmTokenSettings
   end
   object pcSettings: TPageControl
     Left = 0
-    Height = 429
+    Height = 525
     Top = 0
     Width = 187
     ActivePage = tsParticleEmitter
@@ -105,7 +105,7 @@ object fmTokenSettings: TfmTokenSettings
     TabOrder = 1
     object tsCharacter: TTabSheet
       Caption = 'tsCharacter'
-      ClientHeight = 421
+      ClientHeight = 517
       ClientWidth = 179
       object cbVisible1: TCheckBox
         Left = 8
@@ -302,7 +302,7 @@ object fmTokenSettings: TfmTokenSettings
     end
     object tsText: TTabSheet
       Caption = 'tsText'
-      ClientHeight = 421
+      ClientHeight = 517
       ClientWidth = 179
       object cbVisible3: TCheckBox
         Left = 8
@@ -412,7 +412,7 @@ object fmTokenSettings: TfmTokenSettings
     end
     object tsLight: TTabSheet
       Caption = 'tsLight'
-      ClientHeight = 421
+      ClientHeight = 517
       ClientWidth = 179
       object cbVisible4: TCheckBox
         Left = 8
@@ -531,7 +531,7 @@ object fmTokenSettings: TfmTokenSettings
     end
     object tsRangeIndicator: TTabSheet
       Caption = 'tsRangeIndicator'
-      ClientHeight = 421
+      ClientHeight = 517
       ClientWidth = 179
       object cbLockPosition2: TCheckBox
         Left = 8
@@ -677,7 +677,7 @@ object fmTokenSettings: TfmTokenSettings
     end
     object tsParticleEmitter: TTabSheet
       Caption = 'tsParticleEmitter'
-      ClientHeight = 421
+      ClientHeight = 517
       ClientWidth = 179
       object lShape5: TLabel
         Left = 8
@@ -786,23 +786,24 @@ object fmTokenSettings: TfmTokenSettings
       end
       object pcEmissionSettings: TPageControl
         Left = 0
-        Height = 192
-        Top = 232
-        Width = 184
-        ActivePage = tsRotationDir
+        Height = 280
+        Top = 237
+        Width = 179
+        ActivePage = tsRotation
+        Align = alBottom
         MultiLine = True
-        TabIndex = 3
+        TabIndex = 2
         TabOrder = 8
         Visible = False
         Options = [nboMultiLine]
         object tsAngle: TTabSheet
           Caption = 'Angle'
-          ClientHeight = 144
-          ClientWidth = 176
+          ClientHeight = 252
+          ClientWidth = 171
           object cbAngleDistribution: TComboBox
             Left = 87
             Height = 23
-            Top = 69
+            Top = 87
             Width = 81
             ItemHeight = 15
             ItemIndex = 0
@@ -818,7 +819,7 @@ object fmTokenSettings: TfmTokenSettings
           object fseCenterAngle: TFloatSpinEdit
             Left = 87
             Height = 23
-            Top = 13
+            Top = 31
             Width = 82
             MaxValue = 360
             TabOrder = 1
@@ -826,7 +827,7 @@ object fmTokenSettings: TfmTokenSettings
           object fseAngleRange: TFloatSpinEdit
             Left = 87
             Height = 23
-            Top = 41
+            Top = 59
             Width = 81
             MaxValue = 180
             TabOrder = 2
@@ -834,7 +835,7 @@ object fmTokenSettings: TfmTokenSettings
           object lCenterAngle: TLabel
             Left = 3
             Height = 15
-            Top = 17
+            Top = 35
             Width = 72
             Caption = 'Center Angle:'
             ParentColor = False
@@ -842,7 +843,7 @@ object fmTokenSettings: TfmTokenSettings
           object lAngleRange: TLabel
             Left = 3
             Height = 15
-            Top = 45
+            Top = 63
             Width = 70
             Caption = 'Angle Range:'
             ParentColor = False
@@ -850,7 +851,7 @@ object fmTokenSettings: TfmTokenSettings
           object lAngleDistribution: TLabel
             Left = 3
             Height = 15
-            Top = 73
+            Top = 91
             Width = 65
             Caption = 'Distribution:'
             ParentColor = False
@@ -858,12 +859,12 @@ object fmTokenSettings: TfmTokenSettings
         end
         object tsSpeed: TTabSheet
           Caption = 'Speed'
-          ClientHeight = 144
-          ClientWidth = 176
+          ClientHeight = 252
+          ClientWidth = 171
           object lCenterSpeed: TLabel
             Left = 3
             Height = 15
-            Top = 17
+            Top = 35
             Width = 73
             Caption = 'Center Speed:'
             ParentColor = False
@@ -871,7 +872,7 @@ object fmTokenSettings: TfmTokenSettings
           object fseCenterSpeed: TFloatSpinEdit
             Left = 87
             Height = 23
-            Top = 13
+            Top = 31
             Width = 82
             MaxValue = 360
             TabOrder = 0
@@ -879,7 +880,7 @@ object fmTokenSettings: TfmTokenSettings
           object lSpeedRange: TLabel
             Left = 3
             Height = 15
-            Top = 45
+            Top = 63
             Width = 71
             Caption = 'Speed Range:'
             ParentColor = False
@@ -887,7 +888,7 @@ object fmTokenSettings: TfmTokenSettings
           object fseSpeedRange: TFloatSpinEdit
             Left = 87
             Height = 23
-            Top = 41
+            Top = 59
             Width = 81
             MaxValue = 180
             TabOrder = 1
@@ -895,7 +896,7 @@ object fmTokenSettings: TfmTokenSettings
           object lSpeedDistribution: TLabel
             Left = 3
             Height = 15
-            Top = 73
+            Top = 91
             Width = 65
             Caption = 'Distribution:'
             ParentColor = False
@@ -903,7 +904,7 @@ object fmTokenSettings: TfmTokenSettings
           object cbSpeedDistribution: TComboBox
             Left = 87
             Height = 23
-            Top = 69
+            Top = 87
             Width = 81
             ItemHeight = 15
             ItemIndex = 0
@@ -919,12 +920,12 @@ object fmTokenSettings: TfmTokenSettings
         end
         object tsRotation: TTabSheet
           Caption = 'Rotation'
-          ClientHeight = 144
-          ClientWidth = 176
+          ClientHeight = 252
+          ClientWidth = 171
           object lCenterRotation: TLabel
             Left = 3
             Height = 15
-            Top = 17
+            Top = 35
             Width = 86
             Caption = 'Center Rotation:'
             ParentColor = False
@@ -932,7 +933,7 @@ object fmTokenSettings: TfmTokenSettings
           object fseCenterRotation: TFloatSpinEdit
             Left = 87
             Height = 23
-            Top = 13
+            Top = 31
             Width = 82
             MaxValue = 360
             TabOrder = 0
@@ -940,7 +941,7 @@ object fmTokenSettings: TfmTokenSettings
           object lRotationRange: TLabel
             Left = 3
             Height = 15
-            Top = 45
+            Top = 63
             Width = 84
             Caption = 'Rotation Range:'
             ParentColor = False
@@ -948,7 +949,7 @@ object fmTokenSettings: TfmTokenSettings
           object fseRotationRange: TFloatSpinEdit
             Left = 87
             Height = 23
-            Top = 41
+            Top = 59
             Width = 81
             MaxValue = 180
             TabOrder = 1
@@ -956,7 +957,7 @@ object fmTokenSettings: TfmTokenSettings
           object lRotationDistribution: TLabel
             Left = 3
             Height = 15
-            Top = 73
+            Top = 91
             Width = 65
             Caption = 'Distribution:'
             ParentColor = False
@@ -964,7 +965,7 @@ object fmTokenSettings: TfmTokenSettings
           object cbRotationDistribution: TComboBox
             Left = 87
             Height = 23
-            Top = 69
+            Top = 87
             Width = 81
             ItemHeight = 15
             ItemIndex = 0
@@ -977,66 +978,77 @@ object fmTokenSettings: TfmTokenSettings
             TabOrder = 2
             Text = 'Uniform'
           end
-        end
-        object tsRotationDir: TTabSheet
-          Caption = 'Rotation Dir'
-          ClientHeight = 144
-          ClientWidth = 176
-          object cbRotationDirDistribution: TComboBox
-            Left = 87
-            Height = 23
-            Top = 69
-            Width = 81
-            ItemHeight = 15
-            ItemIndex = 0
-            Items.Strings = (
-              'Uniform'
-              'Gaussian'
-              'ArcSine'
-            )
-            Style = csDropDownList
-            TabOrder = 0
-            Text = 'Uniform'
-          end
-          object lRotationDirDistribution: TLabel
+          object lInitialRotation: TLabel
             Left = 3
             Height = 15
-            Top = 73
-            Width = 65
-            Caption = 'Distribution:'
+            Top = 7
+            Width = 77
+            Caption = 'Initial Rotation'
             ParentColor = False
           end
-          object fseRotationDirRange: TFloatSpinEdit
-            Left = 87
-            Height = 23
-            Top = 41
-            Width = 81
-            MaxValue = 180
-            TabOrder = 1
-          end
-          object lRotationDirRange: TLabel
+          object lChangeRate: TLabel
             Left = 3
             Height = 15
-            Top = 45
-            Width = 53
-            Caption = 'Deviation:'
+            Top = 119
+            Width = 79
+            Caption = 'Rotation speed'
+            ParentColor = False
+          end
+          object lCenterRotationDir: TLabel
+            Left = 3
+            Height = 15
+            Top = 147
+            Width = 33
+            Caption = 'Mean:'
             ParentColor = False
           end
           object fseCenterRotationDir: TFloatSpinEdit
             Left = 87
             Height = 23
-            Top = 13
+            Top = 143
             Width = 82
             MaxValue = 360
-            TabOrder = 2
+            TabOrder = 3
           end
-          object lCenterRotationDir: TLabel
+          object lRotationDirRange: TLabel
             Left = 3
             Height = 15
-            Top = 17
-            Width = 33
-            Caption = 'Mean:'
+            Top = 175
+            Width = 53
+            Caption = 'Deviation:'
             ParentColor = False
+          end
+          object fseRotationDirRange: TFloatSpinEdit
+            Left = 87
+            Height = 23
+            Top = 171
+            Width = 81
+            MaxValue = 180
+            TabOrder = 4
+          end
+          object lRotationDirDistribution: TLabel
+            Left = 3
+            Height = 15
+            Top = 203
+            Width = 65
+            Caption = 'Distribution:'
+            ParentColor = False
+          end
+          object cbRotationDirDistribution: TComboBox
+            Left = 87
+            Height = 23
+            Top = 199
+            Width = 81
+            ItemHeight = 15
+            ItemIndex = 0
+            Items.Strings = (
+              'Uniform'
+              'Gaussian'
+              'ArcSine'
+            )
+            Style = csDropDownList
+            TabOrder = 5
+            Text = 'Uniform'
           end
         end
       end
