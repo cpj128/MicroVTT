@@ -206,7 +206,7 @@ begin
     fixMat := AffineMatrixScale(ZoomFactor, ZoomFactor)
   else
     fixMat := AffineMatrixTranslation(-OffsetX, -OffsetY) * AffineMatrixScale(ZoomFactor, ZoomFactor);
-  for i := 0 to FMaxIdx - 1 do
+  for i := 0 to FMaxIdx do
   begin
     tmpMat := fixMat * AffineMatrixTranslation(FData[i].PosX, FData[i].PosY);
     tmpMat := tmpMat * AffineMatrixRotationDeg(FData[i].Rot); 
@@ -222,7 +222,7 @@ begin
   IdxOffset := 0;
   i := 0;
 
-  while {((i + IdxOffset) < FMaxIdx) and} (i < FMaxIdx) do
+  while {((i + IdxOffset) < FMaxIdx) and} (i <= FMaxIdx) do
   begin
     if FData[i + IdxOffset].TTL <= 0 then
     begin
@@ -230,6 +230,9 @@ begin
       while (i + IdxOffset < FMaxIdx) and (FData[i + IdxOffset].TTL <= 0) do
         Inc(IdxOffset);
     end;
+
+    if (i + idxOffset) >= FMaxIdx then
+      Break;
 
     if (IdxOffset > 0) and (i + IdxOffset < FMaxCount) then
     begin

@@ -317,6 +317,7 @@ type
     property Active: Boolean read FActive write FActive;
     property Shape: TParticleEmitterShape read FShape write SetShape;
     property IsRByDir: Boolean read GetIsRByDir;
+    property ParticlesPerSec: Double read FParticlesPerSecond write FParticlesPerSecond;
 
     property CentralAngle: Double read FCentralAngle write FCentralAngle;
     property AngleRange: Double read FAngleRange write FAngleRange;
@@ -953,6 +954,7 @@ begin
     TParticleEmitterToken(Result).ParticleName := saveFile.ReadString(SAVESECTIONTOKENS, 'ParticleName' + IntToStr(idx), '');
     TParticleEmitterToken(Result).Active := saveFile.ReadBool(SAVESECTIONTOKENS, 'Active' + IntToStr(idx), true);
     TParticleEmitterToken(Result).Shape := TParticleEmitterShape(saveFile.ReadInteger(SAVESECTIONTOKENS, 'Shape' + IntToStr(idx), 0));
+    TParticleEmitterToken(Result).ParticlesPerSec := saveFile.ReadFloat(SAVESECTIONTOKENS, 'ParticlesPerSec' + IntToStr(idx), 10);
     TParticleEmitterToken(Result).SettingsFromString(saveFile.ReadString(SAVESECTIONTOKENS, 'Settings' + IntToStr(idx), ''));
   end
   else if FileExists(path) then // Character token
@@ -1828,6 +1830,7 @@ begin
   SaveFile.WriteBool(SAVESECTIONTOKENS, 'Active' + IntToStr(idx), Active);
   SaveFile.WriteString(SAVESECTIONTOKENS, 'ParticleName' + IntToStr(idx), ParticleName);
   SaveFile.WriteInteger(SAVESECTIONTOKENS, 'Shape' + IntToStr(idx), Ord(Shape));
+  SaveFile.WriteFloat(SAVESECTIONTOKENS, 'ParticlesPerSec' + IntToStr(idx), ParticlesPerSec);
   SaveFile.WriteString(SAVESECTIONTOKENS, 'Settings' + IntToStr(idx), SettingsToString);
 
 end;

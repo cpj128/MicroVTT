@@ -66,6 +66,7 @@ type
     eWidth5: TEdit;
     fseAngleRange: TFloatSpinEdit;
     fseCenterRotation: TFloatSpinEdit;
+    fsePps: TFloatSpinEdit;
     fseCenterRotationDir: TFloatSpinEdit;
     fseRotationDirRange: TFloatSpinEdit;
     fseSpeedRange: TFloatSpinEdit;
@@ -77,6 +78,7 @@ type
     fseRotation3: TFloatSpinEdit;
     fseRotationRange: TFloatSpinEdit;
     lCenterRotation: TLabel;
+    lPps: TLabel;
     lCenterRotationDir: TLabel;
     lInitialRotation: TLabel;
     lChangeRate: TLabel;
@@ -257,6 +259,7 @@ begin
     udHeight5.Position := token.Height;
     cbParticleType5.ItemIndex := cbParticleType5.Items.IndexOf(TParticleEmitterToken(token).ParticleName);
     cbEmitterShape5.ItemIndex := Ord(TParticleEmitterToken(token).Shape);
+    fsePps.Value := TParticleEmitterToken(token).ParticlesPerSec;
 
     fseCenterAngle.Value := TParticleEmitterToken(token).CentralAngle;
     fseAngleRange.Value := TParticleEmitterToken(token).AngleRange;
@@ -363,6 +366,7 @@ begin
       LinkedToken.Height  := udHeight5.Position;
       TParticleEmitterToken(LinkedToken).ParticleName := cbParticleType5.Items[cbParticleType5.ItemIndex];
       TParticleEmitterToken(LinkedToken).Shape := TParticleEmitterShape(cbEmitterShape5.ItemIndex);
+      TParticleEmitterToken(LinkedToken).ParticlesPerSec := fsePps.Value;
       
       TParticleEmitterToken(LinkedToken).CentralAngle := fseCenterAngle.Value;
       TParticleEmitterToken(LinkedToken).AngleRange := fseAngleRange.Value;
@@ -524,6 +528,7 @@ begin
   lHeight5.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsHeight');
   lParticleType5.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterParticleType');
   lShape5.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterShape');
+  lPps.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterPps');
 
   tsAngle.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterAngleTab');
   lCenterAngle.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterAngleCenter');

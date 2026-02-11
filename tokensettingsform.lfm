@@ -1052,6 +1052,22 @@ object fmTokenSettings: TfmTokenSettings
           end
         end
       end
+      object lPps: TLabel
+        Left = 8
+        Height = 15
+        Top = 151
+        Width = 57
+        Caption = 'Particles/s:'
+        ParentColor = False
+      end
+      object fsePps: TFloatSpinEdit
+        Left = 76
+        Height = 23
+        Top = 147
+        Width = 96
+        MaxValue = 360
+        TabOrder = 9
+      end
     end
   end
   object cdIndicatorColor: TColorDialog
