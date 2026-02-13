@@ -292,6 +292,9 @@ type
     FCentralRotationDir, FRotationDirRange: Double;
     FAngleDistribution, FSpeedDistribution,
     FRotationDistribution, FRotationDirDistribution: TRandomDistribution;
+    FCentralSize, FSizeRange: Double;
+    FCentralSizeChange, FSizeChangeRange: Double;
+    FSizeDistribution, FSizeChangeDistribution: TRandomDistribution;
     // Need similar stuff for rotation and others
 
     procedure SetParticleName(pName: string);
@@ -334,6 +337,14 @@ type
     property CentralRotationDir: Double read FCentralRotationDir write FCentralRotationDir;
     property RotationDirRange: Double read FRotationDirRange write FRotationDirRange;
     property RotationDirDistribution: TRandomDistribution read FRotationDirDistribution write FRotationDirDistribution;
+
+    property CentralSize: Double read FCentralSize write FCentralSize;
+    property SizeRange: Double read FSizeRange write FSizeRange;
+    property SizeDistribution: TRandomDistribution read FSizeDistribution write FSizeDistribution;
+   
+    property CentralSizeChange: Double read FCentralSizeChange write FCentralSizeChange;
+    property SizeChangeRange: Double read FSizeChangeRange write FSizeChangeRange;
+    property SizeChangeDistribution: TRandomDistribution read FSizeChangeDistribution write FSizeChangeDistribution;
   end;
 
 implementation
@@ -1700,8 +1711,22 @@ begin
   FCentralSpeed      := 50;
   FSpeedRange        := 0;
   FAngleDistribution := rdUniform;
-  FSpeedDistribution := rdUniform;
+  FSpeedDistribution := rdUniform;  
+  FCentralRotation   := 0;
+  FRotationRange     := 0;
+  FCentralRotationDir := 0;
+  FRotationDirRange  := 0;
+  FRotationDistribution := rdUniform;
+  FRotationDirDistribution := rdUniform;
+  FCentralSize       := 100;
+  FSizeRange         := 0;
+  FCentralSizeChange := 0;
+  FSizeChangeRange   := 0;
+  FSizeDistribution  := rdUniform;
+  FSizeChangeDistribution := rdUniform;
+
   FRNG := TMRandom.Create(GetTickCount);
+
 
   FParticlesPerSecond := 10;
   FParticleQueue := 0;
@@ -1797,7 +1822,7 @@ end;
 
 procedure TParticleEmitterToken.DoAnimationStep(var NeedsUpdate: Boolean; DeltaT: Double);
 var
-  ang, speed, rot, dRot: Double;
+  ang, speed, rot, dRot, Size, dSize: Double;
   pnt: TPoint;
 begin
   inherited;
@@ -1813,8 +1838,10 @@ begin
       speed := FCentralSpeed + FRNG.RandomDist(FSpeedDistribution) * FSpeedRange;
       rot := FCentralRotation + FRNG.RandomDist(FRotationDistribution) * FRotationRange;
       dRot := FCentralRotationDir + FRNG.RandomDist(FRotationDirDistribution) * FRotationDirRange;
+      size := FCentralSize + FRNG.RandomDist(FSizeDistribution) * FSizeRange;
+      dSize := FCentralSizeChange + FRNG.RandomDist(FSizeChangeDistribution) * FSizeChangeRange;
       pnt := GetNextPoint;
-      FParticle.AddParticle(pnt.X, pnt.y, rot, 100, Sin(DegToRad(ang)) * speed, Cos(DegToRad(ang)) * speed, dRot, 5, 50);
+      FParticle.AddParticle(pnt.X, pnt.y, rot, size, Sin(DegToRad(ang)) * speed, Cos(DegToRad(ang)) * speed, dRot, dSize, 50);
       FParticleQueue := FParticleQueue - 1;
     end;
   end;
@@ -1863,6 +1890,14 @@ begin
     list.Add(FloatToStrF(FCentralRotationDir, ffNumber, 4, 4, fs));
     list.Add(FloatToStrF(FRotationDirRange, ffNumber, 4, 4, fs));
     list.Add(IntToStr(Ord(FRotationDirDistribution)));
+    // size values
+    list.Add(FloatToStrF(FCentralSize, ffNumber, 4, 4, fs));
+    list.Add(FloatToStrF(FSizeRange, ffNumber, 4, 4, fs));
+    list.Add(IntToStr(Ord(FSizeDistribution)));       
+    // size change values
+    list.Add(FloatToStrF(FCentralSizeChange, ffNumber, 4, 4, fs));
+    list.Add(FloatToStrF(FSizeChangeRange, ffNumber, 4, 4, fs));
+    list.Add(IntToStr(Ord(FSizeChangeDistribution)));
     //...
 
     Result := list.DelimitedText;
@@ -1887,21 +1922,25 @@ begin
     if List.Count >= 9 then // change this when adding more parameters
     begin
       // angle values
-      FCentralAngle      := StrToFloat(list[0], fs);
-      FAngleRange        := StrToFloat(list[1], fs);
-      FAngleDistribution := TRandomDistribution(StrToInt(list[2]));
+      FCentralAngle         := StrToFloat(list[0], fs);
+      FAngleRange           := StrToFloat(list[1], fs);
+      FAngleDistribution    := TRandomDistribution(StrToInt(list[2]));
       // speed values
-      FCentralSpeed      := StrToFloat(list[3], fs);
-      FSpeedRange        := StrToFloat(list[4], fs);
-      FSpeedDistribution := TRandomDistribution(StrToInt(list[5]));      
+      FCentralSpeed         := StrToFloat(list[3], fs);
+      FSpeedRange           := StrToFloat(list[4], fs);
+      FSpeedDistribution    := TRandomDistribution(StrToInt(list[5]));
       // rotation values
-      FCentralRotation   := StrToFloat(list[6], fs);
-      FRotationRange     := StrToFloat(list[7], fs);
+      FCentralRotation      := StrToFloat(list[6], fs);
+      FRotationRange        := StrToFloat(list[7], fs);
       FRotationDistribution := TRandomDistribution(StrToInt(list[8]));
       // rotation dir values
       FCentralRotationDir   := StrToFloat(list[9], fs);
       FRotationDirRange     := StrToFloat(list[10], fs);
       FRotationDirDistribution := TRandomDistribution(StrToInt(list[11]));
+      // size values                                                  
+      FCentralSize          := StrToFloat(list[12], fs);
+      FSizeRange            := StrToFloat(list[13], fs);
+      FSizeDistribution     := TRandomDistribution(StrToInt(list[14]));
       // ...
     end;
   finally

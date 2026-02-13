@@ -231,8 +231,8 @@ begin
         Inc(IdxOffset);
     end;
 
-    if (i + idxOffset) >= FMaxIdx then
-      Break;
+    //if (i + idxOffset) >= FMaxIdx then
+    //  Break;
 
     if (IdxOffset > 0) and (i + IdxOffset < FMaxCount) then
     begin

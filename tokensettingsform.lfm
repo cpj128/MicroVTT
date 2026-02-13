@@ -789,16 +789,16 @@ object fmTokenSettings: TfmTokenSettings
         Height = 280
         Top = 237
         Width = 179
-        ActivePage = tsRotation
+        ActivePage = tsAngle
         Align = alBottom
         MultiLine = True
-        TabIndex = 2
+        TabIndex = 0
         TabOrder = 8
         Visible = False
         Options = [nboMultiLine]
         object tsAngle: TTabSheet
           Caption = 'Angle'
-          ClientHeight = 252
+          ClientHeight = 232
           ClientWidth = 171
           object cbAngleDistribution: TComboBox
             Left = 87
@@ -859,7 +859,7 @@ object fmTokenSettings: TfmTokenSettings
         end
         object tsSpeed: TTabSheet
           Caption = 'Speed'
-          ClientHeight = 252
+          ClientHeight = 232
           ClientWidth = 171
           object lCenterSpeed: TLabel
             Left = 3
@@ -874,7 +874,7 @@ object fmTokenSettings: TfmTokenSettings
             Height = 23
             Top = 31
             Width = 82
-            MaxValue = 360
+            MaxValue = 500
             TabOrder = 0
           end
           object lSpeedRange: TLabel
@@ -890,7 +890,7 @@ object fmTokenSettings: TfmTokenSettings
             Height = 23
             Top = 59
             Width = 81
-            MaxValue = 180
+            MaxValue = 500
             TabOrder = 1
           end
           object lSpeedDistribution: TLabel
@@ -920,7 +920,7 @@ object fmTokenSettings: TfmTokenSettings
         end
         object tsRotation: TTabSheet
           Caption = 'Rotation'
-          ClientHeight = 252
+          ClientHeight = 232
           ClientWidth = 171
           object lCenterRotation: TLabel
             Left = 3
@@ -1008,6 +1008,7 @@ object fmTokenSettings: TfmTokenSettings
             Top = 143
             Width = 82
             MaxValue = 360
+            MinValue = -360
             TabOrder = 3
           end
           object lRotationDirRange: TLabel
@@ -1035,6 +1036,140 @@ object fmTokenSettings: TfmTokenSettings
             ParentColor = False
           end
           object cbRotationDirDistribution: TComboBox
+            Left = 87
+            Height = 23
+            Top = 199
+            Width = 81
+            ItemHeight = 15
+            ItemIndex = 0
+            Items.Strings = (
+              'Uniform'
+              'Gaussian'
+              'ArcSine'
+            )
+            Style = csDropDownList
+            TabOrder = 5
+            Text = 'Uniform'
+          end
+        end
+        object tsSize: TTabSheet
+          Caption = 'Size'
+          ClientHeight = 232
+          ClientWidth = 171
+          object lInitialSize: TLabel
+            Left = 3
+            Height = 15
+            Top = 7
+            Width = 52
+            Caption = 'Initial Size'
+            ParentColor = False
+          end
+          object lCenterSize: TLabel
+            Left = 3
+            Height = 15
+            Top = 35
+            Width = 56
+            Caption = 'Mean Size:'
+            ParentColor = False
+          end
+          object fseCenterSize: TFloatSpinEdit
+            Left = 87
+            Height = 23
+            Top = 31
+            Width = 82
+            MaxValue = 1000
+            TabOrder = 0
+          end
+          object lSizeRange: TLabel
+            Left = 3
+            Height = 15
+            Top = 63
+            Width = 59
+            Caption = 'Size Range:'
+            ParentColor = False
+          end
+          object fseSizeRange: TFloatSpinEdit
+            Left = 87
+            Height = 23
+            Top = 59
+            Width = 81
+            MaxValue = 1000
+            TabOrder = 1
+          end
+          object lSizeDistribution: TLabel
+            Left = 3
+            Height = 15
+            Top = 91
+            Width = 65
+            Caption = 'Distribution:'
+            ParentColor = False
+          end
+          object cbSizeDistribution: TComboBox
+            Left = 87
+            Height = 23
+            Top = 87
+            Width = 81
+            ItemHeight = 15
+            ItemIndex = 0
+            Items.Strings = (
+              'Uniform'
+              'Gaussian'
+              'ArcSine'
+            )
+            Style = csDropDownList
+            TabOrder = 2
+            Text = 'Uniform'
+          end
+          object lSizeChangeRate: TLabel
+            Left = 3
+            Height = 15
+            Top = 119
+            Width = 49
+            Caption = 'Growth/s'
+            ParentColor = False
+          end
+          object lCenterSizeChange: TLabel
+            Left = 3
+            Height = 15
+            Top = 147
+            Width = 33
+            Caption = 'Mean:'
+            ParentColor = False
+          end
+          object fseCenterSizeChange: TFloatSpinEdit
+            Left = 86
+            Height = 23
+            Top = 143
+            Width = 82
+            MaxValue = 500
+            MinValue = -500
+            TabOrder = 3
+          end
+          object lSizeChangeRange: TLabel
+            Left = 3
+            Height = 15
+            Top = 175
+            Width = 53
+            Caption = 'Deviation:'
+            ParentColor = False
+          end
+          object fseSizeChangeRange: TFloatSpinEdit
+            Left = 87
+            Height = 23
+            Top = 171
+            Width = 81
+            MaxValue = 500
+            TabOrder = 4
+          end
+          object lSizeChangeDistribution: TLabel
+            Left = 3
+            Height = 15
+            Top = 203
+            Width = 65
+            Caption = 'Distribution:'
+            ParentColor = False
+          end
+          object cbSizeChangeDistribution: TComboBox
             Left = 87
             Height = 23
             Top = 199

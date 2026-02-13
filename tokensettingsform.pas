@@ -35,6 +35,8 @@ type
     bSendToBack: TButton;
     bShowEmissionSettings: TButton;
     cbRotationDirDistribution: TComboBox;
+    cbSizeChangeDistribution: TComboBox;
+    cbSizeDistribution: TComboBox;
     cbSpeedDistribution: TComboBox;
     cbAnimationType4: TComboBox;
     cbEmitterShape5: TComboBox;
@@ -66,9 +68,13 @@ type
     eWidth5: TEdit;
     fseAngleRange: TFloatSpinEdit;
     fseCenterRotation: TFloatSpinEdit;
+    fseCenterSize: TFloatSpinEdit;
+    fseCenterSizeChange: TFloatSpinEdit;
     fsePps: TFloatSpinEdit;
     fseCenterRotationDir: TFloatSpinEdit;
     fseRotationDirRange: TFloatSpinEdit;
+    fseSizeChangeRange: TFloatSpinEdit;
+    fseSizeRange: TFloatSpinEdit;
     fseSpeedRange: TFloatSpinEdit;
     fseCenterAngle: TFloatSpinEdit;
     fseCenterSpeed: TFloatSpinEdit;
@@ -78,12 +84,20 @@ type
     fseRotation3: TFloatSpinEdit;
     fseRotationRange: TFloatSpinEdit;
     lCenterRotation: TLabel;
+    lCenterSize: TLabel;
+    lCenterSizeChange: TLabel;
+    lSizeChangeRate: TLabel;
+    lInitialSize: TLabel;
     lPps: TLabel;
     lCenterRotationDir: TLabel;
     lInitialRotation: TLabel;
     lChangeRate: TLabel;
     lRotationDirDistribution: TLabel;
+    lSizeChangeDistribution: TLabel;
     lRotationDirRange: TLabel;
+    lSizeChangeRange: TLabel;
+    lSizeDistribution: TLabel;
+    lSizeRange: TLabel;
     lSpeedDistribution: TLabel;
     lRotationDistribution: TLabel;
     lSpeedRange: TLabel;
@@ -128,6 +142,7 @@ type
     seNumber1: TSpinEditEx;
     seSectorAngle2: TSpinEditEx;
     seAnimationSpeed4: TSpinEditEx;
+    tsSize: TTabSheet;
     tsRotation: TTabSheet;
     tsSpeed: TTabSheet;
     tsAngle: TTabSheet;
@@ -277,6 +292,14 @@ begin
     fseRotationDirRange.Value := TParticleEmitterToken(token).RotationDirRange;
     cbRotationDirDistribution.ItemIndex := Ord(TParticleEmitterToken(token).RotationDirDistribution);
 
+    fseCenterSize.Value := TParticleEmitterToken(token).CentralSize;
+    fseSizeRange.Value := TParticleEmitterToken(token).SizeRange;
+    cbSizeDistribution.ItemIndex := Ord(TParticleEmitterToken(token).SizeDistribution);
+
+    fseCenterSizeChange.Value := TParticleEmitterToken(token).CentralSizeChange;
+    fseSizeChangeRange.Value := TParticleEmitterToken(token).SizeChangeRange;
+    cbSizeChangeDistribution.ItemIndex := Ord(TParticleEmitterToken(token).SizeChangeDistribution);
+
     bDetach.Show;
     bDetach.Enabled := TParticleEmitterToken(token).IsAttached; 
     bBringToFront.Enabled := False;
@@ -383,6 +406,14 @@ begin
       TParticleEmitterToken(LinkedToken).CentralRotationDir := fseCenterRotationDir.Value;
       TParticleEmitterToken(LinkedToken).RotationDirRange := fseRotationDirRange.Value;
       TParticleEmitterToken(LinkedToken).RotationDirDistribution := TRandomDistribution(cbRotationDirDistribution.ItemIndex);
+
+      TParticleEmitterToken(LinkedToken).CentralSize := fseCenterSize.Value;
+      TParticleEmitterToken(LinkedToken).SizeRange := fseSizeRange.Value;
+      TParticleEmitterToken(LinkedToken).SizeDistribution := TRandomDistribution(cbSizeDistribution.ItemIndex);
+
+      TParticleEmitterToken(LinkedToken).CentralSizeChange := fseCenterSizeChange.Value;
+      TParticleEmitterToken(LinkedToken).SizeChangeRange := fseSizeChangeRange.Value;
+      TParticleEmitterToken(LinkedToken).SizeChangeDistribution := TRandomDistribution(cbSizeChangeDistribution.ItemIndex);
     end;
     LinkedToken.UpdateAttached;
     LinkedToken := nil;
@@ -548,7 +579,17 @@ begin
   lChangeRate.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterRotationChangeRate');
   lCenterRotationDir.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterRotationDirCenter');
   lRotationDirRange.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterRotationDirRange');
-  lRotationDirDistribution.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterRotationDirDistribution');
+  lRotationDirDistribution.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterRotationDirDistribution');  
+
+  tsSize.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterSizeTab');
+  lInitialSize.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterInitialSize');
+  lCenterSize.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterSizeCenter');
+  lSizeRange.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterSizeRange');
+  lSizeDistribution.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterSizeDistribution');
+  lSizeChangeRate.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterSizeChangeRate');
+  lCenterSizeChange.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterSizeDirCenter');
+  lSizeChangeRange.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterSizeDirRange');
+  lSizeChangeDistribution.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterSizeDirDistribution');
 
 
   // Buttons
