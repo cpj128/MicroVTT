@@ -725,7 +725,7 @@ object fmTokenSettings: TfmTokenSettings
         Top = 35
         Width = 17
         Associate = eWidth5
-        Max = 1000
+        Max = 2000
         Min = 0
         Position = 100
         TabOrder = 2
@@ -736,7 +736,7 @@ object fmTokenSettings: TfmTokenSettings
         Top = 63
         Width = 17
         Associate = eHeight5
-        Max = 1000
+        Max = 2000
         Min = 0
         Position = 100
         TabOrder = 3
@@ -789,10 +789,10 @@ object fmTokenSettings: TfmTokenSettings
         Height = 280
         Top = 237
         Width = 179
-        ActivePage = tsAngle
+        ActivePage = tsAlpha
         Align = alBottom
         MultiLine = True
-        TabIndex = 0
+        TabIndex = 4
         TabOrder = 8
         Visible = False
         Options = [nboMultiLine]
@@ -1186,6 +1186,140 @@ object fmTokenSettings: TfmTokenSettings
             Text = 'Uniform'
           end
         end
+        object tsAlpha: TTabSheet
+          Caption = 'Transparency'
+          ClientHeight = 232
+          ClientWidth = 171
+          object lInitialAlpha: TLabel
+            Left = 3
+            Height = 15
+            Top = 7
+            Width = 42
+            Caption = 'Initial %'
+            ParentColor = False
+          end
+          object lCenterAlpha: TLabel
+            Left = 3
+            Height = 15
+            Top = 35
+            Width = 33
+            Caption = 'Mean:'
+            ParentColor = False
+          end
+          object fseCenterAlpha: TFloatSpinEdit
+            Left = 87
+            Height = 23
+            Top = 31
+            Width = 82
+            MaxValue = 1000
+            TabOrder = 0
+          end
+          object lAlphaRange: TLabel
+            Left = 3
+            Height = 15
+            Top = 63
+            Width = 53
+            Caption = 'Deviation:'
+            ParentColor = False
+          end
+          object fseAlphaRange: TFloatSpinEdit
+            Left = 87
+            Height = 23
+            Top = 59
+            Width = 81
+            MaxValue = 1000
+            TabOrder = 1
+          end
+          object lAlphaDistribution: TLabel
+            Left = 3
+            Height = 15
+            Top = 91
+            Width = 65
+            Caption = 'Distribution:'
+            ParentColor = False
+          end
+          object cbAlphaDistribution: TComboBox
+            Left = 87
+            Height = 23
+            Top = 87
+            Width = 81
+            ItemHeight = 15
+            ItemIndex = 0
+            Items.Strings = (
+              'Uniform'
+              'Gaussian'
+              'ArcSine'
+            )
+            Style = csDropDownList
+            TabOrder = 2
+            Text = 'Uniform'
+          end
+          object lAlphaChangeRate: TLabel
+            Left = 3
+            Height = 15
+            Top = 119
+            Width = 48
+            Caption = 'Fade %/s'
+            ParentColor = False
+          end
+          object lCenterAlphaChange: TLabel
+            Left = 3
+            Height = 15
+            Top = 147
+            Width = 33
+            Caption = 'Mean:'
+            ParentColor = False
+          end
+          object fseCenterAlphaChange: TFloatSpinEdit
+            Left = 86
+            Height = 23
+            Top = 143
+            Width = 82
+            MaxValue = 500
+            MinValue = -500
+            TabOrder = 3
+          end
+          object lAlphaChangeRange: TLabel
+            Left = 3
+            Height = 15
+            Top = 175
+            Width = 53
+            Caption = 'Deviation:'
+            ParentColor = False
+          end
+          object fseAlphaChangeRange: TFloatSpinEdit
+            Left = 87
+            Height = 23
+            Top = 171
+            Width = 81
+            MaxValue = 500
+            TabOrder = 4
+          end
+          object lAlphaChangeDistribution: TLabel
+            Left = 3
+            Height = 15
+            Top = 203
+            Width = 65
+            Caption = 'Distribution:'
+            ParentColor = False
+          end
+          object cbAlphaChangeDistribution: TComboBox
+            Left = 87
+            Height = 23
+            Top = 199
+            Width = 81
+            ItemHeight = 15
+            ItemIndex = 0
+            Items.Strings = (
+              'Uniform'
+              'Gaussian'
+              'ArcSine'
+            )
+            Style = csDropDownList
+            TabOrder = 5
+            Text = 'Uniform'
+          end
+        end
       end
       object lPps: TLabel
         Left = 8
@@ -1200,7 +1334,7 @@ object fmTokenSettings: TfmTokenSettings
         Height = 23
         Top = 147
         Width = 96
-        MaxValue = 360
+        MaxValue = 10000
         TabOrder = 9
       end
     end

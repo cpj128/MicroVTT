@@ -36,7 +36,9 @@ type
     bShowEmissionSettings: TButton;
     cbRotationDirDistribution: TComboBox;
     cbSizeChangeDistribution: TComboBox;
+    cbAlphaChangeDistribution: TComboBox;
     cbSizeDistribution: TComboBox;
+    cbAlphaDistribution: TComboBox;
     cbSpeedDistribution: TComboBox;
     cbAnimationType4: TComboBox;
     cbEmitterShape5: TComboBox;
@@ -69,12 +71,16 @@ type
     fseAngleRange: TFloatSpinEdit;
     fseCenterRotation: TFloatSpinEdit;
     fseCenterSize: TFloatSpinEdit;
+    fseCenterAlpha: TFloatSpinEdit;
     fseCenterSizeChange: TFloatSpinEdit;
+    fseCenterAlphaChange: TFloatSpinEdit;
     fsePps: TFloatSpinEdit;
     fseCenterRotationDir: TFloatSpinEdit;
     fseRotationDirRange: TFloatSpinEdit;
     fseSizeChangeRange: TFloatSpinEdit;
+    fseAlphaChangeRange: TFloatSpinEdit;
     fseSizeRange: TFloatSpinEdit;
+    fseAlphaRange: TFloatSpinEdit;
     fseSpeedRange: TFloatSpinEdit;
     fseCenterAngle: TFloatSpinEdit;
     fseCenterSpeed: TFloatSpinEdit;
@@ -85,7 +91,12 @@ type
     fseRotationRange: TFloatSpinEdit;
     lCenterRotation: TLabel;
     lCenterSize: TLabel;
+    lCenterAlpha: TLabel;
     lCenterSizeChange: TLabel;
+    lCenterAlphaChange: TLabel;
+    lInitialAlpha: TLabel;
+    lAlphaChangeDistribution: TLabel;
+    lAlphaChangeRange: TLabel;
     lSizeChangeRate: TLabel;
     lInitialSize: TLabel;
     lPps: TLabel;
@@ -96,8 +107,11 @@ type
     lSizeChangeDistribution: TLabel;
     lRotationDirRange: TLabel;
     lSizeChangeRange: TLabel;
+    lAlphaChangeRate: TLabel;
     lSizeDistribution: TLabel;
+    lAlphaDistribution: TLabel;
     lSizeRange: TLabel;
+    lAlphaRange: TLabel;
     lSpeedDistribution: TLabel;
     lRotationDistribution: TLabel;
     lSpeedRange: TLabel;
@@ -142,6 +156,7 @@ type
     seNumber1: TSpinEditEx;
     seSectorAngle2: TSpinEditEx;
     seAnimationSpeed4: TSpinEditEx;
+    tsAlpha: TTabSheet;
     tsSize: TTabSheet;
     tsRotation: TTabSheet;
     tsSpeed: TTabSheet;
@@ -300,6 +315,14 @@ begin
     fseSizeChangeRange.Value := TParticleEmitterToken(token).SizeChangeRange;
     cbSizeChangeDistribution.ItemIndex := Ord(TParticleEmitterToken(token).SizeChangeDistribution);
 
+    fseCenterAlpha.Value := TParticleEmitterToken(token).CentralAlpha;
+    fseAlphaRange.Value := TParticleEmitterToken(token).AlphaRange;
+    cbAlphaDistribution.ItemIndex := Ord(TParticleEmitterToken(token).AlphaDistribution);
+
+    fseCenterAlphaChange.Value := TParticleEmitterToken(token).CentralAlphaChange;
+    fseAlphaChangeRange.Value := TParticleEmitterToken(token).AlphaChangeRange;
+    cbAlphaChangeDistribution.ItemIndex := Ord(TParticleEmitterToken(token).AlphaChangeDistribution);
+
     bDetach.Show;
     bDetach.Enabled := TParticleEmitterToken(token).IsAttached; 
     bBringToFront.Enabled := False;
@@ -414,6 +437,14 @@ begin
       TParticleEmitterToken(LinkedToken).CentralSizeChange := fseCenterSizeChange.Value;
       TParticleEmitterToken(LinkedToken).SizeChangeRange := fseSizeChangeRange.Value;
       TParticleEmitterToken(LinkedToken).SizeChangeDistribution := TRandomDistribution(cbSizeChangeDistribution.ItemIndex);
+
+      TParticleEmitterToken(LinkedToken).CentralAlpha := fseCenterAlpha.Value;
+      TParticleEmitterToken(LinkedToken).AlphaRange := fseAlphaRange.Value;
+      TParticleEmitterToken(LinkedToken).AlphaDistribution := TRandomDistribution(cbAlphaDistribution.ItemIndex);
+
+      TParticleEmitterToken(LinkedToken).CentralAlphaChange := fseCenterAlphaChange.Value;
+      TParticleEmitterToken(LinkedToken).AlphaChangeRange := fseAlphaChangeRange.Value;
+      TParticleEmitterToken(LinkedToken).AlphaChangeDistribution := TRandomDistribution(cbAlphaChangeDistribution.ItemIndex);
     end;
     LinkedToken.UpdateAttached;
     LinkedToken := nil;
@@ -472,7 +503,7 @@ begin
   end
   else
   begin
-    Height := 525;
+    Height := 555;
     pcEmissionSettings.Show;
   end;
 end;
@@ -589,7 +620,17 @@ begin
   lSizeChangeRate.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterSizeChangeRate');
   lCenterSizeChange.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterSizeDirCenter');
   lSizeChangeRange.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterSizeDirRange');
-  lSizeChangeDistribution.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterSizeDirDistribution');
+  lSizeChangeDistribution.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterSizeDirDistribution');           
+
+  tsAlpha.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterAlphaTab');
+  lInitialAlpha.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterInitialAlpha');
+  lCenterAlpha.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterAlphaCenter');
+  lAlphaRange.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterAlphaRange');
+  lAlphaDistribution.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterAlphaDistribution');
+  lAlphaChangeRate.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterAlphaChangeRate');
+  lCenterAlphaChange.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterAlphaChangeCenter');
+  lAlphaChangeRange.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterAlphaChangeRange');
+  lAlphaChangeDistribution.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterAlphaChangeDistribution');
 
 
   // Buttons

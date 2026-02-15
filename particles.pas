@@ -30,18 +30,20 @@ type
     PosX, PosY: Single;         
     // Rotations of the particles
     Rot: Single;
-    // Set Rotation to movement direction
-    RByDir: Boolean;
     // Size (in %)
     Size: Single;
     // Transparency
     Alpha: Single;
     // Delta-X/Y/Rotation/Size/Alpha of the particles
-    DX, DY, DRot, DSize: Single;
-    DAlpha: LongInt;
+    DX, DY, DRot, DSize, DAlpha: Single;
     // Time to life per particle, in frames
     TTL: Integer;
-    // Going to need emitter settings for every single one of these...
+    // currently shown frame (round down for drawing)
+    CurFrame: Single;
+    // Total number of frames in animation
+    FrameCount: Integer;
+    // Animation speed in frames/s
+    AniSpeed: Single;
   public
     procedure DoTick(dTime: Double);
   end;
@@ -54,7 +56,7 @@ type
     // Highest index of currently active particles
     FMaxIdx: DWORD;
     // Graphic of the particle
-    FGraphic: TBGRABitmap;
+    FGraphic: array of TBGRABitmap;
 
     FData: array of TParticleData;
 
@@ -78,6 +80,8 @@ type
     // Draw particle independently of screen movement
     FScreenStatic: Boolean;
 
+    // Animation speed (frames/s)
+    FAniSpeed: Single;
   protected
     function GetWidth: Integer;
     function GetHeight: Integer;
@@ -87,7 +91,7 @@ type
     destructor Destroy; override;
     procedure Draw(target: TBGRABitmap; ZoomFactor, OffsetX, OffsetY: Double);
     procedure DoTick(DeltaT: Double);
-    procedure AddParticle(X, Y, R, S, DX, DY, DR, DS: Single; TTL: Integer);
+    procedure AddParticle(X, Y, R, S, A, DX, DY, DR, DS, DA: Single; TTL: Integer);
     property RByDir: Boolean read FSetRByDir;
     property Width: Integer read GetWidth;
     property Height: Integer read GetHeight;
@@ -123,7 +127,8 @@ implementation
 
 uses
   IniFiles,
-  FileUtil;
+  FileUtil,
+  LazFileUtils;
 
   { TParticleData }
 
@@ -131,16 +136,15 @@ procedure TParticleData.DoTick(dTime: Double);
 begin
   PosX := PosX + DX * dTime;
   PosY := PosY + DY * dTime;
-  if RByDir then
-    Rot := RadToDeg(ArcTan2(DY, DX))
-  else
-    Rot  := Rot + DRot * dTime;
+  Rot  := Rot + DRot * dTime;
   Size := Size + DSize * dTime;
   Alpha := EnsureRange(Alpha + DAlpha * dTime, 0, 255);
-  if (Alpha <= 0) or (Size <= 0) then
-    TTL := 0
-  else
-    TTL  := TTL  - 1;
+  // Kill particle if alpha or size are below 0
+  TTL := (TTL - 1) * Ord(Alpha > 0) * Ord(Size > 0);
+
+  CurFrame := CurFrame + AniSpeed * dTime;
+  while (CompareValue(CurFrame, FrameCount) >= 0) and (FrameCount > 0) do
+    CurFrame := CurFrame - FrameCount;
 end;
 
   { TParticle }
@@ -150,8 +154,10 @@ var
   particleFile: TIniFile;
   graphicFileName: string;
   RelPath: string;
+  tmpGraphic: TBGRABitmap;
+  frameWidth, frameHeight, frameCountX, frameCountY: Integer;
+  i, j, CurIdx: Integer;
 begin
-  FGraphic := nil;
   if not FileExists(DefFileName) then
     raise Exception.Create('Particle definition file "' + DefFileName + '" not found.');
   particleFile := TIniFile.Create(DefFileName);
@@ -160,7 +166,27 @@ begin
     graphicFileName := particleFile.ReadString('Particle', 'GraphicFile', '');
     if graphicFileName = '' then
       raise Exception.Create('Particle definition "' + DefFileName + '" does not contain graphic file name.');
-    FGraphic := TBGRABitmap.Create(RelPath + graphicFileName);
+
+    tmpGraphic := TBGRABitmap.Create(RelPath + graphicFileName);
+    try
+      // Determine number of frames in graphic file, copy to individual images
+      frameWidth := particleFile.ReadInteger('Particle', 'FrameWidth', tmpGraphic.Width);
+      frameHeight := particleFile.ReadInteger('Particle', 'FrameHeight', tmpGraphic.Height);
+      frameCountX := tmpGraphic.Width div FrameWidth;
+      frameCountY := tmpGraphic.Height div frameHeight;
+      SetLength(FGraphic, frameCountX * frameCountY);
+      CurIdx := 0;
+      for i := 0 to frameCountX - 1 do
+        for j := 0 to frameCountY - 1 do
+        begin
+          FGraphic[CurIdx] := TBGRABitmap.Create(frameWidth, frameHeight);
+          FGraphic[CurIdx].Canvas.CopyRect(Rect(0, 0, frameWidth, frameHeight), tmpGraphic.Canvas, Bounds(i * frameWidth, j * frameHeight, frameWidth, frameHeight));
+          Inc(CurIdx);
+        end;
+    finally
+      tmpGraphic.Free;
+    end;
+
     FMaxCount := particleFile.ReadInteger('Particle', 'MaxCount', 1000);
     FMaxIdx := 0;
 
@@ -170,49 +196,55 @@ begin
     FTTLMin := particleFile.ReadInteger('Particle', 'TTLMin', 100);
     FTTLMax := particleFile.ReadInteger('Particle', 'TTLMax', 100);
 
+    FAniSpeed := particleFile.ReadFloat('Particle', 'AniSpeed', 50);
+
     SetLength(FData, FMaxCount);
   finally
     particleFile.Free;
   end;
-
 end;
 
 destructor TParticle.Destroy;
+var i: Integer;
 begin
-  if Assigned(FGraphic) then
-    FGraphic.Free;
+  for i := 0 to Length(FGraphic) - 1 do
+    if Assigned(FGraphic[i]) then
+      FGraphic[i].Free;
 end;
 
 function TParticle.GetWidth: Integer;
 begin
   Result := 0;
-  if Assigned(FGraphic) then
-    Result := FGraphic.Width;
+  if Assigned(FGraphic[0]) then
+    Result := FGraphic[0].Width;
 end;
 
 function TParticle.GetHeight: Integer;
 begin
   Result := 0;
-  if Assigned(FGraphic) then
-    Result := FGraphic.Height;
+  if Assigned(FGraphic[0]) then
+    Result := FGraphic[0].Height;
 end;
 
 procedure TParticle.Draw(target: TBGRABitmap; ZoomFactor, OffsetX, OffsetY: Double);
 var
   i: Integer;
   fixMat, tmpMat: TAffineMatrix;
+  alpha: Byte;
 begin
   if FScreenStatic then
     fixMat := AffineMatrixScale(ZoomFactor, ZoomFactor)
   else
     fixMat := AffineMatrixTranslation(-OffsetX, -OffsetY) * AffineMatrixScale(ZoomFactor, ZoomFactor);
-  for i := 0 to FMaxIdx do
+
+  for i := FMaxIdx downto 0 do
   begin
     tmpMat := fixMat * AffineMatrixTranslation(FData[i].PosX, FData[i].PosY);
-    tmpMat := tmpMat * AffineMatrixRotationDeg(FData[i].Rot); 
+    tmpMat := tmpMat * AffineMatrixRotationDeg(FData[i].Rot);
     tmpMat := tmpMat * AffineMatrixScale(FData[i].Size / 100, FData[i].Size / 100);
     tmpMat := tmpMat * AffineMatrixTranslation(-Width / 2, -Height / 2);
-    target.PutImageAffine(tmpMat, FGraphic, Round(FData[i].Alpha));
+    alpha := EnsureRange(Round(FData[i].Alpha / 100 * 255), 0, 255);
+    target.PutImageAffine(tmpMat, FGraphic[Floor(FData[i].CurFrame)], alpha);
   end;
 end;
 
@@ -222,7 +254,7 @@ begin
   IdxOffset := 0;
   i := 0;
 
-  while {((i + IdxOffset) < FMaxIdx) and} (i <= FMaxIdx) do
+  while ((i + IdxOffset) < FMaxCount) and (i < FMaxIdx) do
   begin
     if FData[i + IdxOffset].TTL <= 0 then
     begin
@@ -230,9 +262,6 @@ begin
       while (i + IdxOffset < FMaxIdx) and (FData[i + IdxOffset].TTL <= 0) do
         Inc(IdxOffset);
     end;
-
-    //if (i + idxOffset) >= FMaxIdx then
-    //  Break;
 
     if (IdxOffset > 0) and (i + IdxOffset < FMaxCount) then
     begin
@@ -249,7 +278,7 @@ begin
   FMaxIdx := FMaxIdx - IdxOffset;
 end;
 
-procedure TParticle.AddParticle(X, Y, R, S, DX, DY, DR, DS: Single; TTL: Integer);
+procedure TParticle.AddParticle(X, Y, R, S, A, DX, DY, DR, DS, DA: Single; TTL: Integer);
 var
   CanCreate: Boolean;
   tmpData: TParticleData;
@@ -266,14 +295,23 @@ begin
     tmpData.PosY   := Y;
     tmpData.Rot    := R;
     tmpData.Size   := S;
-    tmpData.Alpha  := 255;
+    tmpData.Alpha  := A;
     tmpData.DX     := DX;
     tmpData.DY     := DY;
     tmpData.DRot   := DR;
     tmpData.DSize  := DS;
-    tmpData.DAlpha := -2;
+    tmpData.DAlpha := DA;
     tmpData.TTL    := FTTLMin + Random(FTTLMax - FTTLMin);
-    tmpData.RByDir := FSetRByDir;
+    if FSetRByDir then
+    begin
+      tmpData.Rot := RadToDeg(ArcTan2(DY, DX));
+      tmpData.DRot := 0;
+    end;
+    tmpData.AniSpeed := FAniSpeed;
+    tmpData.CurFrame := 0;
+    tmpData.FrameCount := Length(FGraphic);
+    if SameValue(fAniSpeed, 0) then // Select a random frame in this case
+      tmpData.CurFrame := Random(Length(FGraphic));
     FData[FMaxIdx] := tmpData;
   end;
 end;
