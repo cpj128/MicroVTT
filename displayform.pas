@@ -817,6 +817,7 @@ begin
   if Assigned(FLoSMap) then
     FreeAndNil(FLoSMap);
   FLoSMap := TBGRABitmap.Create(MapWidth, MapHeight);
+  RedrawMovedMap;
 end;
 
 procedure TfmDisplay.FormShow(Sender: TObject);
