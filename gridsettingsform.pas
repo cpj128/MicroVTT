@@ -1,4 +1,4 @@
-{Copyright (c) 2023 Stephan Breer
+{Copyright (c) 2023-2026 Stephan Breer
 
 This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
 
@@ -65,7 +65,8 @@ implementation
 
 uses
   ControllerForm,
-  LangStrings;
+  LangStrings,
+  ContentManager;
 
 { TfmGridSettings }
 
@@ -119,24 +120,9 @@ begin
 end;
 
 procedure TfmGridSettings.bSaveToLibraryClick(Sender: TObject);
-var
-  ContentList: TStringList;
 begin
-  if fmController.MapLib.IndexOfName(fmController.MapFileName) < 0 then
-    Exit;
-  ContentList := TStringList.Create;
-  try
-    ContentList.Delimiter := '|';
-    ContentList.StrictDelimiter := True;
-    ContentList.DelimitedText := fmController.MapLib.Values[fmController.MapFileName];
-    if ContentList.Count > 1 then
-    begin
-      ContentList[1] := FCurGridData.ToString;
-      fmController.MapLib.Values[fmController.MapFileName] := ContentList.DelimitedText;
-    end;
-  finally
-    ContentList.Free;
-  end;
+  if ContentLib.HasMap(fmController.MapFileName) then
+    ContentLib.SetMapGridData(fmController.MapFileName, FCurGridData.ToString);
 end;
 
 procedure TfmGridSettings.fseGridSizeXChange(Sender: TObject);

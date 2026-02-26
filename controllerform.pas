@@ -25,11 +25,6 @@ uses
   WallManager,
   Particles;
 
-const
-  MAPLIBFILE = 'Maps.txt';
-  TOKENLIBFILE = 'Tokens.txt';
-  OVERLAYLIBFILE = 'Overlays.txt';
-
 type
 
   { TfmController }
@@ -237,11 +232,11 @@ type
     FCurInitiativeIndex: Integer;
     FTokenList: TList;
     FMapDir, FTokenDir, FOverlayDir, FParticleDir: string;
+    FConfigDir: string;
     FThumbnailDir: string;
     FInitiativeDesc, FTokensStartInvisible: Boolean;
     FTokenRotationStyle: TTokenRotationStyle;
     FAppSettings: TIniFile;
-    FMapLib, FTokenLib, FOverlayLib: TStringList;
     FTokenShadowClr,
     FWallClr,
     FPortalClr,
@@ -260,6 +255,7 @@ type
     FWallManager: TWallManager;
     FParticleManager: TParticleManager;
 
+    function GetSettingsFilePath: string;
     procedure UpdateMapList;
     procedure UpdateTokenList;
     procedure UpdateOverlayList;
@@ -302,9 +298,6 @@ type
     property MapFileName: string read FMapFileName;
     property TokenRotationStyle: TTokenRotationStyle read FTokenRotationStyle;
     property CurInitiativeIndex: Integer read FCurInitiativeIndex write SetCurInitiativeIndex;
-    property MapLib: TStringList read FMapLib;
-    property TokenLib: TStringList read FTokenLib;
-    property OverlayLib: TStringList read FOverlayLib;
     property MapDir: string read FMapDir;
     property TokenDir: string read FTokenDir;
     property OverlayDir: string read FOverlayDir;
@@ -361,7 +354,8 @@ uses
   LibraryForm,
   TokenSettingsForm,
   LazLogger,
-  InitiativeForm;
+  InitiativeForm,
+  ContentManager;
 
 { TfmController }
 
@@ -458,25 +452,15 @@ end;
 
 procedure TfmController.LoadMap(FileName: string);
 var
-  ContentList: TStringList;
   GridSettings: string;
   Loader: TMapLoader;
 begin
   if not FileExists(FileName) then
     Exit;
   GridSettings := '';
-  ContentList := TStringList.Create;
-  try
-    ContentList.Delimiter := '|';
-    ContentList.StrictDelimiter := True;
-    if FMapLib.IndexOfName(FileName) >= 0 then
-    begin
-      ContentList.DelimitedText := FMapLib.Values[FileName];
-      if ContentList.Count > 1 then
-        GridSettings := ContentList[1];
-    end;
-  finally
-    ContentList.Free;
+  if ContentLib.HasMap(FileName) then
+  begin
+    GridSettings := ContentLib.GetMapGridData(FileName);
   end;
   if Length(GridSettings) > 0 then
   begin
@@ -1349,13 +1333,6 @@ end;
 procedure TfmController.tbLibraryClick(Sender: TObject);
 begin
   fmLibrary.ShowModal;
-  {FMapLib.SaveToFile(MAPLIBFILE);
-  FTokenLib.SaveToFile(TOKENLIBFILE);
-  FOverlayLib.SaveToFile(OVERLAYLIBFILE);
-
-  UpdateMapList; // Maybe change just names here?
-  UpdateTokenList;
-  UpdateOverlayList;}
 end;
 
 procedure TfmController.tbMapZoomChange(Sender: TObject);
@@ -1715,6 +1692,21 @@ begin
   Accept := False;
 end;
 
+function TfmController.GetSettingsFilePath: string;
+begin
+  Result := IncludeTrailingPathDelimiter(ExtractFilePath(Application.ExeName));
+  try
+    // Test if we can create directories in our current environment
+    MkDir(Result + 'test\');
+    RmDir(Result + 'test\');
+  except
+    // Use Appdata-equivalent if not
+    Result := IncludeTrailingPathDelimiter(ExtractFilePath(GetAppConfigFile(False)));
+    if not DirectoryExists(Result) then
+      MkDir(Result);
+  end;
+end;
+
 procedure TfmController.UpdateMapList;
 var
   i: Integer;
@@ -1738,14 +1730,8 @@ begin
 
       with lvMaps.Items.Add do
       begin
-        if FMapLib.IndexOfName(FileName) >= 0 then
-        begin
-          ContentList.DelimitedText := FMapLib.Values[FileName];
-          if ContentList.Count > 0 then
-            title := ContentList[0]
-          else
-            title := ExtractFileName(FileName);
-        end
+        if ContentLib.HasMap(FileName) then
+          title := ContentLib.GetMapTitle(FileName)
         else
           title := ExtractFileName(FileName);
         Caption := title;
@@ -1793,13 +1779,13 @@ var
         title := ExtractFilename(FileList[i]); 
         NodeData := TTokenNodeData.Create;
         NodeData.TokenType := ttCharacter;
-        if FTokenLib.IndexOfName(FileList[i]) >= 0 then
+        if ContentLib.HasToken(FileList[i]) then
         begin
           ContentList := TStringList.Create;
           try
             ContentList.Delimiter := '|';
             ContentList.StrictDelimiter := True;
-            ContentList.DelimitedText := FTokenLib.Values[FileList[i]];
+            ContentList.DelimitedText := ContentLib.GetTokenData(FileList[i]);
             if Length(ContentList[0]) > 0 then
               title := ContentList[0];
 
@@ -1878,25 +1864,27 @@ begin
 end;
 
 procedure TfmController.UpdateOverlayList;
-var
+{var
   i: Integer;
   FilePath: string;
-  ContentList: TStringList;
+  ContentList: TStringList; }
   {FullPic, ScaledPic: TBGRABitmap;
   vWidth, vHeight: Integer;}
 begin
-  ContentList := TStringList.Create;
+  // Does not seem like we are doing anything here anymore?
+  // Leaving the function as is, just in case
+  (*ContentList := TStringList.Create;
   try
     ContentList.Delimiter := '|';
     ContentList.StrictDelimiter := True;
 
-    for i := 0 to FOverlayLib.Count - 1 do
+    for i := 0 to ContentLib.OverlayCount - 1 do
     begin
-      FilePath := FOverlayLib.Names[i];
-      FOverlayLib.Objects[i] := nil;
+      FilePath := ContentLib.GetOverlayName(i);
+      //FOverlayLib.Objects[i] := nil;
       if FileExists(FilePath) then
       begin
-        ContentList.DelimitedText := FOverlayLib.Values[FilePath];
+        ContentList.DelimitedText := ContentLib.GetOverlayData(FilePath);
         if ContentList.Count = 3 then
         begin
           {vWidth := StrToIntDef(ContentList[1], 32);
@@ -1914,7 +1902,7 @@ begin
 
   finally
     ContentList.Free;
-  end;
+  end; *)
 end;
 
 procedure TfmController.CalcLoSMap;
@@ -1971,12 +1959,11 @@ end;
 function TfmController.GetOverlay(idx: Integer): TBGRABitmap;
 begin
   Result := nil;
-  if (idx >= 0) and (idx < FOverlayLib.Count) then
+  if (idx >= 0) and (idx < ContentLib.OverlayCount) then
   begin
-    if FileExists(FOverlayLib.Names[idx]) then
-      Result := TBGRABitmap.Create(FOverlayLib.Names[idx]);
+    if FileExists(ContentLib.GetOverlayName(idx)) then
+      Result := TBGRABitmap.Create(ContentLib.GetOverlayName(idx));
   end;
-  //  Result := TBGRABitmap(FOverlayLib.Objects[idx]);
 end;
 
 procedure TfmController.RemoveToken(token: TToken);
@@ -2052,9 +2039,7 @@ end;
 
 procedure TfmController.SaveLibraryData;
 begin
-  FMapLib.SaveToFile(MAPLIBFILE);
-  FTokenLib.SaveToFile(TOKENLIBFILE);
-  FOverlayLib.SaveToFile(OVERLAYLIBFILE);
+  ContentLib.SaveData;
 
   UpdateMapList; // Maybe change just names here?
   UpdateTokenList;
@@ -2189,7 +2174,9 @@ begin
   FMarkerClr := FAppSettings.ReadInteger('Settings', 'MarkerClr', clRed);
   FMeasureClr := FAppSettings.ReadInteger('Settings', 'MeasureClr', clYellow);
 
-  FThumbnailDir := IncludeTrailingPathDelimiter(ExtractFilePath(Application.ExeName)) + 'Thumbnails\';
+  FConfigDir := GetSettingsFilePath;
+  FThumbnailDir := FConfigDir + 'Thumbnails\';
+
   // Maybe use Appdata instead?
   if not DirectoryExists(FThumbnailDir) then
     MkDir(FThumbnailDir);
@@ -2249,22 +2236,7 @@ begin
   FSnapTokensToGrid := False;
   FCombatMode := False;
 
-  // Load / create library files
-  FMapLib := TStringList.Create;
-  if FileExists(MAPLIBFILE) then
-    FMapLib.LoadFromFile(MAPLIBFILE)
-  else
-    FMapLib.SaveToFile(MAPLIBFILE);
-  FTokenLib := TStringList.Create;
-  if FileExists(TOKENLIBFILE) then
-    FTokenLib.LoadFromFile(TOKENLIBFILE)
-  else
-    FTokenlib.SaveToFile(TOKENLIBFILE);
-  FOverlayLib := TStringList.Create;
-  if FileExists(OVERLAYLIBFILE) then
-    FOverlayLib.LoadFromFile(OVERLAYLIBFILE)
-  else
-    FOverlayLib.SaveToFile(OVERLAYLIBFILE);
+  ContentManager.ContentLib := TContentManager.Create(FConfigDir);
 end;
 
 procedure TfmController.FormDestroy(Sender: TObject);
@@ -2285,9 +2257,7 @@ begin
   FAppSettings.Free;
   FWallManager.Free;
   FParticleManager.Free;
-  FMapLib.Free;
-  FTokenLib.Free;
-  FOverlayLib.Free;
+  ContentLib.Free;
   // Notes module
   FNotesList.Free;
   FHistoryList.Free;

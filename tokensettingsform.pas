@@ -209,6 +209,7 @@ uses
   Math,
   RPGUtils,
   LangStrings,
+  ContentManager,
   ControllerForm,
   DisplayForm,
   InitiativeForm;
@@ -652,9 +653,9 @@ begin
   try
     ContentList.Delimiter := '|';
     ContentList.StrictDelimiter := True;
-    for i := 0 to fmController.OverlayLib.Count - 1 do
+    for i := 0 to ContentLib.OverlayCount - 1 do
     begin
-      ContentList.DelimitedText := fmController.OverlayLib.ValueFromIndex[i];
+      ContentList.DelimitedText := ContentLib.GetOverlayData(ContentLib.GetOverlayName(i));
       if ContentList.Count >= 1 then
         cbOverlay1.Items.Add(ContentList[0]);
     end;

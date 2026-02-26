@@ -146,7 +146,7 @@
         <PackageName Value="LCL"/>
       </Item8>
     </RequiredPackages>
-    <Units Count="17">
+    <Units Count="18">
       <Unit0>
         <Filename Value="RPGPres.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -251,6 +251,11 @@
         <Filename Value="particles.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit16>
+      <Unit17>
+        <Filename Value="contentmanager.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="ContentManager"/>
+      </Unit17>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

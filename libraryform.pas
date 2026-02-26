@@ -77,7 +77,8 @@ uses
   DisplayConst,
   LangStrings,
   RPGTypes,
-  Notes;
+  Notes,
+  ContentManager;
 
 { TfmLibrary }
 
@@ -108,7 +109,7 @@ end;
 
 procedure TfmLibrary.ShowMaps;
 var
-  FileList, HeaderList, ContentList: TStringList;
+  FileList, HeaderList: TStringList;
   i: Integer;
   tmpGridData: TGridData;
 begin
@@ -117,9 +118,6 @@ begin
   HeaderList.Delimiter := ',';
   HeaderList.StrictDelimiter := True;
   HeaderList.DelimitedText := StrMapsHeader;
-  ContentList := TStringList.Create;
-  ContentList.Delimiter := '|';
-  ContentList.StrictDelimiter := True;
   sgItemData.Columns.Clear;
   sgItemData.ColWidths[0] := 22;
   sgItemData.Columns.Insert(0);   
@@ -142,13 +140,11 @@ begin
       sgItemData.Cells[1, i + 1] := ExtractFileName(FileList[i]);
       sgItemData.Cells[2, i + 1] := FileList[i];
       tmpGridData := DefaultGridData;
-      if fmController.MapLib.IndexOfName(FileList[i]) >= 0 then
+      if ContentLib.HasMap(FileList[i]) then
       begin
-        ContentList.DelimitedText := fmController.MapLib.Values[FileList[i]];
-        if ContentList.Count > 1 then
-          tmpGridData.FromString(ContentList[1]);
-        sgItemData.Cells[3, i + 1] := ContentList[0];
-        if fmController.NotesList.HasEntry(ContentList[0]) then
+        tmpGridData.FromString(ContentLib.GetMapGridData(FileList[i]));
+        sgItemData.Cells[3, i + 1] := ContentLib.GetMapTitle(FileList[i]);
+        if fmController.NotesList.HasEntry(sgItemData.Cells[3, i + 1]) then
           sgItemData.Cells[4, i + 1] := StrGoToNote
         else
           sgItemData.Cells[4, i + 1] := StrAddNote;
@@ -166,22 +162,21 @@ begin
     end;
 
     // Add orphaned entries from database
-    for i := 0 to fmController.MapLib.Count - 1 do
+    for i := 0 to ContentLib.MapCount - 1 do
     begin
-      if sgItemData.Cols[2].IndexOf(fmController.MapLib.Names[i]) < 0 then
+      if sgItemData.Cols[2].IndexOf(ContentLib.GetMapName(i)) < 0 then
       begin
         sgItemData.RowCount := sgItemData.RowCount + 1;
-        sgItemData.Cells[1, sgItemData.RowCount - 1] := ExtractFileName(fmController.MapLib.Names[i]);
-        sgItemData.Cells[2, sgItemData.RowCount - 1] := fmController.MapLib.Names[i];
-        sgItemData.Cells[3, sgItemData.RowCount - 1] := fmController.MapLib.ValueFromIndex[i];
+        sgItemData.Cells[1, sgItemData.RowCount - 1] := ExtractFileName(ContentLib.GetMapName(i));
+        sgItemData.Cells[2, sgItemData.RowCount - 1] := ContentLib.GetMapName(i);
+        sgItemData.Cells[3, sgItemData.RowCount - 1] := ContentLib.GetMapTitle(sgItemData.Cells[2, sgItemData.RowCount - 1]);
+
         tmpGridData := DefaultGridData;
-        if fmController.MapLib.IndexOfName(FileList[i]) >= 0 then
+        if ContentLib.HasMap(FileList[i]) then
         begin
-          ContentList.DelimitedText := fmController.MapLib.Values[FileList[i]];
-          if ContentList.Count > 1 then
-            tmpGridData.FromString(ContentList[1]);
-          sgItemData.Cells[3, i + 1] := ContentList[0];
-          if fmController.NotesList.HasEntry(ContentList[0]) then
+          tmpGridData.FromString(ContentLib.GetMapGridData(FileList[i]));
+          sgItemData.Cells[3, i + 1] := ContentLib.GetMapTitle(FileList[i]);
+          if fmController.NotesList.HasEntry(sgItemData.Cells[3, i + 1]) then
             sgItemData.Cells[4, i + 1] := StrGoToNote
           else
             sgItemData.Cells[4, i + 1] := StrAddNote;
@@ -201,7 +196,6 @@ begin
   finally
     FileList.Free;
     HeaderList.Free;
-    ContentList.Free;
   end;
 end;
 
@@ -212,6 +206,7 @@ procedure TfmLibrary.ShowTokens;
 var
   FileList, ContentList, HeaderList: TStringList;
   i, j: Integer;
+  TokenName: string;
 begin
   FileList := TStringList.Create;
   ContentList := TStringList.Create;
@@ -245,9 +240,9 @@ begin
     begin
       sgItemData.Cells[1, i + 1] := ExtractFileName(FileList[i]);
       sgItemData.Cells[2, i + 1] := FileList[i];
-      if fmController.TokenLib.IndexOfName(FileList[i]) >= 0 then
+      if ContentLib.HasToken(FileList[i]) then
       begin
-        ContentList.DelimitedText := fmController.TokenLib.Values[FileList[i]];
+        ContentList.DelimitedText := ContentLib.GetTokenData(FileList[i]);
         if ContentList.Count = 7 then
         begin
           for j := 0 to ContentList.Count - 1 do
@@ -281,16 +276,17 @@ begin
     end;
 
     // Add orphaned entries from database
-    for i := 0 to fmController.TokenLib.Count - 1 do
+    for i := 0 to ContentLib.TokenCount - 1 do
     begin
-      if sgItemData.Cols[2].IndexOf(fmController.TokenLib.Names[i]) < 0 then
+      TokenName := ContentLib.GetTokenName(i);
+      if sgItemData.Cols[2].IndexOf(TokenName) < 0 then
       begin
         sgItemData.RowCount := sgItemData.RowCount + 1;
-        ContentList.DelimitedText := fmController.TokenLib.ValueFromIndex[i];
+        ContentList.DelimitedText := ContentLib.GetTokenData(TokenName);
         for j := 0 to ContentList.Count - 1 do
           sgItemData.Cells[3 + j, i + 1] := ContentList[j];
-        sgItemData.Cells[1, sgItemData.RowCount - 1] := ExtractFileName(fmController.TokenLib.Names[i]);
-        sgItemData.Cells[2, sgItemData.RowCount - 1] := fmController.TokenLib.Names[i];
+        sgItemData.Cells[1, sgItemData.RowCount - 1] := ExtractFileName(TokenName);
+        sgItemData.Cells[2, sgItemData.RowCount - 1] := TokenName;
         sgItemData.Cells[10, i + 1] := IfThen(fmController.NotesList.HasEntry(sgItemData.Cells[3, i + 1]), StrGotoNote, StrAddNote);
       end;
     end;
@@ -305,6 +301,7 @@ procedure TfmLibrary.ShowOverlays;
 var
   FileList, ContentList, HeaderList: TStringList;
   i, j: Integer;
+  OverlayName: string;
 begin
   FileList := TStringList.Create; 
   ContentList := TStringList.Create;
@@ -336,9 +333,9 @@ begin
     begin
       sgItemData.Cells[1, i + 1] := ExtractFileName(FileList[i]);
       sgItemData.Cells[2, i + 1] := FileList[i];
-      if fmController.OverlayLib.IndexOfName(FileList[i]) >= 0 then
+      if ContentLib.HasOverlay(FileList[i]) then
       begin
-        ContentList.DelimitedText := fmController.OverlayLib.Values[FileList[i]];
+        ContentList.DelimitedText := ContentLib.GetOverlayData(FileList[i]);
         if ContentList.Count = 3 then
         begin
           for j := 0 to ContentList.Count - 1 do
@@ -363,16 +360,17 @@ begin
     end;
 
     // Add orphaned entries from database
-    for i := 0 to fmController.OverlayLib.Count - 1 do
+    for i := 0 to ContentLib.OverlayCount - 1 do
     begin
-      if sgItemData.Cols[2].IndexOf(fmController.OverlayLib.Names[i]) < 0 then
+      if sgItemData.Cols[2].IndexOf(ContentLib.GetOverlayName(i)) < 0 then
       begin
         sgItemData.RowCount := sgItemData.RowCount + 1;
-        ContentList.DelimitedText := fmController.OverlayLib.ValueFromIndex[i];
+        OverlayName := ContentLib.GetOverlayName(i);
+        ContentList.DelimitedText := ContentLib.GetOverlayData(OverlayName);
         for j := 0 to ContentList.Count - 1 do
           sgItemData.Cells[3 + j, i + 1] := ContentList[j];
-        sgItemData.Cells[1, sgItemData.RowCount - 1] := ExtractFileName(fmController.TokenLib.Names[i]);
-        sgItemData.Cells[2, sgItemData.RowCount - 1] := fmController.TokenLib.Names[i];
+        sgItemData.Cells[1, sgItemData.RowCount - 1] := ExtractFileName(OverlayName);
+        sgItemData.Cells[2, sgItemData.RowCount - 1] := OverlayName;
         sgItemData.Cells[6, i + 1] := IfThen(fmController.NotesList.HasEntry(sgItemData.Cells[3, i + 1]), StrGotoNote, StrAddNote);
       end;
     end;
@@ -398,7 +396,7 @@ begin
       ContentList.Add(sgItemData.Cells[3,i]);
       if Assigned(sgItemData.Objects[5, i]) then
         ContentList.Add(TGridDataWrapper(sgItemData.Objects[5, i]).GridData.ToString);
-      fmController.MapLib.Values[sgItemData.Cells[2, i]] := ContentList.DelimitedText;
+      ContentLib.SetMapFullData(sgItemData.Cells[2, i], ContentList.DelimitedText);
     end;
   finally
     ContentList.Free;
@@ -421,7 +419,7 @@ begin
       begin
         ContentList.Add(sgItemData.Cells[j, i]);
       end;
-      fmController.TokenLib.Values[sgItemData.Cells[2, i]] := ContentList.DelimitedText;
+      ContentLib.SetTokenData(sgItemData.Cells[2, i], ContentList.DelimitedText);
     end;
   finally
     ContentList.Free;
@@ -444,7 +442,7 @@ begin
       begin
         ContentList.Add(sgItemData.Cells[j, i]);
       end;
-      fmController.OverlayLib.Values[sgItemData.Cells[2, i]] := ContentList.DelimitedText;
+      ContentLib.SetOverlayData(sgItemData.Cells[2, i], ContentList.DelimitedText);
     end;
   finally
     ContentList.Free;
@@ -532,9 +530,9 @@ function TfmLibrary.ItemExists(path: string): Boolean;
 begin
   Result := False;
   case tcHeader.TabIndex of
-    0: Result := (fmController.MapLib.IndexOfName(path) >= 0);
-    1: Result := (fmController.TokenLib.IndexOfName(path) >= 0);
-    2: Result := (fmController.OverlayLib.IndexOfName(path) >= 0);
+    0: Result := ContentLib.HasMap(path);
+    1: Result := ContentLib.HasToken(path);
+    2: Result := ContentLib.HasOverlay(path);
   end;
 end;
 
