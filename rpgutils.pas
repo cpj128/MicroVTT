@@ -39,6 +39,8 @@ public
   function RandomDist(dist: TRandomDistribution): Double;
   function RandomGauss: Double;
   function RandomArcSine: Double;
+  function RandomHypSecant: Double;
+  function RandomBates(order: Integer): Double;
   property Seed: Cardinal write SetSeed;
 end;
   
@@ -138,7 +140,7 @@ begin
   if dist = rdUniform then
     Result := Random * 2 - 1
   else if dist = rdGaussian then
-    Result := RandomGauss
+    Result := RandomBates(3) * 2 - 1//RandomGauss
   else if dist = rdArcSine then
     Result := RandomArcSine * 2 - 1;
 end;
@@ -168,6 +170,20 @@ end;
 function TCustomRNG.RandomArcSine: Double;
 begin
   Result := Sqr(Sin(0.5 * PI * self.Random));
+end;
+
+function TCustomRNG.RandomHypSecant: Double;
+begin
+  Result := Ln(Tan(0.5 * PI * self.Random));
+end;
+
+function TCustomRNG.RandomBates(order: Integer): Double;
+var i: Integer;
+begin
+  Result := 0;
+  for i := 0 to order - 1 do
+    Result := Result + self.Random;
+  Result := Result / order;
 end;
 
 { TMRandom }
