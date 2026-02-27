@@ -273,7 +273,7 @@ type
     property WallManager: TWallManager read FWallManager write FWallManager;
   end;
 
-  TParticleEmitterShape = (esPoint, esRect, esEllipse);
+  TParticleEmitterShape = (esPoint, esRect, esEllipse, esRing);
 
   TParticleEmitterToken = class(TAttachableToken)
   private
@@ -1810,6 +1810,11 @@ begin
   begin
     FGlyph.EllipseAntialias(FWidth / 2, FHeight / 2, FWidth / 2 - 1, FHeight / 2 - 1, clRed, 2, BGRA(255, 0, 0, 64));
     FGlyph.DrawLineAntialias(FWidth, 0, 0, FHeight, clRed, 2);
+  end
+  else if FShape = esRing then
+  begin
+    FGlyph.EllipseAntialias(FWidth / 2, FHeight / 2, FWidth / 2 - 1, FHeight / 2 - 1, clRed, 2, BGRA(255, 0, 0, 0));
+    FGlyph.DrawLineAntialias(FWidth, 0, 0, FHeight, clRed, 2);
   end;
 end;
 
@@ -1832,6 +1837,12 @@ begin
     BPos := Sqrt(Random);
     Result := Point(Round(XPos + Sin(APos) * BPos * FWidth / 2),
                     Round(YPos + Cos(APos) * BPos * FHeight / 2));
+  end
+  else if FShape = esRing then
+  begin
+    APos := Random * 2 * PI;
+    Result := Point(Round(XPos + Sin(aPos) * FWidth / 2),
+                    Round(YPos + Cos(APos) * FHeight / 2));
   end;
 end;
 

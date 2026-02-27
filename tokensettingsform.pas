@@ -220,9 +220,14 @@ const
                                               'TokenSettingsLightUnstable', 'TokenSettingsLightRampUp',
                                               'TokenSettingsLightRampDown');
 
-  PARTICLEEMITTERSHAPES: array [0..2] of string = ('TokenSettingsEmitterShapePoint',
+  PARTICLEEMITTERSHAPES: array [0..3] of string = ('TokenSettingsEmitterShapePoint',
                                                    'TokenSettingsEmitterShapeRect',
-                                                   'TokenSettingsEmitterShapeEllipse');
+                                                   'TokenSettingsEmitterShapeEllipse',
+                                                   'TokenSettingsEmitterShapeRing');
+
+  DISTRIBUTIONS: array[0..2] of string = ('TokenSettingsEmitterDistributionUniform',
+                                          'TokenSettingsEmitterDistributionGaussian',
+                                          'TokenSettingsEmitterDistributionArcSine');
 
 { TfmTokenSettings }
 
@@ -521,6 +526,26 @@ begin
   // Emitter shapes
   for i := Low(PARTICLEEMITTERSHAPES) to High(PARTICLEEMITTERSHAPES) do
     cbEmitterShape5.Items.Add(GetString(LangStrings.LanguageID, PARTICLEEMITTERSHAPES[i]));
+  // Distributions
+  cbRotationDirDistribution.Items.Clear;
+  for i := Low(DISTRIBUTIONS) to High(DISTRIBUTIONS) do
+    cbRotationDirDistribution.Items.Add(GetString(LangStrings.LanguageID, DISTRIBUTIONS[i]));
+  
+  cbAngleDistribution.Items.Clear;
+  cbAngleDistribution.Items.AddStrings(cbRotationDirDistribution.Items);  
+  cbSpeedDistribution.Items.Clear;
+  cbSpeedDistribution.Items.AddStrings(cbRotationDirDistribution.Items);   
+  cbRotationDistribution.Items.Clear;
+  cbRotationDistribution.Items.AddStrings(cbRotationDirDistribution.Items);  
+  cbSizeDistribution.Items.Clear;
+  cbSizeDistribution.Items.AddStrings(cbRotationDirDistribution.Items);
+  cbSizeChangeDistribution.Items.Clear;
+  cbSizeChangeDistribution.Items.AddStrings(cbRotationDirDistribution.Items);
+  cbAlphaDistribution.Items.Clear;
+  cbAlphaDistribution.Items.AddStrings(cbRotationDirDistribution.Items); 
+  cbAlphaChangeDistribution.Items.Clear;
+  cbAlphaChangeDistribution.Items.AddStrings(cbRotationDirDistribution.Items);
+
 end;
 
 procedure TfmTokenSettings.bDeleteClick(Sender: TObject);

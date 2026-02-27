@@ -789,10 +789,10 @@ object fmTokenSettings: TfmTokenSettings
         Height = 280
         Top = 237
         Width = 179
-        ActivePage = tsAlpha
+        ActivePage = tsAngle
         Align = alBottom
         MultiLine = True
-        TabIndex = 4
+        TabIndex = 0
         TabOrder = 8
         Visible = False
         Options = [nboMultiLine]
