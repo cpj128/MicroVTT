@@ -53,8 +53,8 @@ type
   private
     // Max number of particles managed by this object. Set at creation, cannot change.
     FMaxCount: DWORD;
-    // Highest index of currently active particles
-    FMaxIdx: DWORD;
+    // Highest index of currently active particles. -1 if no particles are active.
+    FMaxIdx: Integer;
     // Graphic of the particle
     FGraphic: array of TBGRABitmap;
 
@@ -254,12 +254,12 @@ begin
   IdxOffset := 0;
   i := 0;
 
-  while ((i + IdxOffset) < FMaxCount) and (i < FMaxIdx) do
+  while ((i + IdxOffset) < FMaxCount) and (i <= FMaxIdx) do
   begin
     if FData[i + IdxOffset].TTL <= 0 then
     begin
       // This particle is dead, replace with next living one
-      while (i + IdxOffset < FMaxIdx) and (FData[i + IdxOffset].TTL <= 0) do
+      while (i + IdxOffset <= FMaxIdx) and (FData[i + IdxOffset].TTL <= 0) do
         Inc(IdxOffset);
     end;
 
