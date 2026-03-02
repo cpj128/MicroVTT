@@ -50,6 +50,11 @@ type
     function GetEmitterData(name: string): string;
     procedure SetEmitterData(name, data: string);
 
+    procedure SaveMapData;
+    procedure SaveTokenData;
+    procedure SaveOverlayData;
+    procedure SaveEmitterData;
+
     procedure SaveData;
 
 
@@ -95,12 +100,32 @@ begin
   FEmitterLib.Free;
 end;
 
-procedure TContentManager.SaveData;
+procedure TContentManager.SaveMapData;
 begin
   FMapLib.SaveToFile(MAPLIBFILE);
+end;
+
+procedure TContentManager.SaveTokenData;
+begin
   FTokenLib.SaveToFile(TOKENLIBFILE);
+end;
+
+procedure TContentManager.SaveOverlayData;
+begin
   FOverlayLib.SaveToFile(OVERLAYLIBFILE);
+end;
+
+procedure TContentManager.SaveEmitterData;
+begin
   FEmitterLib.SaveToFile(EMITTERLIBFILE);
+end;
+
+procedure TContentManager.SaveData;
+begin
+  SaveMapData;
+  SaveTokenData;
+  SaveOverlayData;
+  SaveEmitterData;
 end;
 
 function TContentManager.MapCount: Integer;

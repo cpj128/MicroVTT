@@ -19,7 +19,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ComCtrls,
-  Spin, ExtCtrls, SpinEx, RPGTypes;
+  Spin, ExtCtrls, Buttons, SpinEx, RPGTypes;
 
 type
 
@@ -57,6 +57,7 @@ type
     cbActive5: TCheckBox;
     cdIndicatorColor: TColorDialog;
     cbAngleDistribution: TComboBox;
+    cbEmitterPresets: TComboBox;
     eGridSlotsX1: TEdit;
     eGridSlotsY1: TEdit;
     eHeight1: TEdit;
@@ -97,6 +98,7 @@ type
     lInitialAlpha: TLabel;
     lAlphaChangeDistribution: TLabel;
     lAlphaChangeRange: TLabel;
+    lPresets: TLabel;
     lSizeChangeRate: TLabel;
     lInitialSize: TLabel;
     lPps: TLabel;
@@ -156,6 +158,8 @@ type
     seNumber1: TSpinEditEx;
     seSectorAngle2: TSpinEditEx;
     seAnimationSpeed4: TSpinEditEx;
+    sbSavePreset: TSpeedButton;
+    sbLoadPreset: TSpeedButton;
     tsAlpha: TTabSheet;
     tsSize: TTabSheet;
     tsRotation: TTabSheet;
@@ -185,14 +189,18 @@ type
     procedure bOkClick(Sender: TObject);
     procedure bSendToBackClick(Sender: TObject);
     procedure bShowEmissionSettingsClick(Sender: TObject);
+    procedure cbEmitterPresetsChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDeactivate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure pnColor2Click(Sender: TObject);
+    procedure sbLoadPresetClick(Sender: TObject);
+    procedure sbSavePresetClick(Sender: TObject);
   private
     FLinkedToken: TToken;
     FCombatMode: Boolean;
     procedure SetToken(token: TToken);
+    procedure RefreshEmitterPresets;
   public
     property LinkedToken: TToken read FLinkedToken write SetToken;
     property CombatMode: Boolean write FCombatMode;
@@ -358,6 +366,20 @@ begin
   end;
 end;
 
+procedure TfmTokenSettings.RefreshEmitterPresets;
+var i: Integer;
+begin
+  cbEmitterPresets.Items.BeginUpdate;
+  try
+    cbEmitterPresets.Items.Clear;
+    cbEmitterPresets.Items.Add(GetString(LangStrings.LanguageID, 'TokenSettingsEmitterNewPreset'));
+    for i := 0 to ContentLib.EmitterCount - 1 do
+      cbEmitterPresets.Items.Add(ContentLib.GetEmitterName(i));
+  finally
+    cbEmitterPresets.Items.EndUpdate;
+  end;
+end;
+
 procedure TfmTokenSettings.FormDeactivate(Sender: TObject);
 begin
   Close;
@@ -514,6 +536,11 @@ begin
   end;
 end;
 
+procedure TfmTokenSettings.cbEmitterPresetsChange(Sender: TObject);
+begin
+  sbLoadPreset.Enabled := cbEmitterPresets.ItemIndex <> 0;
+end;
+
 procedure TfmTokenSettings.FormCreate(Sender: TObject);
 var i: Integer;
 begin
@@ -546,6 +573,8 @@ begin
   cbAlphaChangeDistribution.Items.Clear;
   cbAlphaChangeDistribution.Items.AddStrings(cbRotationDirDistribution.Items);
 
+  RefreshEmitterPresets;
+  cbEmitterPresets.ItemIndex := 0;
 end;
 
 procedure TfmTokenSettings.bDeleteClick(Sender: TObject);
@@ -699,6 +728,131 @@ begin
   begin
     TPanel(Sender).Color := cdIndicatorColor.Color;
   end;
+end;
+
+procedure TfmTokenSettings.sbLoadPresetClick(Sender: TObject);
+var
+  list: TStringList;
+  fs: TFormatSettings;
+begin
+  if cbEmitterPresets.ItemIndex = 0 then
+    Exit;
+  fs := FormatSettings;
+  fs.DecimalSeparator := '.';
+  list := TStringList.Create;
+  list.Delimiter := '|';
+  list.StrictDelimiter := True;
+  list.DelimitedText := ContentLib.GetEmitterData(cbEmitterPresets.Items[cbEmitterPresets.ItemIndex]);
+
+  if List.Count >= 24 then
+  begin
+    fseCenterAngle.Value := StrToFloat(list[0], fs);
+    fseAngleRange.Value := StrToFloat(list[1], fs);
+    cbAngleDistribution.ItemIndex := StrToInt(list[2]);
+
+    fseCenterSpeed.Value := StrToFloat(list[3], fs);
+    fseSpeedRange.Value := StrToFloat(list[4], fs);
+    cbSpeedDistribution.ItemIndex := StrToInt(list[5]);
+    
+    fseCenterRotation.Value := StrToFloat(list[6], fs);
+    fseRotationRange.Value := StrToFloat(list[7], fs);
+    cbRotationDistribution.ItemIndex := StrToInt(list[8]);
+
+    fseCenterRotationDir.Value := StrToFloat(list[9], fs);
+    fseRotationDirRange.Value := StrToFloat(list[10], fs);
+    cbRotationDirDistribution.ItemIndex := StrToInt(list[11]);
+
+    fseCenterSize.Value := StrToFloat(list[12], fs);
+    fseSizeRange.Value := StrToFloat(list[13], fs);
+    cbSizeDistribution.ItemIndex := StrToInt(list[14]);
+
+    fseCenterSizeChange.Value := StrToFloat(list[15], fs);
+    fseSizeChangeRange.Value := StrToFloat(list[16], fs);
+    cbSizeChangeDistribution.ItemIndex := StrToInt(list[17]);
+
+    fseCenterAlpha.Value := StrToFloat(list[18], fs);
+    fseAlphaRange.Value := StrToFloat(list[19], fs);
+    cbAlphaDistribution.ItemIndex := StrToInt(list[20]);
+
+    fseCenterAlphaChange.Value := StrToFloat(list[21], fs);
+    fseAlphaChangeRange.Value := StrToFloat(list[22], fs);
+    cbAlphaChangeDistribution.ItemIndex := StrToInt(list[23]);
+  end;
+
+end;
+
+procedure TfmTokenSettings.sbSavePresetClick(Sender: TObject);
+var
+  list: TStringList; 
+  fs: TFormatSettings;
+  PresetName: string;
+begin
+  list := TStringList.Create;
+  list.Delimiter := '|';
+  list.StrictDelimiter := True;
+  fs := FormatSettings;
+  fs.DecimalSeparator := '.';
+
+  try
+    list.Add(FloatToStrF(fseCenterAngle.Value, ffNumber, 4, 4, fs));
+    list.Add(FloatToStrF(fseAngleRange.Value, ffNumber, 4, 4, fs));
+    list.Add(IntToStr(cbAngleDistribution.ItemIndex));
+
+    list.Add(FloatToStrF(fseCenterSpeed.Value, ffNumber, 4, 4, fs));
+    list.Add(FloatToStrF(fseSpeedRange.Value, ffNumber, 4, 4, fs));
+    list.Add(IntToStr(cbSpeedDistribution.ItemIndex));
+
+    list.Add(FloatToStrF(fseCenterRotation.Value, ffNumber, 4, 4, fs));
+    list.Add(FloatToStrF(fseRotationRange.Value, ffNumber, 4, 4, fs));
+    list.Add(IntToStr(cbRotationDistribution.ItemIndex));
+
+    list.Add(FloatToStrF(fseCenterRotationDir.Value, ffNumber, 4, 4, fs));
+    list.Add(FloatToStrF(fseRotationDirRange.Value, ffNumber, 4, 4, fs));
+    list.Add(IntToStr(cbRotationDirDistribution.ItemIndex));
+
+    list.Add(FloatToStrF(fseCenterSize.Value, ffNumber, 4, 4, fs));
+    list.Add(FloatToStrF(fseSizeRange.Value, ffNumber, 4, 4, fs));
+    list.Add(IntToStr(cbSizeDistribution.ItemIndex));
+
+    list.Add(FloatToStrF(fseCenterSizeChange.Value, ffNumber, 4, 4, fs));
+    list.Add(FloatToStrF(fseSizeChangeRange.Value, ffNumber, 4, 4, fs));
+    list.Add(IntToStr(cbSizeChangeDistribution.ItemIndex));
+
+    list.Add(FloatToStrF(fseCenterAlpha.Value, ffNumber, 4, 4, fs));
+    list.Add(FloatToStrF(fseAlphaRange.Value, ffNumber, 4, 4, fs));
+    list.Add(IntToStr(cbAlphaDistribution.ItemIndex));
+
+    list.Add(FloatToStrF(fseCenterAlphaChange.Value, ffNumber, 4, 4, fs));
+    list.Add(FloatToStrF(fseAlphaChangeRange.Value, ffNumber, 4, 4, fs));
+    list.Add(IntToStr(cbAlphaChangeDistribution.ItemIndex));
+
+    PresetName := '';
+    if cbEmitterPresets.ItemIndex <= 0 then
+    begin
+      if not InputQuery(GetString(LangStrings.LanguageID, 'TokenSettingsEmitterNewPresetCaption'), GetString(LangStrings.LanguageID, 'TokenSettingsEmitterNewPresetPrompt'), PresetName) then
+        PresetName := '';
+      if ContentLib.HasEmitter(PresetName) then
+      begin
+        if MessageDlg(GetString(LangStrings.LanguageID, 'TokenSettingsEmitterPresetOverwriteCaption'), Format(GetString(LangStrings.LanguageID, 'TokenSettingsEmitterPresetExistsPrompt'), [PresetName]), mtConfirmation, [mbYes, mbNo], 0) = mrNo then
+          PresetName := '';
+      end;
+    end
+    else
+    begin
+      PresetName := cbEmitterPresets.Items[cbEmitterPresets.ItemIndex];
+      if MessageDlg(GetString(LangStrings.LanguageID, 'TokenSettingsEmitterPresetOverwriteCaption'), Format(GetString(LangStrings.LanguageID, 'TokenSettingsEmitterPresetOverwritePrompt'), [PresetName]), mtConfirmation, [mbYes, mbNo], 0) = mrNo then
+        PresetName := '';
+    end;
+
+    if PresetName <> '' then
+      ContentLib.SetEmitterData(PresetName, list.DelimitedText);
+
+  finally
+    list.Free;
+  end;
+
+  RefreshEmitterPresets;
+  ContentLib.SaveEmitterData;
 end;
 
 end.
