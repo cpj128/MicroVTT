@@ -719,9 +719,8 @@ begin
         end;
 
         // Particles
-        //ViewTransform := AffineMatrixScale(FMapZoom, FMapZoom);
-        //ViewTransform := ViewTransform * AffineMatrixTranslation(-FMapOffsetX, -FMapOffsetY);
-        fmController.ParticleManager.Draw(MapSegmentStretched, FMapZoom, FMapOffsetX, FMapOffsetY);
+        if fmController.ShowTokens then
+          fmController.ParticleManager.Draw(MapSegmentStretched, FMapZoom, FMapOffsetX, FMapOffsetY);
 
         // LoS
         if fmController.ShowLoSPlayer then
