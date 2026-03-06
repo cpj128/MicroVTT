@@ -704,7 +704,7 @@ object fmTokenSettings: TfmTokenSettings
         ParentColor = False
       end
       object eWidth5: TEdit
-        Left = 76
+        Left = 83
         Height = 23
         Top = 35
         Width = 79
@@ -712,7 +712,7 @@ object fmTokenSettings: TfmTokenSettings
         Text = 'eWidth5'
       end
       object eHeight5: TEdit
-        Left = 76
+        Left = 83
         Height = 23
         Top = 63
         Width = 79
@@ -720,7 +720,7 @@ object fmTokenSettings: TfmTokenSettings
         Text = 'eHeight5'
       end
       object udWidth5: TUpDown
-        Left = 155
+        Left = 162
         Height = 23
         Top = 35
         Width = 17
@@ -731,7 +731,7 @@ object fmTokenSettings: TfmTokenSettings
         TabOrder = 2
       end
       object udHeight5: TUpDown
-        Left = 155
+        Left = 162
         Height = 23
         Top = 63
         Width = 17
@@ -750,7 +750,7 @@ object fmTokenSettings: TfmTokenSettings
         TabOrder = 4
       end
       object cbParticleType5: TComboBox
-        Left = 76
+        Left = 83
         Height = 23
         Top = 91
         Width = 96
@@ -759,7 +759,7 @@ object fmTokenSettings: TfmTokenSettings
         TabOrder = 5
       end
       object cbEmitterShape5: TComboBox
-        Left = 76
+        Left = 83
         Height = 23
         Top = 119
         Width = 96
@@ -1330,7 +1330,7 @@ object fmTokenSettings: TfmTokenSettings
         ParentColor = False
       end
       object fsePps: TFloatSpinEdit
-        Left = 76
+        Left = 83
         Height = 23
         Top = 147
         Width = 96
@@ -1338,7 +1338,7 @@ object fmTokenSettings: TfmTokenSettings
         TabOrder = 9
       end
       object cbEmitterPresets: TComboBox
-        Left = 76
+        Left = 83
         Height = 23
         Top = 175
         Width = 96

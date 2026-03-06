@@ -687,6 +687,7 @@ begin
   lAlphaChangeRange.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterAlphaChangeRange');
   lAlphaChangeDistribution.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterAlphaChangeDistribution');
 
+  cbEmitterPresets.ItemIndex := 0;
 
   // Buttons
   bDelete.Caption := GetString(LangStrings.LanguageID, 'ButtonDelete');
