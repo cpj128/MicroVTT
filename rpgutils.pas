@@ -41,6 +41,7 @@ public
   function RandomArcSine: Double;
   function RandomHypSecant: Double;
   function RandomBates(order: Integer): Double;
+  function RandomKumaraswamy(a, b: Double): Double;
   property Seed: Cardinal write SetSeed;
 end;
   
@@ -184,6 +185,11 @@ begin
   for i := 0 to order - 1 do
     Result := Result + self.Random;
   Result := Result / order;
+end;
+
+function TCustomRNG.RandomKumaraswamy(a, b: Double): Double;
+begin
+  Result := Power(1 - Power(1 - self.Random, 1/b), 1/a);
 end;
 
 { TMRandom }
