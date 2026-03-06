@@ -44,6 +44,8 @@ type
     FrameCount: Integer;
     // Animation speed in frames/s
     AniSpeed: Single;
+    // How often does the animation repeat
+    Repeats: Integer;
   public
     procedure DoTick(dTime: Double);
   end;
@@ -79,6 +81,9 @@ type
 
     // Draw particle independently of screen movement
     FScreenStatic: Boolean;
+
+    // How often does the animation repeat
+    FRepeats: Integer;
 
     // Animation speed (frames/s)
     FAniSpeed: Single;
@@ -139,12 +144,16 @@ begin
   Rot  := Rot + DRot * dTime;
   Size := Size + DSize * dTime;
   Alpha := EnsureRange(Alpha + DAlpha * dTime, 0, 255);
-  // Kill particle if alpha or size are below 0
-  TTL := (TTL - 1) * Ord(Alpha > 0) * Ord(Size > 0);
 
   CurFrame := CurFrame + AniSpeed * dTime;
   while (CompareValue(CurFrame, FrameCount) >= 0) and (FrameCount > 0) do
+  begin
     CurFrame := CurFrame - FrameCount;
+    Dec(Repeats);
+  end;
+
+  // Kill particle if alpha, size or remaining animation repeats are 0 or below
+  TTL := (TTL - 1) * Ord(Alpha > 0) * Ord(Size > 0) * Ord(Repeats > 0);
 end;
 
   { TParticle }
@@ -152,7 +161,7 @@ end;
 constructor TParticle.Create(DefFileName: string);
 var
   particleFile: TIniFile;
-  graphicFileName: string;
+  graphicFileName,
   RelPath: string;
   tmpGraphic: TBGRABitmap;
   frameWidth, frameHeight, frameCountX, frameCountY: Integer;
@@ -197,6 +206,8 @@ begin
     FTTLMax := particleFile.ReadInteger('Particle', 'TTLMax', 100);
 
     FAniSpeed := particleFile.ReadFloat('Particle', 'AniSpeed', 50);
+
+    FRepeats := particleFile.ReadInteger('Particle', 'Repeats', MAXINT);
 
     SetLength(FData, FMaxCount);
   finally
@@ -302,6 +313,7 @@ begin
     tmpData.DSize  := DS;
     tmpData.DAlpha := DA;
     tmpData.TTL    := FTTLMin + Random(FTTLMax - FTTLMin);
+    tmpData.Repeats:= FRepeats;
     if FSetRByDir then
     begin
       tmpData.Rot := RadToDeg(ArcTan2(DY, DX));
