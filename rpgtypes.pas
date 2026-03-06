@@ -1712,7 +1712,7 @@ begin
   FAttached := TList.Create;
   FParticleName := '';
   FParticle := nil;
-  FActive := True;
+  FActive := False;
   FShape := esPoint;
   RedrawGlyph;
 
