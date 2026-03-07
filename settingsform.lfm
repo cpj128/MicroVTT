@@ -455,7 +455,7 @@ object fmSettings: TfmSettings
       object Label13: TLabel
         Left = 5
         Height = 15
-        Top = 154
+        Top = 152
         Width = 80
         Caption = 'Measure Color:'
         ParentColor = False
@@ -467,6 +467,21 @@ object fmSettings: TfmSettings
         Width = 184
         TabOrder = 6
         OnClick = pnTokenShadowClick
+      end
+      object Label15: TLabel
+        Left = 5
+        Height = 15
+        Top = 180
+        Width = 79
+        Caption = 'DM''s Message:'
+        ParentColor = False
+      end
+      object mMessage: TMemo
+        Left = 121
+        Height = 50
+        Top = 176
+        Width = 184
+        TabOrder = 7
       end
     end
   end

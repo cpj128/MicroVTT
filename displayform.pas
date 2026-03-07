@@ -63,6 +63,8 @@ type
     FDraggedTokenPos: TPoint;
     FLoSMap: TBGRABitmap;
     FPrevTicks: QWORD;
+    FDMMessage: string;
+    FMessageSize: TSize;
 
     procedure SetMapFile(FileName: string);
     procedure SetMapZoom(val: Double);
@@ -71,6 +73,7 @@ type
     procedure SetMarkerY(val: Integer);
     procedure SetCombatMode(val: Boolean);
     procedure SetPortraitFile(FileName: string);
+    procedure SetDMMessage(message: string);
     procedure CalcLoSMap;
     procedure RedrawZoomedMap;
     procedure RedrawMovedMap;
@@ -94,6 +97,7 @@ type
     property TokenSlotRect: TRect read FCurTokenRect write FCurTokenRect;
     property DraggedTokenPos: TPoint read FDraggedTokenPos write FDraggedTokenPos;
     property PortraitFileName: string read FPortraitFile write SetPortraitFile;
+    property DMMessage: string read FDMMessage write SetDMMessage;
   end;
 
   TBGRAFrameScanner = class(TBGRACustomScanner)
@@ -288,6 +292,12 @@ begin
   Invalidate;
 end;
 
+procedure TfmDisplay.SetDMMessage(message: string);
+begin
+  FDMMessage := message;
+  Invalidate;
+end;
+
 procedure TfmDisplay.CalcLoSMap;
 var
   i, j, PolyCount: Integer;
@@ -472,13 +482,13 @@ begin
   //DrawPhongFrame(ClipRect);
   if Assigned(FMapFrame) then
     FMapFrame.Draw(Canvas, ClipRect.Left - FRAMESIZE, ClipRect.Top - FRAMESIZE, False);
-
+  
+  MapWidth := ClientWidth - VMARGIN - VMARGIN - PORTRAITHEIGHT - VMARGIN;
+  MapHeight := ClientHeight - HMARGIN - HMARGIN;
   // Map
   if fmController.ShowMap and Assigned(FMapPic) then
   begin
     CalcLoSMap;
-    MapWidth := ClientWidth - VMARGIN - VMARGIN - PORTRAITHEIGHT - VMARGIN;
-    MapHeight := ClientHeight - HMARGIN - HMARGIN;
     // MapRect: Rectangle we want to fill with our map, might be smaller than MapWidth * MapHeight
     MapRect := Bounds(HMARGIN, VMARGIN, Round(Min(MapWidth, FMapPic.Width * FMapZoom)), Round(Min(MapHeight, FMapPic.Height * FMapZoom)));
 
@@ -732,9 +742,23 @@ begin
         MapSegmentStretched.Free;
       end;
     end;
+  end
+  else if Trim(FDMMessage) <> '' then
+  begin
+    FMessageSize := Canvas.TextExtent(FDMMessage);
+
+    repeat
+      Canvas.Font.Size := Canvas.FOnt.Size + 1;
+      FMessageSize := Canvas.TextExtent(FDMMessage);
+    until (FMessageSize.cx > MapWidth) or (FMessageSize.cy > MapHeight);
+    Canvas.Font.Size := Canvas.FOnt.Size - 1;
+    FMessageSize := Canvas.TextExtent(FDMMessage);
+
+    Canvas.TextOut((MapWidth - FMessageSize.cx) div 2 + VMARGIN, (MapHeight - FMessageSize.cy) div 2 + HMARGIN, FDMMessage);
   end;
   {$IFDEF DEBUG}
   //OutputDebugString(PChar(IntToStr(GetTickCount64 - StartTime) + ' ms'));
+  Canvas.Font.Size := 0;
   Canvas.TextOut(1, 1, IntToStr(GetTickCount64 - StartTime) + ' ms');
   Canvas.TextOut(100, 1, FloatToStrF(1000 / Max(1, GetTickCount64 - StartTime), ffNumber, 5, 4) + ' fps');
   {$ENDIF}

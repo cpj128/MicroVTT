@@ -43,6 +43,7 @@ type
     Label12: TLabel;
     Label13: TLabel;
     Label14: TLabel;
+    Label15: TLabel;
     Label2: TLabel;
     Label3: TLabel;
     Label4: TLabel;
@@ -51,6 +52,7 @@ type
     Label7: TLabel;
     Label8: TLabel;
     Label9: TLabel;
+    mMessage: TMemo;
     pnHiddenMark: TPanel;
     pnMarker: TPanel;
     pnMeasure: TPanel;
@@ -147,6 +149,7 @@ begin
   Label11.Caption := GetString(LangStrings.LanguageID, 'SettingsInterfaceHiddenToken');
   Label12.Caption := GetString(LangStrings.LanguageID, 'SettingsInterfaceMarker');
   Label13.Caption := GetString(LangStrings.LanguageID, 'SettingsInterfaceMeasure');
+  Label15.Caption := GetString(LangStrings.LanguageID, 'SettingsDMMessage');
 
   bCancel.Caption := GetString(LangStrings.LanguageID, 'ButtonCancel');
   bOk.Caption := GetString(LangStrings.LanguageID, 'ButtonOk');

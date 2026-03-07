@@ -398,6 +398,7 @@ begin
   lvInitiative.Column[2].Caption := GetString(LangStrings.LanguageID, 'ControllerIniListHeaderInitiative');
   lvInitiative.Column[3].Caption := GetString(LangStrings.LanguageID, 'ControllerIniListHeaderPath');
 
+  fmDisplay.DMMessage := FAppSettings.ReadString('Settings', 'DMMessage', GetString(LangStrings.LanguageID, 'DefaultDMMessage'));
   fmDisplay.Show;
   UpdateMapList;
   UpdateTokenList;
@@ -1575,6 +1576,7 @@ begin
   fmSettings.cbTokenRotation.ItemIndex := Ord(FTokenRotationStyle);
   fmSettings.cbLanguage.Items := GetLanguages;
   fmSettings.cbLanguage.ItemIndex := fmSettings.cbLanguage.Items.IndexOf(LanguageID);
+  fmSettings.mMessage.Lines.Text := fmDisplay.DMMessage;
 
   fmSettings.pnTokenShadow.Color := FTokenShadowClr;
   fmSettings.pnWalls.Color := FWallClr;
@@ -1603,6 +1605,7 @@ begin
     FTokensStartInvisible := fmSettings.cbTokensStartInvisible.Checked;
     FInitiativeDesc := fmSettings.cbInitiativeOrder.ItemIndex = 0;
     FTokenRotationStyle := TTokenRotationStyle(fmSettings.cbTokenRotation.ItemIndex);
+    fmDisplay.DMMessage := fmSettings.mMessage.Lines.Text;
     LanguageID := fmSettings.cbLanguage.Items[fmSettings.cbLanguage.ItemIndex];
     for i := 0 to FTokenList.Count - 1 do
     begin
@@ -2253,6 +2256,7 @@ begin
   FAppSettings.WriteString('Settings', 'InitiativeDesc', BoolToStr(FInitiativeDesc));
   FAppSettings.WriteString('Settings', 'TokensStartInvisible', BoolToStr(FTokensStartInvisible)); 
   FAppSettings.WriteInteger('Settings', 'TokenRotationStyle', Ord(FTokenRotatioNStyle));
+  FAppSettings.WriteString('Settings', 'DMMessage', fmDisplay.DMMessage);
   FAppSettings.UpdateFile;
   FAppSettings.Free;
   FWallManager.Free;
