@@ -63,8 +63,6 @@ type
     FDraggedTokenPos: TPoint;
     FLoSMap: TBGRABitmap;
     FPrevTicks: QWORD;
-    FDMMessage: string;
-    FMessageSize: TSize;
 
     procedure SetMapFile(FileName: string);
     procedure SetMapZoom(val: Double);
@@ -73,7 +71,6 @@ type
     procedure SetMarkerY(val: Integer);
     procedure SetCombatMode(val: Boolean);
     procedure SetPortraitFile(FileName: string);
-    procedure SetDMMessage(message: string);
     procedure CalcLoSMap;
     procedure RedrawZoomedMap;
     procedure RedrawMovedMap;
@@ -97,7 +94,6 @@ type
     property TokenSlotRect: TRect read FCurTokenRect write FCurTokenRect;
     property DraggedTokenPos: TPoint read FDraggedTokenPos write FDraggedTokenPos;
     property PortraitFileName: string read FPortraitFile write SetPortraitFile;
-    property DMMessage: string read FDMMessage write SetDMMessage;
   end;
 
   TBGRAFrameScanner = class(TBGRACustomScanner)
@@ -292,12 +288,6 @@ begin
   Invalidate;
 end;
 
-procedure TfmDisplay.SetDMMessage(message: string);
-begin
-  FDMMessage := message;
-  Invalidate;
-end;
-
 procedure TfmDisplay.CalcLoSMap;
 var
   i, j, PolyCount: Integer;
@@ -405,8 +395,9 @@ var
   Hex: array[0..5] of TPoint;
   Iso: array[0..3] of TPoint;
   tmpGridSize: Single;
-  TextSize: TSize;
+  TextSize, LineSize: TSize;
   PortraitText: string;
+  DMText: TStringList;
   {$IFDEF DEBUG}StartTime: Int64;{$ENDIF}
 
 procedure Draw3DFrame(pRect: TRect);
@@ -743,18 +734,51 @@ begin
       end;
     end;
   end
-  else if Trim(FDMMessage) <> '' then
+  else if Trim(fmController.DMMessage) <> '' then
   begin
-    FMessageSize := Canvas.TextExtent(FDMMessage);
+    DMText := TStringlist.Create;
+    try
+      DMText.Delimiter := '|';
+      DMText.StrictDelimiter := True;
+      DMText.DelimitedText := fmController.DMMessage;
 
-    repeat
-      Canvas.Font.Size := Canvas.FOnt.Size + 1;
-      FMessageSize := Canvas.TextExtent(FDMMessage);
-    until (FMessageSize.cx > MapWidth) or (FMessageSize.cy > MapHeight);
-    Canvas.Font.Size := Canvas.FOnt.Size - 1;
-    FMessageSize := Canvas.TextExtent(FDMMessage);
+      // Find text size that just fits the screen space
+      repeat
+        Canvas.Font.Size := Canvas.Font.Size + 1;
+        TextSize := Canvas.TextExtent(DMText[0]);
+        for i := 1 to DMText.Count - 1 do
+        begin
+          LineSize := Canvas.TextExtent(DMText[i]);
+          TextSize.cx := Max(TextSize.cx, LineSIze.cx);
+          TextSize.cy := TextSize.cy + LineSize.cy;
+        end;
 
-    Canvas.TextOut((MapWidth - FMessageSize.cx) div 2 + VMARGIN, (MapHeight - FMessageSize.cy) div 2 + HMARGIN, FDMMessage);
+      until (TextSize.cx > MapWidth) or (TextSize.cy > MapHeight);
+
+      // go down one size
+      Canvas.Font.Size := Canvas.Font.Size - 1;
+
+      TextSize := Canvas.TextExtent(DMText[0]);
+      for i := 1 to DMText.Count - 1 do
+      begin
+        LineSize := Canvas.TextExtent(DMText[i]);
+        TextSize.cx := Max(TextSize.cx, LineSIze.cx);
+        TextSize.cy := TextSize.cy + LineSize.cy;
+      end;
+
+      // show text
+      j := (MapHeight - TextSize.cy) div 2 + HMARGIN;
+      for i := 0 to DMtext.Count - 1 do
+      begin
+        LineSize := Canvas.TextExtent(DMText[i]);
+        Canvas.TextOut((MapWidth - LineSize.cx) div 2 + VMARGIN, j, DMText[i]);
+        j := j + LineSize.cy;
+      end;
+    finally
+      DMText.Free;
+    end;
+
+
   end;
   {$IFDEF DEBUG}
   //OutputDebugString(PChar(IntToStr(GetTickCount64 - StartTime) + ' ms'));

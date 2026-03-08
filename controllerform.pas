@@ -243,6 +243,7 @@ type
     FHiddenMarkerClr,
     FMarkerClr,
     FMeasureClr: TBGRAPixel;
+    FDMMessage: string;
     // Notes module
     FNotesList: TEntryList; 
     FEditedEntry: TNoteEntry;
@@ -267,6 +268,7 @@ type
     function GetTokenAtPos(X, Y: Integer; AllowLocked: Boolean = False): TToken;
     function GetNonAttachableTokenAtPos(X, Y: Integer): TToken;
     procedure SetCurInitiativeIndex(val: Integer);
+    procedure SetDMMessage(message: string);
     procedure LoadMap(FileName: string);
     procedure SetCombatMode(val: Boolean);
     procedure SetCurTokenRect(val: TRect);
@@ -314,6 +316,7 @@ type
     property TokenShadowColor: TBGRAPixel read FTokenShadowClr;
     property MarkerColor: TBGRAPixel read FMarkerClr;
     property MapPic: TBGRABitmap read FMapPic;
+    property DMMessage: string read FDMMessage write SetDMMessage;
   end;
 
 
@@ -398,7 +401,6 @@ begin
   lvInitiative.Column[2].Caption := GetString(LangStrings.LanguageID, 'ControllerIniListHeaderInitiative');
   lvInitiative.Column[3].Caption := GetString(LangStrings.LanguageID, 'ControllerIniListHeaderPath');
 
-  fmDisplay.DMMessage := FAppSettings.ReadString('Settings', 'DMMessage', GetString(LangStrings.LanguageID, 'DefaultDMMessage'));
   fmDisplay.Show;
   UpdateMapList;
   UpdateTokenList;
@@ -1223,6 +1225,12 @@ begin
   FCurInitiativeIndex := val mod lvInitiative.Items.Count;
 end;
 
+procedure TfmController.SetDMMessage(message: string);
+begin
+  FDMMessage := message;
+  fmDisplay.Invalidate;
+end;
+
 function TfmController.GetTokenAtPos(X, Y: Integer; AllowLocked: Boolean = False): TToken;
 var
   i: Integer;
@@ -1576,7 +1584,10 @@ begin
   fmSettings.cbTokenRotation.ItemIndex := Ord(FTokenRotationStyle);
   fmSettings.cbLanguage.Items := GetLanguages;
   fmSettings.cbLanguage.ItemIndex := fmSettings.cbLanguage.Items.IndexOf(LanguageID);
-  fmSettings.mMessage.Lines.Text := fmDisplay.DMMessage;
+  fmSettings.mMessage.Lines.Delimiter := '|';
+  fmSettings.mMessage.Lines.StrictDelimiter := True;
+  fmSettings.mMessage.Lines.QuoteChar := #0;
+  fmSettings.mMessage.Lines.DelimitedText := DMMessage;
 
   fmSettings.pnTokenShadow.Color := FTokenShadowClr;
   fmSettings.pnWalls.Color := FWallClr;
@@ -1605,7 +1616,7 @@ begin
     FTokensStartInvisible := fmSettings.cbTokensStartInvisible.Checked;
     FInitiativeDesc := fmSettings.cbInitiativeOrder.ItemIndex = 0;
     FTokenRotationStyle := TTokenRotationStyle(fmSettings.cbTokenRotation.ItemIndex);
-    fmDisplay.DMMessage := fmSettings.mMessage.Lines.Text;
+    DMMessage := fmSettings.mMessage.Lines.DelimitedText;
     LanguageID := fmSettings.cbLanguage.Items[fmSettings.cbLanguage.ItemIndex];
     for i := 0 to FTokenList.Count - 1 do
     begin
@@ -2167,6 +2178,7 @@ begin
   FInitiativeDesc := StrToBoolDef(FAppSettings.ReadString('Settings', 'InitiativeDesc', 'true'), True);
   FTokensStartInvisible := StrToBoolDef(FAppSettings.ReadString('Settings', 'TokensStartInvisible', 'true'), True);
   FTokenRotationStyle := TTokenRotationStyle(FAppSettings.ReadInteger('Settings', 'TokenRotationStyle', 0));
+  FDMMessage := FAppSettings.ReadString('Settings', 'DMMessage', GetString(LangStrings.LanguageID, 'DefaultDMMessage'));
 
   FParticleManager := TParticleManager.Create(FParticleDir);
 
@@ -2256,7 +2268,7 @@ begin
   FAppSettings.WriteString('Settings', 'InitiativeDesc', BoolToStr(FInitiativeDesc));
   FAppSettings.WriteString('Settings', 'TokensStartInvisible', BoolToStr(FTokensStartInvisible)); 
   FAppSettings.WriteInteger('Settings', 'TokenRotationStyle', Ord(FTokenRotatioNStyle));
-  FAppSettings.WriteString('Settings', 'DMMessage', fmDisplay.DMMessage);
+  FAppSettings.WriteString('Settings', 'DMMessage', DMMessage);
   FAppSettings.UpdateFile;
   FAppSettings.Free;
   FWallManager.Free;
