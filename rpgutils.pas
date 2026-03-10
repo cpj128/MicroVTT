@@ -118,6 +118,8 @@ function GetIntersection_RayRay(r1O, r1D, r2O, r2D: TPointF; var int: TPointF): 
 
 function GetPointSideOfLine(L1, L2, pnt: TPoint): Integer;
 
+function GetPointDistFromLine(L1, L2, pnt: TPoint): Double;
+
 implementation
 
 uses
@@ -328,6 +330,17 @@ function GetPointSideOfLine(L1, L2, pnt: TPoint): Integer;
 begin
   // -1: Left of the line; 0: On the line; +1: Right of the line
   Result := Sign((Pnt.Y - L1.Y) * (L2.X - L1.X) - (L2.Y - L1.Y) * (Pnt.X - L1.X));
+end;
+
+function GetPointDistFromLine(L1, L2, pnt: TPoint): Double;
+var
+  vPP1, vP2P1: TPointF;
+  h: Single;
+begin
+  vPP1 := TPointF.Create(pnt - L1);
+  vP2P1 := TPointF.Create(L2 - L1);
+  h := EnsureRange((vPP1 * vP2P1) / (vP2P1 * vP2P1), 0, 1);
+  Result := (vPP1 - vP2P1*h).Length;
 end;
 
 { Easing-Functions }

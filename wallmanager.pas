@@ -1,4 +1,4 @@
-{Copyright (c) 2023-2025 Stephan Breer
+{Copyright (c) 2023-2026 Stephan Breer
 
 This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
 
@@ -41,6 +41,7 @@ private
   //FIdcs: TIdxList;                                                   
   //function IsNonBlockingCorner(PIdx: Integer; dx, dy: Double; var dir: Integer): Boolean;
   function GetDoorDistFromPnt(pnt: TPoint; DoorIdx: Integer): Double;
+  function GetWallDistFromPnt(pnt: TPoint; WallIdx: Integer): Double;
 public  
   constructor Create;
   destructor Destroy; override;
@@ -56,7 +57,8 @@ public
   function GetLoSPolygon(centerPnt: TPoint; BoundingBox: TRect): ArrayOfTPointF;
   function GetLoSMap(centerPnt: TPoint; BoundingBox: TRect; scale: Double): TBGRABitmap;
   function GetMinBoundingBox: TRect;
-  function GetPortalAtPos(pnt: TPoint): Integer;
+  function GetPortalAtPos(pnt: TPoint): Integer;  
+  function GetWallAtPos(pnt: TPoint): Integer;
 end;
 
 implementation
@@ -174,6 +176,37 @@ begin
   Result := FWalls.Count;
 end;
 
+function TWallManager.GetWallDistFromPnt(pnt: TPoint; WallIdx: Integer): Double;
+var WallP1, WallP2: TPoint;
+begin
+  Result := MAXDOUBLE;
+  WallP1 := GetPoint(FWalls[WallIdx].P1);
+  WallP2 := GetPoint(FWalls[WallIdx].P2);
+  if (WallIdx >= 0) and (WallIdx < FWalls.Count) then
+    Result := GetPointDistFromLine(WallP1, WallP2, pnt);
+end;
+
+function TWallManager.GetWallAtPos(pnt: TPoint): Integer;
+var
+  i: Integer;
+  CurDist, MinDist: Double;
+const
+  MAXDIST = 5;
+begin
+  Result := -1;
+  MinDist := MAXDOUBLE;
+
+  for i := 0 to FWalls.Count - 1 do
+  begin
+    CurDist := GetWallDistFromPnt(pnt, i);
+    if (CurDist <= MAXDIST) and (CurDist < MinDist) then
+    begin
+      MinDist := CurDist;
+      Result := i;
+    end;
+  end;
+end;
+
 function TWallManager.GetPortal(idx: Integer): TMapPortal;
 begin
   Result := nil;
@@ -193,9 +226,7 @@ begin
   DoorP1 := GetPoint(FPortals[DoorIdx].P1);
   DoorP2 := GetPoint(FPortals[DoorIdx].P2);
   if (DoorIdx >= 0) and (DoorIdx < FPortals.Count) then
-    Result := Abs((Pnt.Y - DoorP1.Y) * (DoorP2.X - DoorP1.X)
-                  - (DoorP2.Y - DoorP1.Y) * (Pnt.X - DoorP1.X))
-                  / Hypot(DoorP2.X - DoorP1.X, DoorP2.Y - DoorP1.Y);
+    Result := GetPointDistFromLine(DoorP1, DoorP2, pnt);
 end;
 
 function TWallManager.GetPortalAtPos(pnt: TPoint): Integer;
@@ -564,7 +595,7 @@ begin
     TotalPnts := 0;
 
     // Sort by angle of points from center point. Since we use indices to local lists,
-    // we cannot use the sort-methodfor this and have to do it by hand. Use Selection sort for now.
+    // we cannot use the sort-method for this and have to do it by hand. Use Selection sort for now.
     for i := 0 to sortList.Count - 1 do
     begin
       LowestAngle := MAXDOUBLE;
