@@ -213,6 +213,7 @@ type
     FIsRotatingToken: Boolean;
     FCurDraggedToken: TToken;
     FCurHoverPortal, FPrevHoverPortal: Integer;
+    FSelectedPoint: Integer;
     FSnapTokensToGrid: Boolean;
     FDragStartX, FDragStartY, // In pbViewPort-coordinates
     FLastMouseX, FLastMouseY, // In pbViewPort-coordinates
@@ -590,6 +591,7 @@ begin
     end
     else
     begin
+      // We are dragging the map
       FIsRotatingToken := False;
       FStartDragXOffset := FViewRectXOffset;
       FStartDragYOffset := FViewRectYOffset;
@@ -702,6 +704,10 @@ begin
         end;
       end;
     end;
+
+    // Select clicked wall point, only if we did not drag
+    if (SameValue(FDragStartX, x, 4) and SameValue(FDragStartY, Y, 4)) then
+      FSelectedPoint := FWallManager.GetPointIdxAtPos(ViewPortToMapX(X), ViewPortToMapY(Y));
 
     FIsDragging := False;
     FIsDraggingToken := False;
@@ -928,6 +934,15 @@ begin
                                             MapToViewPortX(WallP2.X), MapToViewPortY(WallP2.Y),
                                             PortalClr, 3, False);
         end;
+
+        // Draw selected point
+        if FSelectedPoint >= 0 then
+        begin
+          WallP1 := FWallManager.GetPoint(FSelectedPoint);
+          DrawnMapSegment.FillRect(MapToViewPortX(WallP1.x - 2), MapToViewPortY(WallP1.y - 2),
+                                   MapToViewPortX(WallP1.x + 2), MapToViewPortY(WallP1.y + 2), FWallClr);
+        end;
+
         // Draw Tokens
         // TODO: Draw Tokens on the map before downsampling?
         // Probably not an improvement, because I'd have to resample to the desired size anyway
@@ -2238,6 +2253,7 @@ begin
   FIsRotatingToken := False;
   FCurHoverPortal := -1;
   FPrevHoverPortal := -1;
+  FSelectedPoint := -1;
   FZoomFactor := 1;
   FGridData.GridSizeX := 100;
   FGridData.GridSizeY := 100;

@@ -49,7 +49,8 @@ public
   procedure AddWall(P1, P2: TPoint);
   procedure AddPortal(P1, P2: TPoint; Open: Boolean);
   function GetPoint(idx: Integer): TPoint;
-  function GetPointCount: Integer;
+  function GetPointCount: Integer;        
+  function GetPointIdxAtPos(x, y: Integer; MaxDist: Double = 4): Integer;
   function GetWall(idx: Integer): TPoint;
   function GetWallCount: Integer;
   function GetPortal(idx: Integer): TMapPortal;
@@ -164,6 +165,18 @@ begin
   Result := FPoints.Count;
 end;
 
+function TWallManager.GetPointIdxAtPos(x, y: Integer; MaxDist: Double = 4): Integer;
+var
+  i: Integer;
+  SqrDist: Double;
+begin
+  Result := -1;
+  SqrDist := MaxDist * MaxDist;
+  for i := 0 to FPoints.Count - 1 do
+    if (Sqr(FPoints[i].X - x) + Sqr(FPoints[i].y - y)) <= SqrDist then
+      Exit(i);
+end;
+
 function TWallManager.GetWall(idx: Integer): TPoint;
 begin
   Result := Point(-1, -1);
@@ -180,8 +193,8 @@ function TWallManager.GetWallDistFromPnt(pnt: TPoint; WallIdx: Integer): Double;
 var WallP1, WallP2: TPoint;
 begin
   Result := MAXDOUBLE;
-  WallP1 := GetPoint(FWalls[WallIdx].P1);
-  WallP2 := GetPoint(FWalls[WallIdx].P2);
+  WallP1 := GetPoint(FWalls[WallIdx].X);
+  WallP2 := GetPoint(FWalls[WallIdx].Y);
   if (WallIdx >= 0) and (WallIdx < FWalls.Count) then
     Result := GetPointDistFromLine(WallP1, WallP2, pnt);
 end;
