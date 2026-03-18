@@ -46,6 +46,7 @@ public
   constructor Create;
   destructor Destroy; override;
   procedure Clear;
+  function AddPoint(P: TPoint): Integer;
   procedure AddWall(P1, P2: TPoint);
   procedure AddPortal(P1, P2: TPoint; Open: Boolean);
   function GetPoint(idx: Integer): TPoint;
@@ -60,6 +61,7 @@ public
   function GetMinBoundingBox: TRect;
   function GetPortalAtPos(pnt: TPoint): Integer;  
   function GetWallAtPos(pnt: TPoint): Integer;
+  procedure RemovePoint(idx: Integer);
 end;
 
 implementation
@@ -103,24 +105,23 @@ begin
   //FIdcs.Clear;
 end;
 
+function TWallManager.AddPoint(P: TPoint): Integer;
+var i: Integer;
+begin         
+  // Check if points exists in list
+  // Do not add in that case, just return the index
+  for i := 0 to FPoints.Count - 1 do
+    if FPoints[i] = P then
+      Exit(i);
+  Result := FPoints.Add(P);
+end;
+
 procedure TWallManager.AddWall(P1, P2: TPoint);
 var
   i, p1Idx, p2Idx: Integer;
 begin
-  // Check if points exists in list
-  p1Idx := -1;                      
-  p2Idx := -1;
-  for i := 0 to FPoints.Count - 1 do
-  begin
-    if FPoints[i] = P1 then
-      p1Idx := i;
-    if FPoints[i] = P2 then
-      p2Idx := i;
-  end;
-  if p1Idx < 0 then
-    p1Idx := FPoints.Add(P1);
-  if p2Idx < 0 then
-    p2Idx := FPoints.Add(P2);
+  p1Idx := AddPoint(P1);
+  p2Idx := AddPoint(P2);
 
   FWalls.Add(Point(p1Idx, P2Idx));
 end;
@@ -131,19 +132,8 @@ var
   tmpPortal: TMapPortal;
 begin
   // Check if points exists in list
-  p1Idx := -1;
-  p2Idx := -1;
-  for i := 0 to FPoints.Count - 1 do
-  begin
-    if FPoints[i] = P1 then
-      p1Idx := i;
-    if FPoints[i] = P2 then
-      p2Idx := i;
-  end;
-  if p1Idx < 0 then
-    p1Idx := FPoints.Add(P1);
-  if p2Idx < 0 then
-    p2Idx := FPoints.Add(P2);
+  p1Idx := AddPoint(P1);
+  p2Idx := AddPoint(P2);
 
   //FWalls.Add(Point(p1Idx, P2Idx));
   tmpPortal := TMapPortal.Create;
@@ -175,6 +165,53 @@ begin
   for i := 0 to FPoints.Count - 1 do
     if (Sqr(FPoints[i].X - x) + Sqr(FPoints[i].y - y)) <= SqrDist then
       Exit(i);
+end;
+
+procedure TWallManager.RemovePoint(idx: Integer);
+var
+  i: Integer;
+  tmpWall: TPoint;
+  tmpPortal, DelPortal: TMapPortal;
+begin
+  if (idx < 0) or (idx >= FPoints.Count) then
+    Exit;
+  // we need to remove all walls and portals that use this point,
+  // and shift down every reference to points after this one
+  for i := FWalls.Count - 1 downto 0 do
+  begin
+    tmpWall := GetWall(i);
+    if (tmpWall.X = idx) or (tmpWall.y = idx) then
+      FWalls.Delete(i)
+    else
+    begin
+      if tmpWall.x > idx then
+        Dec(tmpWall.x);
+      if tmpWall.y > idx then
+        Dec(tmpWall.y);
+    end;
+  end;
+
+  DelPortal := nil;
+  for i := FPortals.Count - 1 downto 0 do
+  begin
+    tmpPortal := GetPortal(i);
+    if (tmpPortal.P1 = idx) or (tmpPortal.P2 = idx) then
+    begin
+      DelPortal := tmpPortal;
+      FPortals.Delete(i);
+    end
+    else
+    begin
+      if tmpPortal.P1 > idx then
+        Dec(tmpPortal.P1);
+      if tmpPortal.P2 > idx then
+        Dec(tmpPortal.P2);
+    end;
+  end;
+  if Assigned(DelPortal) then
+    DelPortal.Free;
+  // Finally, delete the point
+  FPoints.Delete(idx);
 end;
 
 function TWallManager.GetWall(idx: Integer): TPoint;
