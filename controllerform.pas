@@ -66,6 +66,10 @@ type
     MainMenu1: TMainMenu;
     mAnnotationContent: TMemo;
     mEntryContent: TMemo;
+    miDeleteWall: TMenuItem;
+    miAddWall: TMenuItem;
+    miDeletePoint: TMenuItem;
+    miNewPoint: TMenuItem;
     miFile: TMenuItem;
     miSettings: TMenuItem;
     miQuit: TMenuItem;
@@ -73,6 +77,7 @@ type
     pcNotesMain: TPageControl;
     pcMain: TPageControl;
     pbViewport: TPaintBox;
+    pmEditPoints: TPopupMenu;
     pPortrait: TPanel;
     sdSaveSession: TSaveDialog;
     sddExportDir: TSelectDirectoryDialog;
@@ -152,6 +157,7 @@ type
     procedure lvInitiativeDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
     procedure lvMapsDblClick(Sender: TObject);
+    procedure miNewPointClick(Sender: TObject);
     procedure pbViewportDblClick(Sender: TObject);
     procedure pbViewportDragDrop(Sender, Source: TObject; X, Y: Integer);
     procedure pbViewportDragOver(Sender, Source: TObject; X, Y: Integer;
@@ -217,6 +223,7 @@ type
     FSnapTokensToGrid: Boolean;
     FDragStartX, FDragStartY, // In pbViewPort-coordinates
     FLastMouseX, FLastMouseY, // In pbViewPort-coordinates
+    FNewPointX, FNewPointY,   // In pbViewPort-coordinates
     FStartDragXOffset, FStartDragYOffset: Integer;
     FLastClicked, FLastLastClicked: TPoint; // MapPic-coordinates
     FCurMeasure: Double; 
@@ -454,6 +461,15 @@ begin
   LoadMap(lvMaps.Items[lvMaps.ItemIndex].SubItems[0]);
 end;
 
+procedure TfmController.miNewPointClick(Sender: TObject);
+var NewPoint: TPoint;
+begin
+  NewPoint.X := ViewportToMapX(FNewPointX);
+  NewPoint.Y := ViewportToMapY(FNewPointY);
+  FWallManager.AddPoint(NewPoint);
+  pbViewport.Invalidate;
+end;
+
 procedure TfmController.LoadMap(FileName: string);
 var
   GridSettings: string;
@@ -636,7 +652,7 @@ begin
   else
   begin
     FPrevHoverPortal := FCurHoverPortal;
-    FCurHoverPortal := FWallManager.GetPortalAtPos(Point(ViewportToMapX(X), ViewportToMapY(Y)));
+    FCurHoverPortal := FWallManager.GetWallAtPos(Point(ViewportToMapX(X), ViewportToMapY(Y)), True);
     if FCurHoverPortal <> FPrevHoverPortal then
       pbViewPort.Invalidate;
   end;
@@ -649,7 +665,8 @@ var
   AttachToken: TToken;
   AttachedIdx, CurIdx: Integer;
   diffGrid: TPointF;
-  ClickedPortal: TMapPortal;
+  ClickedPortal: TMapWall;
+  MenuLoc: TPoint;
   //Modal: TModalResult;
 begin
   if Button = mbLeft then
@@ -716,7 +733,7 @@ begin
 
     if FCurHoverPortal >= 0 then
     begin
-      ClickedPortal := FWallManager.GetPortal(FCurHoverPortal);
+      ClickedPortal := FWallManager.GetWall(FCurHoverPortal);
       if Assigned(ClickedPortal) then
       begin
         ClickedPortal.IsOpen := not ClickedPortal.IsOpen;
@@ -740,6 +757,13 @@ begin
 
       fmTokenSettings.Show; // Treat this one more like a popup menu
 
+    end
+    else if Assigned(FMapPic) then
+    begin
+      FNewPointX := X;
+      FNewPointY := Y;
+      MenuLoc := pbViewport.ControlToScreen(Point(X, Y));
+      pmEditPoints.PopUp(MenuLoc.X, MenuLoc.Y);
     end;
   end;
 end;
@@ -755,9 +779,10 @@ var
   CellRect, BoundingRect{, MapBounds}: TRect;
   Hex: array[0..5] of TPoint;
   Iso: array[0..3] of TPoint;
-  Wall, WallP1, WallP2: TPoint;
-  Portal: TMapPortal;
-  PortalClr: TBGRAPixel;
+  WallP1, WallP2: TPoint;
+  Wall, Portal: TMapWall;
+  WallClr: TBGRAPixel;
+  WallWidth: Integer;
   tmpGridSize: Single;
   Rotation: TBGRAAffineBitmapTransform;
   RotatedBmp, OverlayBmp, OverlayScaled: TBGRABitmap;
@@ -909,21 +934,33 @@ begin
         for i := 0 to FWallManager.GetWallCount - 1 do
         begin
           Wall := FWallManager.GetWall(i);
-          WallP1 := FWallManager.GetPoint(Wall.X);
-          WallP2 := FWallManager.GetPoint(Wall.Y);
+          WallP1 := FWallManager.GetPoint(Wall.P1);
+          WallP2 := FWallManager.GetPoint(Wall.P2);
+          WallClr := FWallClr;
+          WallWidth := 1;
+          if Wall.IsPortal then
+          begin
+            WallClr := FPortalClr;
+            if Wall.IsOpen then
+              WallClr.Alpha := 128;
+            WallWidth := 3;
+            if i = FCurHoverPortal then
+              WallWidth := 7;
+          end;
           DrawnMapSegment.DrawLineAntialias(MapToViewPortX(WallP1.X), MapToViewPortY(WallP1.Y),
-                                            MapToViewPortX(WallP2.X), MapToViewPortY(WallP2.Y), FWallClr, 1);
+                                            MapToViewPortX(WallP2.X), MapToViewPortY(WallP2.Y),
+                                            WallClr, WallWidth, False);
         end;
 
         // Draw Portals
-        for i := 0 to FWallManager.GetPortalCount - 1 do
+        {for i := 0 to FWallManager.GetPortalCount - 1 do
         begin
           Portal := FWallManager.GetPortal(i);
           WallP1 := FWallManager.GetPoint(Portal.P1);
           WallP2 := FWallManager.GetPoint(Portal.P2);
-          PortalClr := FPortalClr;
+          WallClr := FPortalClr;
           if Portal.IsOpen then
-            PortalClr.alpha  := 128;
+            WallClr.alpha  := 128;
 
           if FCurHoverPortal = i then
             DrawnMapSegment.DrawLineAntialias(MapToViewPortX(WallP1.X), MapToViewPortY(WallP1.Y),
@@ -932,15 +969,20 @@ begin
 
           DrawnMapSegment.DrawLineAntialias(MapToViewPortX(WallP1.X), MapToViewPortY(WallP1.Y),
                                             MapToViewPortX(WallP2.X), MapToViewPortY(WallP2.Y),
-                                            PortalClr, 3, False);
-        end;
+                                            WallClr, 3, False);
+        end;//}
 
-        // Draw selected point
-        if FSelectedPoint >= 0 then
+        // Draw points
+        //if FSelectedPoint >= 0 then
+        for i := 0 to FWallManager.GetPointCount - 1 do
         begin
-          WallP1 := FWallManager.GetPoint(FSelectedPoint);
-          DrawnMapSegment.FillRect(MapToViewPortX(WallP1.x - 2), MapToViewPortY(WallP1.y - 2),
-                                   MapToViewPortX(WallP1.x + 2), MapToViewPortY(WallP1.y + 2), FWallClr);
+          WallP1 := FWallManager.GetPoint(i);
+          if i = FSelectedPoint then
+            DrawnMapSegment.FillRect(MapToViewPortX(WallP1.x - 2), MapToViewPortY(WallP1.y - 2),
+                                     MapToViewPortX(WallP1.x + 2), MapToViewPortY(WallP1.y + 2), FPortalClr)
+          else
+            DrawnMapSegment.FillRect(MapToViewPortX(WallP1.x - 2), MapToViewPortY(WallP1.y - 2),
+                                     MapToViewPortX(WallP1.x + 2), MapToViewPortY(WallP1.y + 2), FWallClr);
         end;
 
         // Draw Tokens
