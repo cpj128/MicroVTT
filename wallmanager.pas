@@ -28,6 +28,8 @@ public
   IsPortal: Boolean;
   IsOpen: Boolean;
   //function DistFromPnt(pnt: TPoint): Double;
+  function ToString: string;
+  procedure FromString(str: string);
 end;
 
 TPointList = specialize TFPGList<TPoint>;
@@ -58,7 +60,11 @@ public
   function GetMinBoundingBox: TRect;
   function GetWallAtPos(pnt: TPoint; PortalOnly: Boolean = False): Integer;
   procedure RemovePoint(idx: Integer);
+  procedure RemoveWall(idx: Integer);
   procedure MovePoint(idx: Integer; NewPos: TPoint);
+
+  procedure SaveToStr(str: string);
+  procedure LoadFromStr(str: string);
 end;
 
 implementation
@@ -68,6 +74,33 @@ uses
   RPGUtils, RPGTypes;
 
 { TMapWall }
+
+function TMapWall.ToString: string;
+begin
+  Result := IntToStr(P1) + ';' + IntToStr(P2) + ';' + IntToStr(Ord(IsPortal)) + ';' + IntToStr(Ord(IsOpen));
+end;
+
+procedure TMapWall.FromString(str: string);
+var list: TStringList;
+begin
+  list := TStringList.Create;
+  try                          
+    list.Delimiter := ';';
+    list.StrictDelimiter := True;
+    list.DelimitedText := str;
+
+    if list.Count >= 4 then
+    begin
+      P1 := StrToIntDef(list[0], 0);
+      P2 := StrToIntDef(list[1], 0);
+      IsPortal := StrToIntDef(list[2], 0) <> 0;
+      IsOpen   := StrToIntDef(list[3], 0) <> 0;
+    end;
+
+  finally
+    list.Free;
+  end;
+end;
 
 {function TMapWall.DistFromPnt: Double;
 begin
@@ -97,6 +130,16 @@ begin
   FPoints.Clear;
   FWalls.Clear;
   //FIdcs.Clear;
+end;
+
+procedure TWallManager.SaveToStr(str: string);
+begin
+  //
+end;
+
+procedure TWallManager.LoadFromStr(str: string);
+begin
+  //
 end;
 
 function TWallManager.AddPoint(P: TPoint): Integer;
@@ -189,6 +232,15 @@ begin
 
   // Finally, delete the point
   FPoints.Delete(idx);
+end;
+
+procedure TWallManager.RemoveWall(idx: Integer);
+begin
+  if (idx >= 0) and (idx < FWalls.Count) then
+  begin
+    FWalls[idx].Free;
+    FWalls.Delete(idx);
+  end;
 end;
 
 procedure TWallManager.MovePoint(idx: Integer; NewPos: TPoint);

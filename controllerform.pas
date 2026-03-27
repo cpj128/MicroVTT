@@ -157,6 +157,8 @@ type
     procedure lvInitiativeDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
     procedure lvMapsDblClick(Sender: TObject);
+    procedure miDeletePointClick(Sender: TObject);
+    procedure miDeleteWallClick(Sender: TObject);
     procedure miNewPointClick(Sender: TObject);
     procedure pbViewportDblClick(Sender: TObject);
     procedure pbViewportDragDrop(Sender, Source: TObject; X, Y: Integer);
@@ -219,7 +221,8 @@ type
     FIsRotatingToken: Boolean;
     FCurDraggedToken: TToken;
     FCurHoverPortal, FPrevHoverPortal: Integer;
-    FSelectedPoint: Integer;
+    FSelectedPoint,
+    FSelectedWall: Integer;
     FSnapTokensToGrid: Boolean;
     FDragStartX, FDragStartY, // In pbViewPort-coordinates
     FLastMouseX, FLastMouseY, // In pbViewPort-coordinates
@@ -459,6 +462,26 @@ end;
 procedure TfmController.lvMapsDblClick(Sender: TObject);
 begin
   LoadMap(lvMaps.Items[lvMaps.ItemIndex].SubItems[0]);
+end;
+
+procedure TfmController.miDeletePointClick(Sender: TObject);
+begin
+  if FSelectedPoint >= 0 then
+  begin
+    FWallManager.RemovePoint(FSelectedPoint);
+    FSelectedPoint := -1;
+    pbViewport.Invalidate;
+  end;
+end;
+
+procedure TfmController.miDeleteWallClick(Sender: TObject);
+begin
+  if FSelectedWall >= 0 then
+  begin
+    FWallManager.RemoveWall(FSelectedWall);
+    FSelectedWall := -1; 
+    pbViewport.Invalidate;
+  end;
 end;
 
 procedure TfmController.miNewPointClick(Sender: TObject);
@@ -724,7 +747,10 @@ begin
 
     // Select clicked wall point, only if we did not drag
     if (SameValue(FDragStartX, x, 4) and SameValue(FDragStartY, Y, 4)) then
+    begin
       FSelectedPoint := FWallManager.GetPointIdxAtPos(ViewPortToMapX(X), ViewPortToMapY(Y));
+      FSelectedWall := FWallManager.GetWallAtPos(Point(ViewPortToMapX(X), ViewPortToMapY(Y)));
+    end;
 
     FIsDragging := False;
     FIsDraggingToken := False;
@@ -930,7 +956,7 @@ begin
             end;
           end;
         end;
-        // Draw walls
+        // Draw walls and portals
         for i := 0 to FWallManager.GetWallCount - 1 do
         begin
           Wall := FWallManager.GetWall(i);
@@ -946,31 +972,16 @@ begin
             WallWidth := 3;
             if i = FCurHoverPortal then
               WallWidth := 7;
+          end
+          else
+          begin
+            if i = FSelectedWall then
+              WallWidth := 5;
           end;
           DrawnMapSegment.DrawLineAntialias(MapToViewPortX(WallP1.X), MapToViewPortY(WallP1.Y),
                                             MapToViewPortX(WallP2.X), MapToViewPortY(WallP2.Y),
                                             WallClr, WallWidth, False);
         end;
-
-        // Draw Portals
-        {for i := 0 to FWallManager.GetPortalCount - 1 do
-        begin
-          Portal := FWallManager.GetPortal(i);
-          WallP1 := FWallManager.GetPoint(Portal.P1);
-          WallP2 := FWallManager.GetPoint(Portal.P2);
-          WallClr := FPortalClr;
-          if Portal.IsOpen then
-            WallClr.alpha  := 128;
-
-          if FCurHoverPortal = i then
-            DrawnMapSegment.DrawLineAntialias(MapToViewPortX(WallP1.X), MapToViewPortY(WallP1.Y),
-                                              MapToViewPortX(WallP2.X), MapToViewPortY(WallP2.Y),
-                                              BGRA(32, 32, 0, 255), 7, False);
-
-          DrawnMapSegment.DrawLineAntialias(MapToViewPortX(WallP1.X), MapToViewPortY(WallP1.Y),
-                                            MapToViewPortX(WallP2.X), MapToViewPortY(WallP2.Y),
-                                            WallClr, 3, False);
-        end;//}
 
         // Draw points
         //if FSelectedPoint >= 0 then

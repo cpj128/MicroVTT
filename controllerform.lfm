@@ -1,5 +1,5 @@
 object fmController: TfmController
-  Left = 257
+  Left = 314
   Height = 900
   Top = 103
   Width = 1597
@@ -4466,5 +4466,24 @@ object fmController: TfmController
     Options = [ofCreatePrompt, ofEnableSizing, ofViewDetail]
     Left = 544
     Top = 272
+  end
+  object pmEditPoints: TPopupMenu
+    Left = 749
+    Top = 217
+    object miNewPoint: TMenuItem
+      Caption = 'New Point'
+      OnClick = miNewPointClick
+    end
+    object miDeletePoint: TMenuItem
+      Caption = 'Delete Point'
+      OnClick = miDeletePointClick
+    end
+    object miAddWall: TMenuItem
+      Caption = 'Add Wall'
+    end
+    object miDeleteWall: TMenuItem
+      Caption = 'Delete Wall'
+      OnClick = miDeleteWallClick
+    end
   end
 end
