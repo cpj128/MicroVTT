@@ -4480,6 +4480,7 @@ object fmController: TfmController
     end
     object miAddWall: TMenuItem
       Caption = 'Add Wall'
+      OnClick = miAddWallClick
     end
     object miDeleteWall: TMenuItem
       Caption = 'Delete Wall'

@@ -47,7 +47,8 @@ public
   destructor Destroy; override;
   procedure Clear;
   function AddPoint(P: TPoint): Integer;
-  procedure AddWall(P1, P2: TPoint; IsPortal: Boolean = False; Open: Boolean = False);
+  procedure AddWall(P1, P2: TPoint; IsPortal: Boolean = False; Open: Boolean = False); overload;
+  procedure AddWall(P1, P2: Integer; IsPortal: Boolean = False; Open: Boolean = False); overload;
   procedure AddPortal(P1, P2: TPoint; Open: Boolean);
   function GetPoint(idx: Integer): TPoint;
   function GetPointCount: Integer;        
@@ -168,6 +169,21 @@ begin
   tmpWall.IsOpen := Open;
 
   FWalls.Add(tmpWall);
+end;
+
+procedure TWallManager.AddWall(P1, P2: Integer; IsPortal: Boolean = False; Open: Boolean = False);
+var tmpWall: TMapWall;
+begin
+  if InRange(P1, 0, FWalls.Count - 1) and InRange(P2, 0, FWalls.Count - 1) then
+  begin
+    tmpWall := TMapWall.Create;
+    tmpWall.P1 := P1;
+    tmpWall.P2 := P2;
+    tmpWall.IsPortal := IsPortal;
+    tmpWall.IsOpen := Open;
+
+    FWalls.Add(tmpWall);
+  end;
 end;
 
 procedure TWallManager.AddPortal(P1, P2: TPoint; Open: Boolean);

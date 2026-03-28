@@ -157,6 +157,7 @@ type
     procedure lvInitiativeDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
     procedure lvMapsDblClick(Sender: TObject);
+    procedure miAddWallClick(Sender: TObject);
     procedure miDeletePointClick(Sender: TObject);
     procedure miDeleteWallClick(Sender: TObject);
     procedure miNewPointClick(Sender: TObject);
@@ -222,7 +223,8 @@ type
     FCurDraggedToken: TToken;
     FCurHoverPortal, FPrevHoverPortal: Integer;
     FSelectedPoint,
-    FSelectedWall: Integer;
+    FSelectedWall,
+    FWallStartPnt: Integer;
     FSnapTokensToGrid: Boolean;
     FDragStartX, FDragStartY, // In pbViewPort-coordinates
     FLastMouseX, FLastMouseY, // In pbViewPort-coordinates
@@ -464,6 +466,11 @@ begin
   LoadMap(lvMaps.Items[lvMaps.ItemIndex].SubItems[0]);
 end;
 
+procedure TfmController.miAddWallClick(Sender: TObject);
+begin
+  FWallStartPnt := FSelectedPoint;
+end;
+
 procedure TfmController.miDeletePointClick(Sender: TObject);
 begin
   if FSelectedPoint >= 0 then
@@ -679,6 +686,8 @@ begin
     if FCurHoverPortal <> FPrevHoverPortal then
       pbViewPort.Invalidate;
   end;
+  if FWallStartPnt >= 0 then
+    pbViewport.Invalidate;
 end;
 
 procedure TfmController.pbViewportMouseUp(Sender: TObject;
@@ -745,11 +754,23 @@ begin
       end;
     end;
 
-    // Select clicked wall point, only if we did not drag
-    if (SameValue(FDragStartX, x, 4) and SameValue(FDragStartY, Y, 4)) then
+    if FWallStartPnt >= 0 then
     begin
-      FSelectedPoint := FWallManager.GetPointIdxAtPos(ViewPortToMapX(X), ViewPortToMapY(Y));
-      FSelectedWall := FWallManager.GetWallAtPos(Point(ViewPortToMapX(X), ViewPortToMapY(Y)));
+      CurIdx := FWallManager.GetPointIdxAtPos(ViewPortToMapX(X), ViewPortToMapY(Y), 2);
+      if CurIdx >= 0 then
+      begin
+        FWallManager.AddWall(FWallStartPnt, CurIdx);
+        FWallStartPnt := -1;
+      end;
+    end
+    else if (SameValue(FDragStartX, x, 4) and SameValue(FDragStartY, Y, 4)) then
+    begin
+      // Select clicked wall point, only if we did not drag
+      FSelectedPoint := FWallManager.GetPointIdxAtPos(ViewPortToMapX(X), ViewPortToMapY(Y), 2);
+      if FSelectedPoint < 0 then
+        FSelectedWall := FWallManager.GetWallAtPos(Point(ViewPortToMapX(X), ViewPortToMapY(Y)))
+      else
+        FSelectedWall := -1;
     end;
 
     FIsDragging := False;
@@ -981,6 +1002,15 @@ begin
           DrawnMapSegment.DrawLineAntialias(MapToViewPortX(WallP1.X), MapToViewPortY(WallP1.Y),
                                             MapToViewPortX(WallP2.X), MapToViewPortY(WallP2.Y),
                                             WallClr, WallWidth, False);
+        end;
+
+        // Draw wall currently being created
+        if FWallStartPnt >= 0 then
+        begin
+          WallP1 := FWallManager.GetPoint(FWallStartPnt);
+          DrawnMapSegment.DrawLineAntialias(MapToViewportX(WallP1.x), MapToViewportY(WallP1.y),
+                                            {MapToViewportX}(FLastMouseX), {MapToViewportY}(FLastMouseY),
+                                            WallClr, 1, False);
         end;
 
         // Draw points
@@ -2307,6 +2337,8 @@ begin
   FCurHoverPortal := -1;
   FPrevHoverPortal := -1;
   FSelectedPoint := -1;
+  FSelectedWall := -1;
+  FWallStartPnt := -1;
   FZoomFactor := 1;
   FGridData.GridSizeX := 100;
   FGridData.GridSizeY := 100;
