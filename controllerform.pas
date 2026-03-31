@@ -19,13 +19,23 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ComCtrls,
-  ExtCtrls, Menus, DateTimePicker, IniFiles, BGRABitmap,
+  ExtCtrls, Menus, DateTimePicker, IniFiles, fgl, BGRABitmap,
   BGRABitmapTypes, RPGTypes, HtmlView,
   Notes, HtmlGlobals, HTMLUn2, LCLType,
   WallManager,
   Particles;
 
 type
+  
+  TMapIconType = (mitNewPoint, mitMovePoint, mitDeletePoint, mitNewWall, mitDeleteWall, mitWallToPortal);
+
+  TMapClickIcon = class
+    IconPos: TPoint;
+    IconType: TMapIconType;
+    ClickedPos: TPoint;
+  end;
+
+  TMapIconList = specialize TFPGObjectList<TMapClickIcon>;
 
   { TfmController }
 
@@ -66,10 +76,6 @@ type
     MainMenu1: TMainMenu;
     mAnnotationContent: TMemo;
     mEntryContent: TMemo;
-    miDeleteWall: TMenuItem;
-    miAddWall: TMenuItem;
-    miDeletePoint: TMenuItem;
-    miNewPoint: TMenuItem;
     miFile: TMenuItem;
     miSettings: TMenuItem;
     miQuit: TMenuItem;
@@ -77,7 +83,6 @@ type
     pcNotesMain: TPageControl;
     pcMain: TPageControl;
     pbViewport: TPaintBox;
-    pmEditPoints: TPopupMenu;
     pPortrait: TPanel;
     sdSaveSession: TSaveDialog;
     sddExportDir: TSelectDirectoryDialog;
@@ -157,10 +162,6 @@ type
     procedure lvInitiativeDragOver(Sender, Source: TObject; X, Y: Integer;
       State: TDragState; var Accept: Boolean);
     procedure lvMapsDblClick(Sender: TObject);
-    procedure miAddWallClick(Sender: TObject);
-    procedure miDeletePointClick(Sender: TObject);
-    procedure miDeleteWallClick(Sender: TObject);
-    procedure miNewPointClick(Sender: TObject);
     procedure pbViewportDblClick(Sender: TObject);
     procedure pbViewportDragDrop(Sender, Source: TObject; X, Y: Integer);
     procedure pbViewportDragOver(Sender, Source: TObject; X, Y: Integer;
@@ -211,6 +212,7 @@ type
     FMapPic: TBGRABitmap;
     FLoSMap: TBGRABitmap;
     FLockedPic: TBGRABitmap;
+    FMapIconList: TMapIconList;
     FMapFileName: string;
     FViewRectWidth, FViewRectHeight: Integer;
     FViewRectXOffset, FViewRectYOffset: Integer;
@@ -222,13 +224,11 @@ type
     FIsRotatingToken: Boolean;
     FCurDraggedToken: TToken;
     FCurHoverPortal, FPrevHoverPortal: Integer;
-    FSelectedPoint,
-    FSelectedWall,
-    FWallStartPnt: Integer;
+    FSelectedPoint, FSelectedWall,
+    FWallStartPnt, FCurDraggedPoint: Integer;
     FSnapTokensToGrid: Boolean;
     FDragStartX, FDragStartY, // In pbViewPort-coordinates
     FLastMouseX, FLastMouseY, // In pbViewPort-coordinates
-    FNewPointX, FNewPointY,   // In pbViewPort-coordinates
     FStartDragXOffset, FStartDragYOffset: Integer;
     FLastClicked, FLastLastClicked: TPoint; // MapPic-coordinates
     FCurMeasure: Double; 
@@ -274,10 +274,10 @@ type
     procedure UpdateTokenList;
     procedure UpdateOverlayList;
     procedure CalcLoSMap;
-    function MapToViewPortX(MapX: Single): Integer;
-    function MapToViewPortY(MapY: Single): Integer;
-    function ViewPortToMapX(ViewPortX: Integer): Integer;
-    function ViewPortToMapY(ViewPortY: Integer): Integer;
+    function MapToViewPortX(MapX: Single): Integer; inline;
+    function MapToViewPortY(MapY: Single): Integer; inline;
+    function ViewPortToMapX(ViewPortX: Integer): Integer; inline;
+    function ViewPortToMapY(ViewPortY: Integer): Integer; inline;
     function GetTokenAtPos(X, Y: Integer; AllowLocked: Boolean = False): TToken;
     function GetNonAttachableTokenAtPos(X, Y: Integer): TToken;
     procedure SetCurInitiativeIndex(val: Integer);
@@ -466,40 +466,6 @@ begin
   LoadMap(lvMaps.Items[lvMaps.ItemIndex].SubItems[0]);
 end;
 
-procedure TfmController.miAddWallClick(Sender: TObject);
-begin
-  FWallStartPnt := FSelectedPoint;
-end;
-
-procedure TfmController.miDeletePointClick(Sender: TObject);
-begin
-  if FSelectedPoint >= 0 then
-  begin
-    FWallManager.RemovePoint(FSelectedPoint);
-    FSelectedPoint := -1;
-    pbViewport.Invalidate;
-  end;
-end;
-
-procedure TfmController.miDeleteWallClick(Sender: TObject);
-begin
-  if FSelectedWall >= 0 then
-  begin
-    FWallManager.RemoveWall(FSelectedWall);
-    FSelectedWall := -1; 
-    pbViewport.Invalidate;
-  end;
-end;
-
-procedure TfmController.miNewPointClick(Sender: TObject);
-var NewPoint: TPoint;
-begin
-  NewPoint.X := ViewportToMapX(FNewPointX);
-  NewPoint.Y := ViewportToMapY(FNewPointY);
-  FWallManager.AddPoint(NewPoint);
-  pbViewport.Invalidate;
-end;
-
 procedure TfmController.LoadMap(FileName: string);
 var
   GridSettings: string;
@@ -642,6 +608,7 @@ begin
       FStartDragXOffset := FViewRectXOffset;
       FStartDragYOffset := FViewRectYOffset;
     end;
+    FCurDraggedPoint := -1;
   end;
 end;
 
@@ -686,7 +653,13 @@ begin
     if FCurHoverPortal <> FPrevHoverPortal then
       pbViewPort.Invalidate;
   end;
-  if FWallStartPnt >= 0 then
+
+  if FCurDraggedPoint >= 0 then
+  begin
+    FWallManager.MovePoint(FCurDraggedPoint, Point(ViewportToMapX(X), ViewportToMapY(Y)));
+  end;
+
+  if (FWallStartPnt >= 0) or (FCurDraggedPoint >= 0) then
     pbViewport.Invalidate;
 end;
 
@@ -699,8 +672,10 @@ var
   diffGrid: TPointF;
   ClickedPortal: TMapWall;
   MenuLoc: TPoint;
+  tmpMapIcon: TMapClickIcon;
   //Modal: TModalResult;
 begin
+  // TODO: This method has grown out of control, need to refactor
   if Button = mbLeft then
   begin
     if FIsDragging then
@@ -765,12 +740,123 @@ begin
     end
     else if (SameValue(FDragStartX, x, 4) and SameValue(FDragStartY, Y, 4)) then
     begin
-      // Select clicked wall point, only if we did not drag
-      FSelectedPoint := FWallManager.GetPointIdxAtPos(ViewPortToMapX(X), ViewPortToMapY(Y), 2);
-      if FSelectedPoint < 0 then
-        FSelectedWall := FWallManager.GetWallAtPos(Point(ViewPortToMapX(X), ViewPortToMapY(Y)))
+      // Check first if we have clicked an icon
+      tmpMapIcon := nil;
+      for CurIdx := 0 to FMapIconList.Count - 1 do
+      begin
+        if Hypot(FMapIconList[CurIdx].IconPos.X - ViewportToMapX(X), FMapIconList[CurIdx].IconPos.Y - ViewportToMapY(Y)) <= 10 then
+        begin
+          tmpMapIcon := FMapIconList[CurIdx];
+          Break;
+        end;
+      end;
+
+      if Assigned(tmpMapIcon) then
+      begin
+        if tmpMapIcon.IconType = mitNewPoint then
+        begin
+          FWallManager.AddPoint(tmpMapIcon.ClickedPos);
+          pbViewport.Invalidate;
+        end
+        else if tmpMapIcon.IconType = mitDeletePoint then
+        begin
+          if FSelectedPoint >= 0 then
+          begin
+            FWallManager.RemovePoint(FSelectedPoint);
+            FSelectedPoint := -1;
+            pbViewport.Invalidate;
+          end;
+        end
+        else if tmpMapIcon.IconType = mitDeleteWall then
+        begin
+          if FSelectedWall >= 0 then
+          begin
+            FWallManager.RemoveWall(FSelectedWall);
+            FSelectedWall := -1;
+            pbViewport.Invalidate;
+          end;
+        end
+        else if tmpMapIcon.IconType = mitNewWall then
+        begin
+          FWallStartPnt := FSelectedPoint;
+        end
+        else if tmpMapIcon.IconType = mitWallToPortal then
+        begin
+          ClickedPortal := FWallManager.GetWall(FSelectedWall);
+          if Assigned(ClickedPortal) then
+            ClickedPortal.IsPortal := not ClickedPortal.IsPortal;
+        end
+        else if tmpMapIcon.IconType = mitMovePoint then
+        begin
+          FCurDraggedPoint := FSelectedPoint;
+        end;
+
+        FMapIconList.Clear;
+      end
       else
-        FSelectedWall := -1;
+      begin
+
+        // Select clicked wall point, only if we did not drag
+        FSelectedPoint := FWallManager.GetPointIdxAtPos(ViewPortToMapX(X), ViewPortToMapY(Y), 2);
+        if FSelectedPoint < 0 then
+          FSelectedWall := FWallManager.GetWallAtPos(Point(ViewPortToMapX(X), ViewPortToMapY(Y)))
+        else
+          FSelectedWall := -1;
+
+        // Click onto nothing specific and list is showing? Hide list
+        if (FSelectedPoint < 0) and (FSelectedWall < 0) and (FMapIconList.Count > 0) then
+        begin
+          FMapIconList.Clear;
+        end
+        else
+        begin
+          // Clear list before adding new icons
+          FMapIconList.Clear;
+
+          if FSelectedPoint >= 0 then
+          begin
+            tmpMapIcon := TMapClickIcon.Create;
+            tmpMapIcon.IconType := mitMovePoint;
+            tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
+            tmpMapIcon.IconPos := Point(ViewportToMapX(X + 50), ViewportToMapY(Y));
+            FMapIconList.add(tmpMapIcon);
+
+            tmpMapIcon := TMapClickIcon.Create;
+            tmpMapIcon.IconType := mitNewWall;
+            tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
+            tmpMapIcon.IconPos := Point(ViewportToMapX(X + 50), ViewportToMapY(Y + 50));
+            FMapIconList.add(tmpMapIcon);
+
+            tmpMapIcon := TMapClickIcon.Create;
+            tmpMapIcon.IconType := mitDeletePoint;
+            tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
+            tmpMapIcon.IconPos := Point(ViewportToMapX(X + 50), ViewportToMapY(Y + 100));
+            FMapIconList.add(tmpMapIcon);
+          end
+          else if FSelectedWall >= 0 then
+          begin
+            tmpMapIcon := TMapClickIcon.Create;
+            tmpMapIcon.IconType := mitWallToPortal;
+            tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
+            tmpMapIcon.IconPos := Point(ViewportToMapX(X + 50), ViewportToMapY(Y));
+            FMapIconList.add(tmpMapIcon);
+
+            tmpMapIcon := TMapClickIcon.Create;
+            tmpMapIcon.IconType := mitDeleteWall;
+            tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
+            tmpMapIcon.IconPos := Point(ViewportToMapX(X + 50), ViewportToMapY(Y + 50));
+            FMapIconList.add(tmpMapIcon);
+          end
+          else
+          begin
+            tmpMapIcon := TMapClickIcon.Create;
+            tmpMapIcon.IconType := mitNewPoint;
+            tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
+            tmpMapIcon.IconPos := Point(ViewportToMapX(X + 50), ViewportToMapY(Y));
+            FMapIconList.add(tmpMapIcon);
+          end;
+        end;
+      end;
     end;
 
     FIsDragging := False;
@@ -804,13 +890,6 @@ begin
 
       fmTokenSettings.Show; // Treat this one more like a popup menu
 
-    end
-    else if Assigned(FMapPic) then
-    begin
-      FNewPointX := X;
-      FNewPointY := Y;
-      MenuLoc := pbViewport.ControlToScreen(Point(X, Y));
-      pmEditPoints.PopUp(MenuLoc.X, MenuLoc.Y);
     end;
   end;
 end;
@@ -838,6 +917,7 @@ var
   TextSize: TSize;
   //LoSPoly: ArrayOfTPointF;
   time: DWORD;
+  tmpMapIcon: TMapClickIcon;
 begin
   // Draw Map
   if Assigned(FMapPic) then
@@ -1009,7 +1089,7 @@ begin
         begin
           WallP1 := FWallManager.GetPoint(FWallStartPnt);
           DrawnMapSegment.DrawLineAntialias(MapToViewportX(WallP1.x), MapToViewportY(WallP1.y),
-                                            {MapToViewportX}(FLastMouseX), {MapToViewportY}(FLastMouseY),
+                                            FLastMouseX, FLastMouseY,
                                             WallClr, 1, False);
         end;
 
@@ -1025,6 +1105,34 @@ begin
             DrawnMapSegment.FillRect(MapToViewPortX(WallP1.x - 2), MapToViewPortY(WallP1.y - 2),
                                      MapToViewPortX(WallP1.x + 2), MapToViewPortY(WallP1.y + 2), FWallClr);
         end;
+
+        // Draw Map icons
+        for i := 0 to FMapIconList.Count - 1 do
+        begin
+          tmpMapIcon := FMapIconList[i];
+          DrawnMapSegment.EllipseAntialias(MapToViewportX(tmpMapIcon.IconPos.X), MapToViewportY(tmpMapIcon.IconPos.Y),
+                                                          20, 20, clBlack, 2, clWhite);
+
+          case tmpMapIcon.IconType of
+            mitNewPoint, mitNewWall:
+            begin
+              DrawnMapSegment.DrawLineAntialias(MapToViewportX(tmpMapIcon.IconPos.X) - 10, MapToViewportY(tmpMapIcon.IconPos.Y),
+                                                MapToViewportX(tmpMapIcon.IconPos.X) + 10, MapToViewportY(tmpMapIcon.IconPos.Y),
+                                                clBlack, 2, True);
+              DrawnMapSegment.DrawLineAntialias(MapToViewportX(tmpMapIcon.IconPos.X), MapToViewportY(tmpMapIcon.IconPos.Y) - 10,
+                                                MapToViewportX(tmpMapIcon.IconPos.X), MapToViewportY(tmpMapIcon.IconPos.Y) + 10,
+                                                clBlack, 2, True);
+            end;
+            mitDeletePoint, mitDeleteWall:
+            begin
+              DrawnMapSegment.DrawLineAntialias(MapToViewportX(tmpMapIcon.IconPos.X) - 10, MapToViewportY(tmpMapIcon.IconPos.Y),
+                                                MapToViewportX(tmpMapIcon.IconPos.X) + 10, MapToViewportY(tmpMapIcon.IconPos.Y),
+                                                clBlack, 2, True);
+            end;
+          else
+          end;
+        end;
+
 
         // Draw Tokens
         // TODO: Draw Tokens on the map before downsampling?
@@ -2257,6 +2365,7 @@ begin
   FWallManager := TWallManager.Create;
   FShowLoS := False;
   FShowLoSPlayer := False;
+  FMapIconList := TMapIconList.Create;
 
   FLockedPic := TBGRABitmap.Create(24, 24, BGRA(0, 0, 0, 0));
 
@@ -2339,6 +2448,7 @@ begin
   FSelectedPoint := -1;
   FSelectedWall := -1;
   FWallStartPnt := -1;
+  FCurDraggedPoint := -1;
   FZoomFactor := 1;
   FGridData.GridSizeX := 100;
   FGridData.GridSizeY := 100;
@@ -2374,6 +2484,7 @@ begin
   FAppSettings.Free;
   FWallManager.Free;
   FParticleManager.Free;
+  FMapIconList.Free;
   ContentLib.Free;
   // Notes module
   FNotesList.Free;

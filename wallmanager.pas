@@ -174,7 +174,7 @@ end;
 procedure TWallManager.AddWall(P1, P2: Integer; IsPortal: Boolean = False; Open: Boolean = False);
 var tmpWall: TMapWall;
 begin
-  if InRange(P1, 0, FWalls.Count - 1) and InRange(P2, 0, FWalls.Count - 1) then
+  if InRange(P1, 0, FPoints.Count - 1) and InRange(P2, 0, FPoints.Count - 1) and (P1 <> P2) then
   begin
     tmpWall := TMapWall.Create;
     tmpWall.P1 := P1;
