@@ -18,10 +18,14 @@
         <TextDesc Value="A minimalistic VTT for local play."/>
       </XPManifest>
       <Icon Value="0"/>
-      <Resources Count="3">
+      <Resources Count="7">
         <Resource_0 FileName="RPGPres.ico" Type="ICON" ResourceName="RPGPRES"/>
         <Resource_1 FileName="Bilder\Parchment_tile.jpg" Type="RCDATA" ResourceName="PARCHMENT_TILE"/>
         <Resource_2 FileName="Bilder\Locked.png" Type="RCDATA" ResourceName="LOCKED"/>
+        <Resource_3 FileName="Bilder\WallPortal.png" Type="RCDATA" ResourceName="WALLPORTAL"/>
+        <Resource_4 FileName="Bilder\AddItem.png" Type="RCDATA" ResourceName="ADDITEM"/>
+        <Resource_5 FileName="Bilder\DeleteItem.png" Type="RCDATA" ResourceName="DELETEITEM"/>
+        <Resource_6 FileName="Bilder\Move.png" Type="RCDATA" ResourceName="MOVE"/>
       </Resources>
     </General>
     <VersionInfo>

@@ -212,6 +212,8 @@ type
     FMapPic: TBGRABitmap;
     FLoSMap: TBGRABitmap;
     FLockedPic: TBGRABitmap;
+    FWallPortalPic, FMovePic,
+    FAddItemPic, FDeleteItemPic: TBGRABitmap;
     FMapIconList: TMapIconList;
     FMapFileName: string;
     FViewRectWidth, FViewRectHeight: Integer;
@@ -274,8 +276,8 @@ type
     procedure UpdateTokenList;
     procedure UpdateOverlayList;
     procedure CalcLoSMap;
-    function MapToViewPortX(MapX: Single): Integer; inline;
-    function MapToViewPortY(MapY: Single): Integer; inline;
+    function MapToViewPortX(MapX: Single): Integer;
+    function MapToViewPortY(MapY: Single): Integer;
     function ViewPortToMapX(ViewPortX: Integer): Integer; inline;
     function ViewPortToMapY(ViewPortY: Integer): Integer; inline;
     function GetTokenAtPos(X, Y: Integer; AllowLocked: Boolean = False): TToken;
@@ -285,6 +287,7 @@ type
     procedure LoadMap(FileName: string);
     procedure SetCombatMode(val: Boolean);
     procedure SetCurTokenRect(val: TRect);
+    function LoadBmpFromResource(ResName: string): TBGRABitmap;
     // Notes module
     procedure UpdateHistoryButtons;
     //procedure WMAppCommand(var Msg: TMessage); message WM_APPCOMMAND;
@@ -504,6 +507,20 @@ begin
   pbViewport.Invalidate;
   tbMapZoom.Enabled := True;
   bResetZoom.Enabled := True;
+end;
+
+function TfmController.LoadBmpFromResource(ResName: string): TBGRABitmap;
+var LoadPic: TPicture;
+begin
+  Result := nil;
+  LoadPic := TPicture.Create;
+  try
+    LoadPic.LoadFromResourceName(HINSTANCE, ResName);
+    Result := TBGRABitmap.Create(LoadPic.Width, LoadPic.Height, BGRA(0, 0, 0, 0));
+    Result.Assign(LoadPic.png);
+  finally
+    LoadPic.Free;
+  end;
 end;
 
 procedure TfmController.pbViewportDblClick(Sender: TObject);
@@ -731,7 +748,7 @@ begin
 
     if FWallStartPnt >= 0 then
     begin
-      CurIdx := FWallManager.GetPointIdxAtPos(ViewPortToMapX(X), ViewPortToMapY(Y), 2);
+      CurIdx := FWallManager.GetPointIdxAtPos(ViewPortToMapX(X), ViewPortToMapY(Y), 4);
       if CurIdx >= 0 then
       begin
         FWallManager.AddWall(FWallStartPnt, CurIdx);
@@ -797,7 +814,7 @@ begin
       begin
 
         // Select clicked wall point, only if we did not drag
-        FSelectedPoint := FWallManager.GetPointIdxAtPos(ViewPortToMapX(X), ViewPortToMapY(Y), 2);
+        FSelectedPoint := FWallManager.GetPointIdxAtPos(ViewPortToMapX(X), ViewPortToMapY(Y), 4);
         if FSelectedPoint < 0 then
           FSelectedWall := FWallManager.GetWallAtPos(Point(ViewPortToMapX(X), ViewPortToMapY(Y)))
         else
@@ -1099,11 +1116,11 @@ begin
         begin
           WallP1 := FWallManager.GetPoint(i);
           if i = FSelectedPoint then
-            DrawnMapSegment.FillRect(MapToViewPortX(WallP1.x - 2), MapToViewPortY(WallP1.y - 2),
-                                     MapToViewPortX(WallP1.x + 2), MapToViewPortY(WallP1.y + 2), FPortalClr)
+            DrawnMapSegment.FillRect(MapToViewPortX(WallP1.x - 4), MapToViewPortY(WallP1.y - 4),
+                                     MapToViewPortX(WallP1.x + 4), MapToViewPortY(WallP1.y + 4), FPortalClr)
           else
-            DrawnMapSegment.FillRect(MapToViewPortX(WallP1.x - 2), MapToViewPortY(WallP1.y - 2),
-                                     MapToViewPortX(WallP1.x + 2), MapToViewPortY(WallP1.y + 2), FWallClr);
+            DrawnMapSegment.FillRect(MapToViewPortX(WallP1.x - 4), MapToViewPortY(WallP1.y - 4),
+                                     MapToViewPortX(WallP1.x + 4), MapToViewPortY(WallP1.y + 4), FWallClr);
         end;
 
         // Draw Map icons
@@ -1116,19 +1133,28 @@ begin
           case tmpMapIcon.IconType of
             mitNewPoint, mitNewWall:
             begin
-              DrawnMapSegment.DrawLineAntialias(MapToViewportX(tmpMapIcon.IconPos.X) - 10, MapToViewportY(tmpMapIcon.IconPos.Y),
-                                                MapToViewportX(tmpMapIcon.IconPos.X) + 10, MapToViewportY(tmpMapIcon.IconPos.Y),
-                                                clBlack, 2, True);
-              DrawnMapSegment.DrawLineAntialias(MapToViewportX(tmpMapIcon.IconPos.X), MapToViewportY(tmpMapIcon.IconPos.Y) - 10,
-                                                MapToViewportX(tmpMapIcon.IconPos.X), MapToViewportY(tmpMapIcon.IconPos.Y) + 10,
-                                                clBlack, 2, True);
+              FAddItemPic.Draw(DrawnMapSegment.Canvas,
+                               MapToViewportX(tmpMapIcon.IconPos.X) - FAddItemPic.Width div 2,
+                               MapToViewportY(tmpMapIcon.IconPos.Y) - FAddItemPic.Height div 2, False);
             end;
             mitDeletePoint, mitDeleteWall:
             begin
-              DrawnMapSegment.DrawLineAntialias(MapToViewportX(tmpMapIcon.IconPos.X) - 10, MapToViewportY(tmpMapIcon.IconPos.Y),
-                                                MapToViewportX(tmpMapIcon.IconPos.X) + 10, MapToViewportY(tmpMapIcon.IconPos.Y),
-                                                clBlack, 2, True);
+              FDeleteItemPic.Draw(DrawnMapSegment.Canvas,
+                                  MapToViewportX(tmpMapIcon.IconPos.X) - FDeleteItemPic.Width div 2,
+                                  MapToViewportY(tmpMapIcon.IconPos.Y) - FDeleteItemPic.Height div 2, False);
             end;
+            mitWallToPortal:
+            begin
+              FWallPortalPic.Draw(DrawnMapSegment.Canvas,
+                                  MapToViewportX(tmpMapIcon.IconPos.X) - FWallPortalPic.Width div 2,
+                                  MapToViewportY(tmpMapIcon.IconPos.Y) - FWallPortalPic.Height div 2, False);
+            end;
+            mitMovePoint:
+            begin
+              FMovePic.Draw(DrawnMapSegment.Canvas,
+                            MapToViewportX(tmpMapIcon.IconPos.X) - FMovePic.Width div 2,
+                            MapToViewportY(tmpMapIcon.IconPos.Y) - FMovePic.Height div 2, False);
+            end
           else
           end;
         end;
@@ -2351,7 +2377,6 @@ var
   LangID, FallbackLangID, LangName, tmpLang: string;
   LangList: TStrings;
   i: Integer;
-  LoadLock: TPicture;
 begin
   FMapPic := nil;
   FLoSMap := nil;
@@ -2367,15 +2392,11 @@ begin
   FShowLoSPlayer := False;
   FMapIconList := TMapIconList.Create;
 
-  FLockedPic := TBGRABitmap.Create(24, 24, BGRA(0, 0, 0, 0));
-
-  LoadLock := TPicture.Create;
-  try
-    LoadLock.LoadFromResourceName(HINSTANCE, 'LOCKED');
-    FLockedPic.Assign(LoadLock.Png);
-  finally
-    LoadLock.Free;
-  end;
+  FLockedPic := LoadBmpFromResource('LOCKED');
+  FWallPortalPic := LoadBmpFromResource('WALLPORTAL');
+  FAddItemPic := LoadBmpFromResource('ADDITEM');
+  FDeleteItemPic := LoadBmpFromResource('DELETEITEM');
+  FMovePic := LoadBmpFromResource('MOVE');
 
   // Load settings
   FMapDir := FAppSettings.ReadString('Settings', 'MapDir', 'Content\Maps\');
@@ -2470,6 +2491,10 @@ begin
   if Assigned(FMapPic) then
     FMapPic.Free;
   FLockedPic.Free;
+  FWallPortalPic.Free;
+  FAddItemPic.Free;
+  FDeleteItemPic.Free;
+  FMovePic.Free;
   FTokenList.Free;
   FInitiativePicList.Free;
   FInitiativeNumList.Free;
