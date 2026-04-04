@@ -96,6 +96,7 @@ type
     tbMeasure: TToolButton;
     tbShowLoSMaster: TToolButton;
     tbShowLoSPlayers: TToolButton;
+    tbEditWalls: TToolButton;
     tsCategoryEditor: TTabSheet;
     tsEntryListEditor: TTabSheet;
     tsEntryEditor: TTabSheet;
@@ -180,6 +181,7 @@ type
     procedure tbClearInitiativeClick(Sender: TObject);
     procedure tbClearTokensClick(Sender: TObject);
     procedure tbCombatModeClick(Sender: TObject);
+    procedure tbEditWallsClick(Sender: TObject);
     procedure tbExitClick(Sender: TObject);
     procedure tbExportForDMClick(Sender: TObject);
     procedure tbGridSettingsClick(Sender: TObject);
@@ -746,134 +748,138 @@ begin
       end;
     end;
 
-    if FWallStartPnt >= 0 then
+    if tbEditWalls.Down then
     begin
-      CurIdx := FWallManager.GetPointIdxAtPos(ViewPortToMapX(X), ViewPortToMapY(Y), 4);
-      if CurIdx >= 0 then
+      if FWallStartPnt >= 0 then
       begin
-        FWallManager.AddWall(FWallStartPnt, CurIdx);
-        FWallStartPnt := -1;
-      end;
-    end
-    else if (SameValue(FDragStartX, x, 4) and SameValue(FDragStartY, Y, 4)) then
-    begin
-      // Check first if we have clicked an icon
-      tmpMapIcon := nil;
-      for CurIdx := 0 to FMapIconList.Count - 1 do
-      begin
-        if Hypot(FMapIconList[CurIdx].IconPos.X - ViewportToMapX(X), FMapIconList[CurIdx].IconPos.Y - ViewportToMapY(Y)) <= 10 then
+        CurIdx := FWallManager.GetPointIdxAtPos(ViewPortToMapX(X), ViewPortToMapY(Y), 4);
+        if CurIdx >= 0 then
         begin
-          tmpMapIcon := FMapIconList[CurIdx];
-          Break;
+          FWallManager.AddWall(FWallStartPnt, CurIdx);
+          FWallStartPnt := -1;
         end;
-      end;
-
-      if Assigned(tmpMapIcon) then
-      begin
-        if tmpMapIcon.IconType = mitNewPoint then
-        begin
-          FWallManager.AddPoint(tmpMapIcon.ClickedPos);
-          pbViewport.Invalidate;
-        end
-        else if tmpMapIcon.IconType = mitDeletePoint then
-        begin
-          if FSelectedPoint >= 0 then
-          begin
-            FWallManager.RemovePoint(FSelectedPoint);
-            FSelectedPoint := -1;
-            pbViewport.Invalidate;
-          end;
-        end
-        else if tmpMapIcon.IconType = mitDeleteWall then
-        begin
-          if FSelectedWall >= 0 then
-          begin
-            FWallManager.RemoveWall(FSelectedWall);
-            FSelectedWall := -1;
-            pbViewport.Invalidate;
-          end;
-        end
-        else if tmpMapIcon.IconType = mitNewWall then
-        begin
-          FWallStartPnt := FSelectedPoint;
-        end
-        else if tmpMapIcon.IconType = mitWallToPortal then
-        begin
-          ClickedPortal := FWallManager.GetWall(FSelectedWall);
-          if Assigned(ClickedPortal) then
-            ClickedPortal.IsPortal := not ClickedPortal.IsPortal;
-        end
-        else if tmpMapIcon.IconType = mitMovePoint then
-        begin
-          FCurDraggedPoint := FSelectedPoint;
-        end;
-
-        FMapIconList.Clear;
       end
-      else
+      else if (SameValue(FDragStartX, x, 4) and SameValue(FDragStartY, Y, 4)) then
       begin
-
-        // Select clicked wall point, only if we did not drag
-        FSelectedPoint := FWallManager.GetPointIdxAtPos(ViewPortToMapX(X), ViewPortToMapY(Y), 4);
-        if FSelectedPoint < 0 then
-          FSelectedWall := FWallManager.GetWallAtPos(Point(ViewPortToMapX(X), ViewPortToMapY(Y)))
-        else
-          FSelectedWall := -1;
-
-        // Click onto nothing specific and list is showing? Hide list
-        if (FSelectedPoint < 0) and (FSelectedWall < 0) and (FMapIconList.Count > 0) then
+        // Check first if we have clicked an icon
+        tmpMapIcon := nil;
+        for CurIdx := 0 to FMapIconList.Count - 1 do
         begin
+          if Hypot(FMapIconList[CurIdx].IconPos.X - ViewportToMapX(X), FMapIconList[CurIdx].IconPos.Y - ViewportToMapY(Y)) <= 10 then
+          begin
+            tmpMapIcon := FMapIconList[CurIdx];
+            Break;
+          end;
+        end;
+
+        if Assigned(tmpMapIcon) then
+        begin
+          if tmpMapIcon.IconType = mitNewPoint then
+          begin
+            FWallManager.AddPoint(tmpMapIcon.ClickedPos);
+            pbViewport.Invalidate;
+          end
+          else if tmpMapIcon.IconType = mitDeletePoint then
+          begin
+            if FSelectedPoint >= 0 then
+            begin
+              FWallManager.RemovePoint(FSelectedPoint);
+              FSelectedPoint := -1;
+              pbViewport.Invalidate;
+            end;
+          end
+          else if tmpMapIcon.IconType = mitDeleteWall then
+          begin
+            if FSelectedWall >= 0 then
+            begin
+              FWallManager.RemoveWall(FSelectedWall);
+              FSelectedWall := -1;
+              pbViewport.Invalidate;
+            end;
+          end
+          else if tmpMapIcon.IconType = mitNewWall then
+          begin
+            FWallStartPnt := FSelectedPoint;
+          end
+          else if tmpMapIcon.IconType = mitWallToPortal then
+          begin
+            ClickedPortal := FWallManager.GetWall(FSelectedWall);
+            if Assigned(ClickedPortal) then
+              ClickedPortal.IsPortal := not ClickedPortal.IsPortal;
+          end
+          else if tmpMapIcon.IconType = mitMovePoint then
+          begin
+            FCurDraggedPoint := FSelectedPoint;
+          end;
+
           FMapIconList.Clear;
         end
         else
         begin
-          // Clear list before adding new icons
-          FMapIconList.Clear;
 
-          if FSelectedPoint >= 0 then
+          // Select clicked wall point, only if we did not drag
+          FSelectedPoint := FWallManager.GetPointIdxAtPos(ViewPortToMapX(X), ViewPortToMapY(Y), 4);
+          if FSelectedPoint < 0 then
+            FSelectedWall := FWallManager.GetWallAtPos(Point(ViewPortToMapX(X), ViewPortToMapY(Y)))
+          else
+            FSelectedWall := -1;
+
+          // Click onto nothing specific and list is showing? Hide list
+          if (FSelectedPoint < 0) and (FSelectedWall < 0) and (FMapIconList.Count > 0) then
           begin
-            tmpMapIcon := TMapClickIcon.Create;
-            tmpMapIcon.IconType := mitMovePoint;
-            tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
-            tmpMapIcon.IconPos := Point(ViewportToMapX(X + 50), ViewportToMapY(Y));
-            FMapIconList.add(tmpMapIcon);
-
-            tmpMapIcon := TMapClickIcon.Create;
-            tmpMapIcon.IconType := mitNewWall;
-            tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
-            tmpMapIcon.IconPos := Point(ViewportToMapX(X + 50), ViewportToMapY(Y + 50));
-            FMapIconList.add(tmpMapIcon);
-
-            tmpMapIcon := TMapClickIcon.Create;
-            tmpMapIcon.IconType := mitDeletePoint;
-            tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
-            tmpMapIcon.IconPos := Point(ViewportToMapX(X + 50), ViewportToMapY(Y + 100));
-            FMapIconList.add(tmpMapIcon);
-          end
-          else if FSelectedWall >= 0 then
-          begin
-            tmpMapIcon := TMapClickIcon.Create;
-            tmpMapIcon.IconType := mitWallToPortal;
-            tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
-            tmpMapIcon.IconPos := Point(ViewportToMapX(X + 50), ViewportToMapY(Y));
-            FMapIconList.add(tmpMapIcon);
-
-            tmpMapIcon := TMapClickIcon.Create;
-            tmpMapIcon.IconType := mitDeleteWall;
-            tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
-            tmpMapIcon.IconPos := Point(ViewportToMapX(X + 50), ViewportToMapY(Y + 50));
-            FMapIconList.add(tmpMapIcon);
+            FMapIconList.Clear;
           end
           else
           begin
-            tmpMapIcon := TMapClickIcon.Create;
-            tmpMapIcon.IconType := mitNewPoint;
-            tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
-            tmpMapIcon.IconPos := Point(ViewportToMapX(X + 50), ViewportToMapY(Y));
-            FMapIconList.add(tmpMapIcon);
+            // Clear list before adding new icons
+            FMapIconList.Clear;
+
+            if FSelectedPoint >= 0 then
+            begin
+              tmpMapIcon := TMapClickIcon.Create;
+              tmpMapIcon.IconType := mitMovePoint;
+              tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
+              tmpMapIcon.IconPos := Point(ViewportToMapX(X) + Round(50 * Cos(DegToRad(-60))), ViewportToMapY(Y) + Round(50 * Sin(DegToRad(-60))));
+              FMapIconList.add(tmpMapIcon);
+
+              tmpMapIcon := TMapClickIcon.Create;
+              tmpMapIcon.IconType := mitNewWall;
+              tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
+              tmpMapIcon.IconPos := Point(ViewportToMapX(X) + Round(50 * Cos(DegToRad(0))), ViewportToMapY(Y) + Round(50 * Sin(DegToRad(0))));
+              FMapIconList.add(tmpMapIcon);
+
+              tmpMapIcon := TMapClickIcon.Create;
+              tmpMapIcon.IconType := mitDeletePoint;
+              tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
+              tmpMapIcon.IconPos := Point(ViewportToMapX(X) + Round(50 * Cos(DegToRad(60))), ViewportToMapY(Y) + Round(50 * Sin(DegToRad(60))));
+              FMapIconList.add(tmpMapIcon);
+            end
+            else if FSelectedWall >= 0 then
+            begin
+              tmpMapIcon := TMapClickIcon.Create;
+              tmpMapIcon.IconType := mitWallToPortal;
+              tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
+              tmpMapIcon.IconPos := Point(ViewportToMapX(X)+ Round(50 * Cos(DegToRad(0))), ViewportToMapY(Y)+ Round(50 * Sin(DegToRad(0))));
+              FMapIconList.add(tmpMapIcon);
+
+              tmpMapIcon := TMapClickIcon.Create;
+              tmpMapIcon.IconType := mitDeleteWall;
+              tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
+              tmpMapIcon.IconPos := Point(ViewportToMapX(X) + Round(50 * Cos(DegToRad(60))), ViewportToMapY(Y) + Round(50 * Sin(DegToRad(60))));
+              FMapIconList.add(tmpMapIcon);
+            end
+            else
+            begin
+              tmpMapIcon := TMapClickIcon.Create;
+              tmpMapIcon.IconType := mitNewPoint;
+              tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
+              tmpMapIcon.IconPos := Point(ViewportToMapX(X) + Round(50 * Cos(DegToRad(0))), ViewportToMapY(Y) + Round(50 * Sin(DegToRad(0))));
+              FMapIconList.add(tmpMapIcon);
+            end;
           end;
         end;
       end;
+
     end;
 
     FIsDragging := False;
@@ -881,7 +887,7 @@ begin
     FIsRotatingToken := False;
     FCurDraggedToken := nil;
 
-    if FCurHoverPortal >= 0 then
+    if (FCurHoverPortal >= 0) and not tbEditWalls.Down then
     begin
       ClickedPortal := FWallManager.GetWall(FCurHoverPortal);
       if Assigned(ClickedPortal) then
@@ -935,6 +941,7 @@ var
   //LoSPoly: ArrayOfTPointF;
   time: DWORD;
   tmpMapIcon: TMapClickIcon;
+  TextRenderer: TBGRATextEffectFontRenderer;
 begin
   // Draw Map
   if Assigned(FMapPic) then
@@ -1094,7 +1101,10 @@ begin
           else
           begin
             if i = FSelectedWall then
+            begin
               WallWidth := 5;
+              WallClr := FMarkerClr;
+            end;
           end;
           DrawnMapSegment.DrawLineAntialias(MapToViewPortX(WallP1.X), MapToViewPortY(WallP1.Y),
                                             MapToViewPortX(WallP2.X), MapToViewPortY(WallP2.Y),
@@ -1111,17 +1121,17 @@ begin
         end;
 
         // Draw points
-        //if FSelectedPoint >= 0 then
-        for i := 0 to FWallManager.GetPointCount - 1 do
-        begin
-          WallP1 := FWallManager.GetPoint(i);
-          if i = FSelectedPoint then
-            DrawnMapSegment.FillRect(MapToViewPortX(WallP1.x - 4), MapToViewPortY(WallP1.y - 4),
-                                     MapToViewPortX(WallP1.x + 4), MapToViewPortY(WallP1.y + 4), FPortalClr)
-          else
-            DrawnMapSegment.FillRect(MapToViewPortX(WallP1.x - 4), MapToViewPortY(WallP1.y - 4),
-                                     MapToViewPortX(WallP1.x + 4), MapToViewPortY(WallP1.y + 4), FWallClr);
-        end;
+        if tbEditWalls.Down then
+          for i := 0 to FWallManager.GetPointCount - 1 do
+          begin
+            WallP1 := FWallManager.GetPoint(i);
+            if i = FSelectedPoint then
+              DrawnMapSegment.FillRect(MapToViewPortX(WallP1.x - 4), MapToViewPortY(WallP1.y - 4),
+                                       MapToViewPortX(WallP1.x + 4), MapToViewPortY(WallP1.y + 4), FMarkerClr)
+            else
+              DrawnMapSegment.FillRect(MapToViewPortX(WallP1.x - 4), MapToViewPortY(WallP1.y - 4),
+                                       MapToViewPortX(WallP1.x + 4), MapToViewPortY(WallP1.y + 4), FWallClr);
+          end;
 
         // Draw Map icons
         for i := 0 to FMapIconList.Count - 1 do
@@ -1299,6 +1309,12 @@ begin
             TextAngle := TextAngle + 1800;
           AngleText := FloatToStrF(FCurMeasure, ffFixed, 3, 2);
           TextSize := DrawnMapSegment.TextSize(AngleText);
+          //TextRenderer := TBGRATextEffectFontRenderer.Create;
+          //TextRenderer.OutlineVisible := True;
+          //TextRenderer.OutlineColor := clNavy;
+          //DrawnMapSegment.FontStyle := [fsBold];
+          DrawnMapSegment.FontName := 'Arial Black';//DrawnMapSegment.FontName;
+          //DrawnMapSegment.FontRenderer := TextRenderer;
           DrawnMapSegment.TextOutAngle(MapToViewPortX((FLastClicked.X + FLastLastClicked.X - (Cos(DegToRad(TextAngle / 10)) * TextSize.cX)) / 2),
                                        MapToViewPortY((FLastClicked.Y + FLastLastClicked.Y + (Sin(DegToRad(TextAngle / 10)) * TextSize.cX)) / 2),
                                        TextAngle,
@@ -1377,6 +1393,13 @@ end;
 procedure TfmController.tbCombatModeClick(Sender: TObject);
 begin
   SetCombatMode(tbCombatMode.Down);
+end;
+
+procedure TfmController.tbEditWallsClick(Sender: TObject);
+begin
+  if not tbEditWalls.Down then
+    FMapIconList.Clear;
+  pbViewport.Invalidate;
 end;
 
 procedure TfmController.SetCombatMode(val: Boolean);  
@@ -2411,11 +2434,11 @@ begin
   FParticleManager := TParticleManager.Create(FParticleDir);
 
   FTokenShadowClr := FAppSettings.ReadInteger('Settings', 'TokenShadowClr', clGray);
-  FWallClr := FAppSettings.ReadInteger('Settings', 'WallClr', clGreen);
-  FPortalClr := FAppSettings.ReadInteger('Settings', 'PortalClr', clBlue);
+  FWallClr := FAppSettings.ReadInteger('Settings', 'WallClr', BGRA(0, 204, 0));//clGreen);
+  FPortalClr := FAppSettings.ReadInteger('Settings', 'PortalClr', BGRA(59, 20, 175));//clBlue);
   FHiddenMarkerClr := FAppSettings.ReadInteger('Settings', 'HiddenMarkerClr', clRed);
-  FMarkerClr := FAppSettings.ReadInteger('Settings', 'MarkerClr', clRed);
-  FMeasureClr := FAppSettings.ReadInteger('Settings', 'MeasureClr', clYellow);
+  FMarkerClr := FAppSettings.ReadInteger('Settings', 'MarkerClr', BGRA(197, 0, 0));//clRed);
+  FMeasureClr := FAppSettings.ReadInteger('Settings', 'MeasureClr', BGRA(255, 213, 0));//clYellow);
 
   FConfigDir := GetSettingsFilePath;
   FThumbnailDir := FConfigDir + 'Thumbnails\';
