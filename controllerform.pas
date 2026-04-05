@@ -405,6 +405,7 @@ begin
   tbSnapTokensToGrid.Hint := GetString(LangStrings.LanguageID, 'ControllerSnapToGridHint');
   tbHideTokens.Hint := GetString(LangStrings.LanguageID, 'ControllerHideAllTokensHint');       
   tbMeasure.Hint := GetString(LangStrings.LanguageID, 'ControllerShowMeasurementHint');
+  tbEditWalls.Hint := GetString(LangStrings.LanguageID, 'ControllerToggleEditWalls');
 
   tbHideMarker.Hint := GetString(LangStrings.LanguageID, 'ControllerHideMarkerHint');
   tbHidePortrait.Hint := GetString(LangStrings.LanguageID, 'ControllerHidePortraitHint');
@@ -839,19 +840,19 @@ begin
               tmpMapIcon := TMapClickIcon.Create;
               tmpMapIcon.IconType := mitMovePoint;
               tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
-              tmpMapIcon.IconPos := Point(ViewportToMapX(X) + Round(50 * Cos(DegToRad(-60))), ViewportToMapY(Y) + Round(50 * Sin(DegToRad(-60))));
+              tmpMapIcon.IconPos := Point(ViewportToMapX(X + Round(50 * Cos(DegToRad(-60)))), ViewportToMapY(Y + Round(50 * Sin(DegToRad(-60)))));
               FMapIconList.add(tmpMapIcon);
 
               tmpMapIcon := TMapClickIcon.Create;
               tmpMapIcon.IconType := mitNewWall;
               tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
-              tmpMapIcon.IconPos := Point(ViewportToMapX(X) + Round(50 * Cos(DegToRad(0))), ViewportToMapY(Y) + Round(50 * Sin(DegToRad(0))));
+              tmpMapIcon.IconPos := Point(ViewportToMapX(X + Round(50 * Cos(DegToRad(0)))), ViewportToMapY(Y + Round(50 * Sin(DegToRad(0)))));
               FMapIconList.add(tmpMapIcon);
 
               tmpMapIcon := TMapClickIcon.Create;
               tmpMapIcon.IconType := mitDeletePoint;
               tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
-              tmpMapIcon.IconPos := Point(ViewportToMapX(X) + Round(50 * Cos(DegToRad(60))), ViewportToMapY(Y) + Round(50 * Sin(DegToRad(60))));
+              tmpMapIcon.IconPos := Point(ViewportToMapX(X + Round(50 * Cos(DegToRad(60)))), ViewportToMapY(Y + Round(50 * Sin(DegToRad(60)))));
               FMapIconList.add(tmpMapIcon);
             end
             else if FSelectedWall >= 0 then
@@ -859,13 +860,13 @@ begin
               tmpMapIcon := TMapClickIcon.Create;
               tmpMapIcon.IconType := mitWallToPortal;
               tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
-              tmpMapIcon.IconPos := Point(ViewportToMapX(X)+ Round(50 * Cos(DegToRad(0))), ViewportToMapY(Y)+ Round(50 * Sin(DegToRad(0))));
+              tmpMapIcon.IconPos := Point(ViewportToMapX(X+ Round(50 * Cos(DegToRad(0)))), ViewportToMapY(Y+ Round(50 * Sin(DegToRad(0)))));
               FMapIconList.add(tmpMapIcon);
 
               tmpMapIcon := TMapClickIcon.Create;
               tmpMapIcon.IconType := mitDeleteWall;
               tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
-              tmpMapIcon.IconPos := Point(ViewportToMapX(X) + Round(50 * Cos(DegToRad(60))), ViewportToMapY(Y) + Round(50 * Sin(DegToRad(60))));
+              tmpMapIcon.IconPos := Point(ViewportToMapX(X + Round(50 * Cos(DegToRad(60)))), ViewportToMapY(Y + Round(50 * Sin(DegToRad(60)))));
               FMapIconList.add(tmpMapIcon);
             end
             else
@@ -873,7 +874,7 @@ begin
               tmpMapIcon := TMapClickIcon.Create;
               tmpMapIcon.IconType := mitNewPoint;
               tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
-              tmpMapIcon.IconPos := Point(ViewportToMapX(X) + Round(50 * Cos(DegToRad(0))), ViewportToMapY(Y) + Round(50 * Sin(DegToRad(0))));
+              tmpMapIcon.IconPos := Point(ViewportToMapX(X + Round(50 * Cos(DegToRad(0)))), ViewportToMapY(Y + Round(50 * Sin(DegToRad(0)))));
               FMapIconList.add(tmpMapIcon);
             end;
           end;
@@ -1605,6 +1606,7 @@ begin
   FZoomFactor := Power(5, (tbMapZoom.Position - 100) / 100);
   fmDisplay.MapZoom := FZoomFactor;
   lZoom.Caption := IntToStr(Round(100 * FZoomFactor)) + '%';
+  FMapIconList.Clear;
   UpdateViewPort;
 end;
 
