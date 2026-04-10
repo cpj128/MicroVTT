@@ -1,4 +1,4 @@
-{Copyright (c) 2023-2025 Stephan Breer
+{Copyright (c) 2023-2026 Stephan Breer
 
 This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
 
@@ -32,6 +32,8 @@ const
   INITIATIVEWIDTH = 200;
   INITIATIVEHEIGHT = 200;
   FRAMESIZE = 7;
+  MAPICONRADIUS = 20;
+  MAPICONDIST = 50;
 
   SQRT2 = 1.4142135623;
   SQRT05 = 0.7071067811;
