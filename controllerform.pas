@@ -693,6 +693,7 @@ var
   ClickedPortal: TMapWall;
   MenuLoc: TPoint;
   tmpMapIcon: TMapClickIcon;
+  ClickDist, IconAngle: Double;
   //Modal: TModalResult;
 begin
   // TODO: This method has grown out of control, need to refactor
@@ -766,7 +767,9 @@ begin
         tmpMapIcon := nil;
         for CurIdx := 0 to FMapIconList.Count - 1 do
         begin
-          if Hypot(FMapIconList[CurIdx].IconPos.X - ViewportToMapX(X), FMapIconList[CurIdx].IconPos.Y - ViewportToMapY(Y)) <= 10 then
+          MenuLoc := FMapIconList[CurIdx].IconPos;
+          ClickDist := Hypot(MenuLoc.X - ViewportToMapX(X), MenuLoc.Y - ViewportToMapY(Y)) * FDisplayScale * FZoomFactor;
+          if ClickDist <= 20 then
           begin
             tmpMapIcon := FMapIconList[CurIdx];
             Break;
@@ -835,24 +838,32 @@ begin
             // Clear list before adding new icons
             FMapIconList.Clear;
 
+            IconAngle := 0;
+            if y < 60 then
+              IconAngle := 90
+            else if y > (pbViewport.Height - 60) then
+              IconAngle := 270
+            else if x > (pbViewport.Width - 60) then
+              IconAngle := 180;
+
             if FSelectedPoint >= 0 then
             begin
               tmpMapIcon := TMapClickIcon.Create;
               tmpMapIcon.IconType := mitMovePoint;
               tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
-              tmpMapIcon.IconPos := Point(ViewportToMapX(X + Round(50 * Cos(DegToRad(-60)))), ViewportToMapY(Y + Round(50 * Sin(DegToRad(-60)))));
+              tmpMapIcon.IconPos := Point(ViewportToMapX(X) + Round(50 * Cos(DegToRad(IconAngle-60)) / FDisplayScale / FZoomFactor), ViewportToMapY(Y) + Round(50 * Sin(DegToRad(IconAngle-60)) / FDisplayScale / FZoomFactor));
               FMapIconList.add(tmpMapIcon);
 
               tmpMapIcon := TMapClickIcon.Create;
               tmpMapIcon.IconType := mitNewWall;
               tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
-              tmpMapIcon.IconPos := Point(ViewportToMapX(X + Round(50 * Cos(DegToRad(0)))), ViewportToMapY(Y + Round(50 * Sin(DegToRad(0)))));
+              tmpMapIcon.IconPos := Point(ViewportToMapX(X) + Round(50 * Cos(DegToRad(IconAngle)) / FDisplayScale / FZoomFactor), ViewportToMapY(Y) + Round(50 * Sin(DegToRad(IconAngle)) / FDisplayScale / FZoomFactor));
               FMapIconList.add(tmpMapIcon);
 
               tmpMapIcon := TMapClickIcon.Create;
               tmpMapIcon.IconType := mitDeletePoint;
               tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
-              tmpMapIcon.IconPos := Point(ViewportToMapX(X + Round(50 * Cos(DegToRad(60)))), ViewportToMapY(Y + Round(50 * Sin(DegToRad(60)))));
+              tmpMapIcon.IconPos := Point(ViewportToMapX(X) + Round(50 * Cos(DegToRad(IconAngle+60)) / FDisplayScale / FZoomFactor), ViewportToMapY(Y) + Round(50 * Sin(DegToRad(IconAngle+60)) / FDisplayScale / FZoomFactor));
               FMapIconList.add(tmpMapIcon);
             end
             else if FSelectedWall >= 0 then
@@ -860,13 +871,13 @@ begin
               tmpMapIcon := TMapClickIcon.Create;
               tmpMapIcon.IconType := mitWallToPortal;
               tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
-              tmpMapIcon.IconPos := Point(ViewportToMapX(X+ Round(50 * Cos(DegToRad(0)))), ViewportToMapY(Y+ Round(50 * Sin(DegToRad(0)))));
+              tmpMapIcon.IconPos := Point(ViewportToMapX(X) + Round(50 * Cos(DegToRad(IconAngle)) / FDisplayScale / FZoomFactor), ViewportToMapY(Y) + Round(50 * Sin(DegToRad(IconAngle)) / FDisplayScale / FZoomFactor));
               FMapIconList.add(tmpMapIcon);
 
               tmpMapIcon := TMapClickIcon.Create;
               tmpMapIcon.IconType := mitDeleteWall;
               tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
-              tmpMapIcon.IconPos := Point(ViewportToMapX(X + Round(50 * Cos(DegToRad(60)))), ViewportToMapY(Y + Round(50 * Sin(DegToRad(60)))));
+              tmpMapIcon.IconPos := Point(ViewportToMapX(X) + Round(50 * Cos(DegToRad(IconAngle+60)) / FDisplayScale / FZoomFactor), ViewportToMapY(Y) + Round(50 * Sin(DegToRad(IconAngle+60)) / FDisplayScale / FZoomFactor));
               FMapIconList.add(tmpMapIcon);
             end
             else
@@ -874,7 +885,7 @@ begin
               tmpMapIcon := TMapClickIcon.Create;
               tmpMapIcon.IconType := mitNewPoint;
               tmpMapIcon.ClickedPos := Point(ViewportToMapX(X), ViewportToMapY(Y));
-              tmpMapIcon.IconPos := Point(ViewportToMapX(X + Round(50 * Cos(DegToRad(0)))), ViewportToMapY(Y + Round(50 * Sin(DegToRad(0)))));
+              tmpMapIcon.IconPos := Point(ViewportToMapX(X) + Round(50 * Cos(DegToRad(IconAngle)) / FDisplayScale / FZoomFactor), ViewportToMapY(Y) + Round(50 * Sin(DegToRad(IconAngle)) / FDisplayScale / FZoomFactor));
               FMapIconList.add(tmpMapIcon);
             end;
           end;
