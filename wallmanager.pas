@@ -800,20 +800,29 @@ begin
               end;
             end;
           end;
-          // Add new point before checked point if all walls are right of the current point, otherwise add after
-          if CurSide > 0 then
+          // No intersection found? Add just the checked point
+          if LowestIdx < 0 then
           begin
-            Result[TotalPnts] := AddPnt;
-            Inc(TotalPnts);
             Result[TotalPnts] := NewPnt;
             Inc(TotalPnts);
           end
           else
           begin
-            Result[TotalPnts] := NewPnt;
-            Inc(TotalPnts);
-            Result[TotalPnts] := AddPnt;
-            Inc(TotalPnts);
+            // Add new point before checked point if all walls are right of the current point, otherwise add after
+            if CurSide > 0 then
+            begin
+              Result[TotalPnts] := AddPnt;
+              Inc(TotalPnts);
+              Result[TotalPnts] := NewPnt;
+              Inc(TotalPnts);
+            end
+            else
+            begin
+              Result[TotalPnts] := NewPnt;
+              Inc(TotalPnts);
+              Result[TotalPnts] := AddPnt;
+              Inc(TotalPnts);
+            end;
           end;
         end
         else
