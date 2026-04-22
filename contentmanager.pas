@@ -39,10 +39,13 @@ type
 
     function MapCount: Integer;
     function HasMap(path: string): Boolean;
+    function HasMapWallData(path: string): Boolean;
     function GetMapName(idx: Integer): string;
     function GetMapTitle(path: string): string;
     function GetMapGridData(path: string): string;
+    function GetMapWallData(path: string): string;
     procedure SetMapGridData(path, GridData: string);
+    procedure SetMapWallData(path, WallData: string);
     procedure SetMapFullData(path, Data: string);
 
     function TokenCount: Integer;
@@ -151,6 +154,24 @@ begin
   Result := FMapLib.IndexOfName(path) >= 0;
 end;
 
+function TContentManager.HasMapWallData(path: string): Boolean;
+var list: TStringList;
+begin
+  Result := False;
+  if not HasMap(path) then
+    Exit;
+  list := TStringList.Create;
+  list.Delimiter := '|';
+  list.StrictDelimiter := True;
+  try
+    list.DelimitedText := FMapLib.Values[path];
+    if list.Count > 2 then
+      Result := Length(list[2]) > 1;
+  finally
+    list.Free;
+  end;
+end;
+
 function TContentManager.GetMapName(idx: Integer): string;
 begin
   Result := '';
@@ -194,6 +215,24 @@ begin
   end;
 end;
 
+function TContentManager.GetMapWallData(path: string): string;
+var list: TStringList;
+begin
+  Result := '';
+  if not HasMap(path) then
+    Exit;
+  list := TStringList.Create;
+  list.Delimiter := '|';
+  list.StrictDelimiter := True;
+  try
+    list.DelimitedText := FMapLib.Values[path];
+    if list.Count > 2 then
+      Result := list[2];
+  finally
+    list.Free;
+  end;
+end;
+
 procedure TContentManager.SetMapGridData(path, GridData: string);
 var list: TStringList;
 begin
@@ -207,6 +246,36 @@ begin
     if list.Count > 1 then
     begin
       list[1] := GridData;
+      FMapLib.Values[path] := list.DelimitedText;
+    end
+    else if list.Count = 1 then
+    begin
+      list.Add(GridData);
+      FMapLib.Values[path] := list.DelimitedText;
+    end;
+  finally
+    list.Free;
+  end;
+end;
+
+procedure TContentManager.SetMapWallData(path, WallData: string);
+var list: TStringList;
+begin
+  if not HasMap(path) then
+    Exit;
+  list := TStringList.Create;
+  list.Delimiter := '|';
+  list.StrictDelimiter := True;
+  try
+    list.DelimitedText := FMapLib.Values[path];
+    if list.Count > 2 then
+    begin
+      list[2] := WallData;
+      FMapLib.Values[path] := list.DelimitedText;
+    end
+    else if list.Count = 2 then
+    begin
+      list.Add(WallData);
       FMapLib.Values[path] := list.DelimitedText;
     end;
   finally
