@@ -1,4 +1,4 @@
-{Copyright (c) 2023-2025 Stephan Breer
+{Copyright (c) 2023-2026 Stephan Breer
 
 This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
 
@@ -205,6 +205,7 @@ begin
         else
         begin
           WallMgr.AddWall(PrevPnt, tmpPnt);
+          Inc(Result);
         end;
         PrevPnt := TmpPnt;
       end;
@@ -234,6 +235,7 @@ begin
         else
         begin
           WallMgr.AddWall(PrevPnt, tmpPnt);
+          Inc(Result);
         end;
         PrevPnt := TmpPnt;
       end;
@@ -261,6 +263,7 @@ begin
       tmpOpen := not jPortal.Booleans['closed'];
 
       WallMgr.AddPortal(TmpPnt, TmpPnt2, TmpOpen);
+      Inc(Result);
     end;
   end;
   FileData.Free;
@@ -320,6 +323,7 @@ begin
         tmpToken.Color := BGRA(StrToInt('$' + Copy(clrStr, 3, 2)), StrToInt('$' + Copy(clrStr, 5, 2)), StrToInt('$' + Copy(clrStr, 7, 2)), StrToInt('$' + Copy(clrStr, 1, 2)));
         tmpToken.LockPos := True;
         TokenList.Add(tmpToken);
+        Inc(Result);
       end;
     end;
   end;
