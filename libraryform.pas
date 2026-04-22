@@ -396,6 +396,7 @@ begin
       ContentList.Add(sgItemData.Cells[3,i]);
       if Assigned(sgItemData.Objects[5, i]) then
         ContentList.Add(TGridDataWrapper(sgItemData.Objects[5, i]).GridData.ToString);
+      ContentList.Add(ContentLib.GetMapWallData(sgItemData.Cells[2, i]));
       ContentLib.SetMapFullData(sgItemData.Cells[2, i], ContentList.DelimitedText);
     end;
   finally

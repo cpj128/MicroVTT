@@ -479,6 +479,12 @@ var
 begin
   if not FileExists(FileName) then
     Exit;
+  // Save edits to last map
+  if FMapFileName <> '' then
+  begin
+    ContentLib.SetMapWallData(FMapFileName, FWallManager.SaveToStr);
+  end;
+
   GridSettings := '';
   if ContentLib.HasMap(FileName) then
   begin
@@ -497,7 +503,10 @@ begin
   Loader := GetMapLoader(Filename);
   try
     FMapPic := loader.LoadFromFile(Filename);
-    loader.LoadWalls(Filename, FWallManager);
+    if ContentLib.HasMapWallData(Filename) then
+      FWallManager.LoadFromStr(ContentLib.GetMapWallData(FileName))
+    else
+      loader.LoadWalls(Filename, FWallManager);
     loader.LoadLights(Filename, FTokenList);
   finally
     loader.Free;
@@ -677,6 +686,7 @@ begin
   if FCurDraggedPoint >= 0 then
   begin
     FWallManager.MovePoint(FCurDraggedPoint, Point(ViewportToMapX(X), ViewportToMapY(Y)));
+    ContentLib.SetMapWallData(FMapFileName, FWallManager.SaveToStr);
   end;
 
   if (FWallStartPnt >= 0) or (FCurDraggedPoint >= 0) then
@@ -758,6 +768,7 @@ begin
         if CurIdx >= 0 then
         begin
           FWallManager.AddWall(FWallStartPnt, CurIdx);
+          ContentLib.SetMapWallData(FMapFileName, FWallManager.SaveToStr);
           FWallStartPnt := -1;
         end;
       end
@@ -781,6 +792,7 @@ begin
           if tmpMapIcon.IconType = mitNewPoint then
           begin
             FWallManager.AddPoint(tmpMapIcon.ClickedPos);
+            ContentLib.SetMapWallData(FMapFileName, FWallManager.SaveToStr);
             pbViewport.Invalidate;
           end
           else if tmpMapIcon.IconType = mitDeletePoint then
@@ -789,6 +801,7 @@ begin
             begin
               FWallManager.RemovePoint(FSelectedPoint);
               FSelectedPoint := -1;
+              ContentLib.SetMapWallData(FMapFileName, FWallManager.SaveToStr);
               pbViewport.Invalidate;
             end;
           end
@@ -798,6 +811,7 @@ begin
             begin
               FWallManager.RemoveWall(FSelectedWall);
               FSelectedWall := -1;
+              ContentLib.SetMapWallData(FMapFileName, FWallManager.SaveToStr);
               pbViewport.Invalidate;
             end;
           end
@@ -809,7 +823,10 @@ begin
           begin
             ClickedPortal := FWallManager.GetWall(FSelectedWall);
             if Assigned(ClickedPortal) then
+            begin
               ClickedPortal.IsPortal := not ClickedPortal.IsPortal;
+              ContentLib.SetMapWallData(FMapFileName, FWallManager.SaveToStr);
+            end;
           end
           else if tmpMapIcon.IconType = mitMovePoint then
           begin
@@ -3105,6 +3122,8 @@ begin
         CanClose := False;
     end;
   end;
+  // Should probably query for this one separately?
+  ContentLib.SaveMapData;
 end;
 
 
