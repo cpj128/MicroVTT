@@ -64,7 +64,7 @@ public
   procedure RemoveWall(idx: Integer);
   procedure MovePoint(idx: Integer; NewPos: TPoint);
 
-  procedure SaveToStr(str: string);
+  function SaveToStr: string;
   procedure LoadFromStr(str: string);
 end;
 
@@ -133,14 +133,69 @@ begin
   //FIdcs.Clear;
 end;
 
-procedure TWallManager.SaveToStr(str: string);
+function TWallManager.SaveToStr: string;
+var
+  list: TStringList;
+  i: Integer;
 begin
-  //
+  list := TStringList.Create;
+  try
+    list.Delimiter := '#';
+    list.StrictDelimiter := True;
+
+    list.Add(IntToStr(FPoints.Count));
+    for i := 0 to FPoints.Count - 1 do
+      list.Add(IntToStr(FPoints[i].x) + ',' + IntToStr(FPoints[i].y));
+    for i := 0 to FWalls.Count - 1 do
+      list.Add(FWalls[i].ToString);
+    Result := list.DelimitedText;
+  finally
+    list.Free;
+  end;
 end;
 
 procedure TWallManager.LoadFromStr(str: string);
+var
+  ItemList, PointList: TStringList;
+  i, PointCount: Integer;
+  tmpPoint: TPoint;
+  tmpWall: TMapWall;
 begin
-  //
+  ItemList := TStringList.Create;
+  PointList := TStringList.Create;
+  try
+    ItemList.Delimiter := '#';
+    ItemList.StrictDelimiter := True;
+    PointList.Delimiter := ',';
+    PointList.StrictDelimiter := True;
+
+    ItemList.DelimitedText := str;
+    if ItemList.Count > 0 then
+    begin
+      PointCount := StrToIntDef(ItemList[0], 0);
+      if PointCount > 0 then
+      begin
+        Clear;
+        for i := 1 to PointCount do
+        begin
+          PointList.DelimitedText := ItemList[i];
+          tmpPoint.X := StrToInt(PointList[0]);
+          tmpPoint.Y := StrToInt(PointList[1]);
+          AddPoint(tmpPoint);
+        end;
+
+        for i := PointCount + 1 to ItemList.Count - 1 do
+        begin
+          tmpWall := TMapWall.Create;
+          tmpWall.FromString(ItemList[i]);
+          FWalls.Add(tmpWall);
+        end;
+      end;
+    end;
+  finally
+    ItemList.Free;
+    PointList.Free;
+  end;
 end;
 
 function TWallManager.AddPoint(P: TPoint): Integer;
