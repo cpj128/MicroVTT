@@ -2614,6 +2614,11 @@ begin
   begin
     if FCombatMode then
       tbNextCombatantClick(self);
+  end
+  else if (Key = 27) and (FWallStartPnt >= 0) then //VK_ESCAPE
+  begin
+    FWallStartPnt := -1;
+    pbViewport.Invalidate;
   end;
 end;
 
