@@ -18,7 +18,7 @@ unit Notes;
 interface
 
 uses
-  Classes, SysUtils, DOM, MarkdownProcessor, MarkdownUtils;
+  Classes, SysUtils, DOM, MarkdownProcessor, MarkdownUtils, RegExpr;
 
 type
 
@@ -44,6 +44,7 @@ type
     FContent: string;
     FCategory: string;
     FDMOnly: Boolean;
+    FIsNew: Boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -59,6 +60,7 @@ type
     property Content: string read FContent write FContent;
     property Category: string read FCategory write FCategory;
     property DMOnly: Boolean read FDMOnly write FDMOnly;
+    property IsNew: Boolean read FIsNew write FIsNew;
   end;
 
   TEntryList = class(TPersistent)
@@ -68,6 +70,8 @@ type
     FMarkdownProcessor: TMarkdownProcessor;
     function GetSidebar(EditKey: string; ForExport: Boolean = False): string;
     function MakeFilenameSave(entryName: string): string;
+    function LinkReplaceCallback(Sender: TRegexpr): string;
+    function NamedLinkReplaceCallback(Sender: TRegexpr): string;
   public
     constructor Create;
     destructor Destroy; override;
@@ -97,7 +101,6 @@ implementation
 uses
   LangStrings,
   FileUtil,
-  RegExpr,
   StrUtils,
   XMLRead,
   XMLWrite;
@@ -169,6 +172,7 @@ constructor TNoteEntry.Create;
 begin
   inherited Create;
   FAnnotations := TList.Create;
+  FIsNew := False;
 end;
 
 destructor TNoteEntry.Destroy;
@@ -417,12 +421,36 @@ begin
   end;
 end;
 
+function TEntryList.LinkReplaceCallback(Sender: TRegexpr): string;
+var
+  name: string;
+begin
+  name := Sender.Match[1];
+  if HasEntry(name) then
+    Result := '<a href="' + name + '">' + name + '</a>'
+  else
+    Result := '<a href="' + name + '" class="Redlink">' + name + '</a>';
+end;
+
+function TEntryList.NamedLinkReplaceCallback(Sender: TRegexpr): string;    
+var
+  name, dest: string;
+begin
+  name := Sender.Match[2];
+  dest := Sender.Match[1];
+  if HasEntry(dest) then
+    Result := '<a href="' + dest + '">' + name + '</a>'
+  else
+    Result := '<a href="' + dest + '" class="Redlink">' + name + '</a>';
+end;
+
 function TEntryList.EntryToHTML(Name: string; ForPlayers: Boolean; ForExport: Boolean = False): TStream;
 var
   str: string;
   tmpEntry: TNoteEntry;
   LinkHelper: TRegExpr;
   LinkTarget, LinkName: string;
+  RedlinkText, tmp: string;
 begin
   tmpEntry := GetEntry(Name);
   if not Assigned(tmpEntry) then
@@ -435,6 +463,7 @@ begin
   if ForExport then
   begin
     // if we want the links to point to the actual html-files, things get a bit more complicated...
+    // TODO: Replace with the same method as below
     LinkHelper := TRegExpr.Create;
     LinkHelper.Expression := '\[\[([^\]\|]+)\|([^\]\|]+)\]\]';
     if LinkHelper.Exec(str) then
@@ -465,8 +494,14 @@ begin
   end
   else
   begin
-    str := ReplaceRegExpr('\[\[([^\]\|]+)\|([^\]\|]+)\]\]', str, '<a href="$1">$2</a>', True);
-    str := ReplaceRegExpr('\[\[([^\]]+)\]\]', str, '<a href="$1">$1</a>', True);
+    LinkHelper := TRegExpr.Create;
+    LinkHelper.Expression := '\[\[([^\]\|]+)\|([^\]\|]+)\]\]'; 
+    str := LinkHelper.ReplaceEx(str, @NamedLinkReplaceCallback);
+
+    LinkHelper.Expression := '\[\[([^\]]+)\]\]';
+    str := LinkHelper.ReplaceEx(str, @LinkReplaceCallback);
+
+    LinkHelper.Free;
   end;
 
   // Line breaks to <br />-tags
@@ -594,6 +629,9 @@ end;
 function TEntryList.HasEntry(Name: string): Boolean;
 var tmpEntry: TNoteEntry;
 begin
+  if SameText(Name, 'Main') or
+     SameText(Name, 'Categories') then
+    Exit(True); // Special entries always exist
   tmpEntry := GetEntry(Name);
   Result := Assigned(tmpEntry);
 end;

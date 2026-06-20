@@ -2826,6 +2826,8 @@ end;
 
 procedure TfmController.bEntryCancelClick(Sender: TObject);
 begin
+  if FEditedEntry.IsNew then
+    FEditedEntry.Free;
   FEditedEntry := nil;
   pcNotesMain.ActivePage := tsDisplay;
 end;
@@ -2836,6 +2838,8 @@ var
 begin
   if Assigned(FEditedEntry) then
   begin
+    if FEditedEntry.IsNew then
+      FNotesList.AddEntry(FEditedEntry);
     FEditedEntry.Content := mEntryContent.Text;
     FEditedEntry.Date := dtpTimestamp.DateTime;
     FEditedEntry.DMOnly := cbDMOnly.Checked;
@@ -2858,24 +2862,30 @@ end;
  
 procedure TfmController.hvNotesDisplayHotSpotClick(Sender: TObject;
   const SRC: ThtString; var Handled: Boolean);
+var LinkTarget: string;
 begin
+  LinkTarget := SRC;
   Handled := True;
-  if ExecRegExpr('(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)', SRC) then
+  if ExecRegExpr('(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)', LinkTarget) then
   begin
     // Weblinks
     if MessageDlg(GetString(LangStrings.LanguageID, 'NotesOpenExternalLink'),
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-      OpenURL(SRC);
+      OpenURL(LinkTarget);
   end
   else
   begin
-    if not StartsStr('edit|', SRC) then
+    if not FNotesList.HasEntry(LinkTarget) and
+       not StartsStr('edit|', LinkTarget) then
+      LinkTarget := 'edit|' + LinkTarget; // Red link
+
+    if not StartsStr('edit|', LinkTarget) then
     begin
-      AddToHistory(SRC);
+      AddToHistory(LinkTarget);
     end;
 
     UpdateHistoryButtons;
-    LoadHtml(SRC);
+    LoadHtml(LinkTarget);
   end;
 end;
 
@@ -2949,6 +2959,13 @@ begin
     begin
       str := Copy(Entry, Length('edit|') + 1, Length(Entry));
       tmpEntry := FNotesList.GetEntry(str);
+      if not Assigned(tmpEntry) then
+      begin
+        tmpEntry := TNoteEntry.Create;
+        tmpEntry.IsNew := True;
+        tmpEntry.EntryName := str;
+      end;
+
       if Assigned(tmpEntry) then
       begin
         eEntryName.Text := tmpEntry.EntryName;
