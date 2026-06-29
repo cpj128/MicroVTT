@@ -65,6 +65,10 @@ body {
 	background-color: lightcoral;
 }
 
+.Redlink {
+	color: #c60000;
+}
+
 .timestamp {
 	border-style: none none solid;
 	border-width: 1px;
@@ -77,4 +81,12 @@ body {
 	background-color: aqua;
 	padding: 5px;
 	float: right;
+}
+
+.statblock {
+	border-style: solid;
+	border-width: 1px;
+	padding: 5px;
+	float: right;
+	background-color: BurlyWood;
 }

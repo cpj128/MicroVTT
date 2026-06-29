@@ -2964,6 +2964,7 @@ begin
         tmpEntry := TNoteEntry.Create;
         tmpEntry.IsNew := True;
         tmpEntry.EntryName := str;
+        tmpEntry.Date := Now;
       end;
 
       if Assigned(tmpEntry) then

@@ -72,6 +72,8 @@ type
     function MakeFilenameSave(entryName: string): string;
     function LinkReplaceCallback(Sender: TRegexpr): string;
     function NamedLinkReplaceCallback(Sender: TRegexpr): string;
+    function ExportLinkReplaceCallback(Sender: TRegexpr): string;
+    function ExportNamedLinkReplaceCallback(Sender: TRegexpr): string;
   public
     constructor Create;
     destructor Destroy; override;
@@ -444,13 +446,35 @@ begin
     Result := '<a href="' + dest + '" class="Redlink">' + name + '</a>';
 end;
 
+function TEntryList.ExportLinkReplaceCallback(Sender: TRegexpr): string;
+var
+  name, target: string;
+begin    
+  target := MakeFilenameSave(Sender.Match[1]) + '.html';
+  name := Sender.Match[1];
+  if HasEntry(name) then
+    Result := '<a href="' + target + '">' + name + '</a>'
+  else
+    Result := '<a href="#" onclick="return false;" class="Redlink">' + name + '</a>';
+end;
+
+function TEntryList.ExportNamedLinkReplaceCallback(Sender: TRegexpr): string;
+var
+  name, target: string;
+begin
+  target := MakeFilenameSave(Sender.Match[1]) + '.html';
+  name := Sender.Match[2];
+  if HasEntry(Sender.Match[1]) then
+    Result := '<a href="' + target + '">' + name + '</a>'
+  else
+    Result := '<a href="#" onclick="return false;" class="Redlink">' + name + '</a>';
+end;
+
 function TEntryList.EntryToHTML(Name: string; ForPlayers: Boolean; ForExport: Boolean = False): TStream;
 var
   str: string;
   tmpEntry: TNoteEntry;
   LinkHelper: TRegExpr;
-  LinkTarget, LinkName: string;
-  RedlinkText, tmp: string;
 begin
   tmpEntry := GetEntry(Name);
   if not Assigned(tmpEntry) then
@@ -462,46 +486,29 @@ begin
   // Wikilinks to <a>-tags
   if ForExport then
   begin
-    // if we want the links to point to the actual html-files, things get a bit more complicated...
-    // TODO: Replace with the same method as below
     LinkHelper := TRegExpr.Create;
-    LinkHelper.Expression := '\[\[([^\]\|]+)\|([^\]\|]+)\]\]';
-    if LinkHelper.Exec(str) then
-    begin
-      repeat
-        LinkTarget := MakeFilenameSave(LinkHelper.Match[1]) + '.html';
-        LinkName := LinkHelper.Match[2];
-        str := ReplaceRegExpr('\[\[([^\]\|]+)\|([^\]\|]+)\]\]', str, '<a href="$1">$2</a>', False);
-        str := AnsiReplaceStr(str, '$1', LinkTarget);
-        str := AnsiReplaceStr(str, '$2', LinkName);
+    try
+      LinkHelper.Expression := '\[\[([^\]\|]+)\|([^\]\|]+)\]\]';
+      str := LinkHelper.ReplaceEx(str, @ExportNamedLinkReplaceCallback);
 
-      until not LinkHelper.ExecNext;
+      LinkHelper.Expression := '\[\[([^\]]+)\]\]';
+      str := LinkHelper.ReplaceEx(str, @ExportLinkReplaceCallback);
+    finally
+      LinkHelper.Free;
     end;
-
-    LinkHelper.Expression := '\[\[([^\]]+)\]\]';
-    if LinkHelper.Exec(str) then
-    begin
-      repeat
-        LinkTarget := MakeFilenameSave(LinkHelper.Match[1]) + '.html';
-        LinkName := LinkHelper.Match[1];
-        str := ReplaceRegExpr('\[\[([^\]]+)\]\]', str, '<a href="$1">$2</a>', False);
-        str := AnsiReplaceStr(str, '$1', LinkTarget);
-        str := AnsiReplaceStr(str, '$2', LinkName);
-      until not LinkHelper.ExecNext;
-    end;
-
-    LinkHelper.Free;
   end
   else
   begin
     LinkHelper := TRegExpr.Create;
-    LinkHelper.Expression := '\[\[([^\]\|]+)\|([^\]\|]+)\]\]'; 
-    str := LinkHelper.ReplaceEx(str, @NamedLinkReplaceCallback);
+    try
+      LinkHelper.Expression := '\[\[([^\]\|]+)\|([^\]\|]+)\]\]';
+      str := LinkHelper.ReplaceEx(str, @NamedLinkReplaceCallback);
 
-    LinkHelper.Expression := '\[\[([^\]]+)\]\]';
-    str := LinkHelper.ReplaceEx(str, @LinkReplaceCallback);
-
-    LinkHelper.Free;
+      LinkHelper.Expression := '\[\[([^\]]+)\]\]';
+      str := LinkHelper.ReplaceEx(str, @LinkReplaceCallback);
+    finally
+      LinkHelper.Free;
+    end;
   end;
 
   // Line breaks to <br />-tags
