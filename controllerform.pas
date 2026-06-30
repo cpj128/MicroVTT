@@ -2433,7 +2433,7 @@ end;
 
 procedure TfmController.FormCreate(Sender: TObject);
 var
-  LangID, FallbackLangID, LangName, tmpLang: string;
+  LangID, FallbackLangID, LangName, tmpLang, LastNotesFile: string;
   LangList: TStrings;
   i: Integer;
 begin
@@ -2516,6 +2516,11 @@ begin
   FNotesSaved := True;
   FHistoryList := TStringList.Create;
   FHistoryIdx := 0;
+
+  LastNotesFile := FAppSettings.ReadString('Settings', 'LastNotesFile', '');
+  if (LastNotesFile <> '') and FileExists(LastNotesFile) then
+    FNotesList.LoadFromFile(LastNotesFile);
+
   LoadHTML('Main');
   FHistoryList.Add('Main');
   UpdateHistoryButtons;
@@ -3068,6 +3073,7 @@ begin
     FHistoryList.Add('Main');
     UpdateHistoryButtons; 
     FNotesSaved := True;
+    FAppSettings.WriteString('Settings', 'LastNotesFile', odLoadSession.FileName);
   end;
 end;
 

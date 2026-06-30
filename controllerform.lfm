@@ -1,7 +1,7 @@
 object fmController: TfmController
-  Left = 314
+  Left = 182
   Height = 900
-  Top = 103
+  Top = 40
   Width = 1597
   AllowDropFiles = True
   Caption = 'MicroVTT'
@@ -636,10 +636,11 @@ object fmController: TfmController
           ClientHeight = 758
           ClientWidth = 1581
           object mEntryContent: TMemo
-            Left = 48
+            Left = 16
             Height = 240
-            Top = 152
-            Width = 153
+            Top = 148
+            Width = 352
+            Anchors = [akTop, akLeft, akBottom]
             Lines.Strings = (
               'mEntryContent'
             )
@@ -694,10 +695,11 @@ object fmController: TfmController
             MonthNames = 'Long'
           end
           object gbAnnotations: TGroupBox
-            Left = 238
+            Left = 0
             Height = 344
-            Top = 24
+            Top = 422
             Width = 370
+            Anchors = [akLeft, akBottom]
             Caption = 'Annotations'
             ClientHeight = 324
             ClientWidth = 366
@@ -797,19 +799,21 @@ object fmController: TfmController
             end
           end
           object bEntryOK: TButton
-            Left = 48
+            Left = 16
             Height = 25
-            Top = 400
+            Top = 394
             Width = 75
+            Anchors = [akLeft, akBottom]
             Caption = 'Ok'
             OnClick = bEntryOKClick
             TabOrder = 6
           end
           object bEntryCancel: TButton
-            Left = 128
+            Left = 96
             Height = 25
-            Top = 400
+            Top = 394
             Width = 75
+            Anchors = [akLeft, akBottom]
             Caption = 'Cancel'
             OnClick = bEntryCancelClick
             TabOrder = 7
