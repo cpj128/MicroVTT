@@ -120,7 +120,7 @@ object fmTokenSettings: TfmTokenSettings
         Height = 23
         Top = 63
         Width = 79
-        TabOrder = 1
+        TabOrder = 3
         Text = 'eWidth1'
       end
       object lWidth1: TLabel
@@ -140,7 +140,7 @@ object fmTokenSettings: TfmTokenSettings
         Max = 1000
         Min = 0
         Position = 100
-        TabOrder = 2
+        TabOrder = 10
       end
       object lHeight1: TLabel
         Left = 8
@@ -155,7 +155,7 @@ object fmTokenSettings: TfmTokenSettings
         Height = 23
         Top = 91
         Width = 79
-        TabOrder = 3
+        TabOrder = 4
         Text = 'eHeight1'
       end
       object udHeight1: TUpDown
@@ -167,7 +167,7 @@ object fmTokenSettings: TfmTokenSettings
         Max = 1000
         Min = 0
         Position = 100
-        TabOrder = 4
+        TabOrder = 11
       end
       object lGridSlotsX1: TLabel
         Left = 8
@@ -182,7 +182,7 @@ object fmTokenSettings: TfmTokenSettings
         Height = 23
         Top = 203
         Width = 79
-        TabOrder = 5
+        TabOrder = 8
         Text = 'eGridSlotsX1'
       end
       object udGridSlotsX1: TUpDown
@@ -195,7 +195,7 @@ object fmTokenSettings: TfmTokenSettings
         Min = 1
         MinRepeatInterval = 25
         Position = 1
-        TabOrder = 6
+        TabOrder = 12
       end
       object lGridSlotsY1: TLabel
         Left = 8
@@ -210,7 +210,7 @@ object fmTokenSettings: TfmTokenSettings
         Height = 23
         Top = 231
         Width = 79
-        TabOrder = 7
+        TabOrder = 9
         Text = 'eGridSlotsY1'
       end
       object udGridSlotsY1: TUpDown
@@ -223,7 +223,7 @@ object fmTokenSettings: TfmTokenSettings
         Min = 1
         MinRepeatInterval = 25
         Position = 1
-        TabOrder = 8
+        TabOrder = 13
       end
       object lRotation1: TLabel
         Left = 8
@@ -240,7 +240,7 @@ object fmTokenSettings: TfmTokenSettings
         Width = 96
         MaxValue = 360
         MinValue = -360
-        TabOrder = 9
+        TabOrder = 5
       end
       object lOverlay1: TLabel
         Left = 8
@@ -260,7 +260,7 @@ object fmTokenSettings: TfmTokenSettings
           '-'
         )
         Style = csDropDownList
-        TabOrder = 10
+        TabOrder = 7
       end
       object lNumber1: TLabel
         Left = 8
@@ -277,7 +277,7 @@ object fmTokenSettings: TfmTokenSettings
         Width = 96
         MaxLength = 0
         NumbersOnly = True
-        TabOrder = 11
+        TabOrder = 6
         MaxValue = 999
         NullValue = 0
         NullValueBehaviour = nvbInitialValue
@@ -289,7 +289,7 @@ object fmTokenSettings: TfmTokenSettings
         Top = 8
         Width = 71
         Caption = 'Show LoS'
-        TabOrder = 12
+        TabOrder = 1
       end
       object cbLockPosition1: TCheckBox
         Left = 8
@@ -297,7 +297,7 @@ object fmTokenSettings: TfmTokenSettings
         Top = 36
         Width = 91
         Caption = 'Lock Position'
-        TabOrder = 13
+        TabOrder = 2
       end
     end
     object tsText: TTabSheet
@@ -333,7 +333,7 @@ object fmTokenSettings: TfmTokenSettings
         Height = 23
         Top = 91
         Width = 79
-        TabOrder = 2
+        TabOrder = 3
         Text = 'eHeight3'
       end
       object udHeight3: TUpDown
@@ -345,7 +345,7 @@ object fmTokenSettings: TfmTokenSettings
         Max = 1000
         Min = 0
         Position = 100
-        TabOrder = 3
+        TabOrder = 6
       end
       object lRotation3: TLabel
         Left = 8
@@ -395,7 +395,7 @@ object fmTokenSettings: TfmTokenSettings
         Height = 23
         Top = 63
         Width = 79
-        TabOrder = 6
+        TabOrder = 2
         Text = 'eWidth3'
       end
       object udWidth3: TUpDown
@@ -455,7 +455,7 @@ object fmTokenSettings: TfmTokenSettings
         Max = 1000
         Min = 0
         Position = 100
-        TabOrder = 3
+        TabOrder = 7
       end
       object lMaxStrength4: TLabel
         Left = 8
@@ -473,7 +473,7 @@ object fmTokenSettings: TfmTokenSettings
         Increment = 0.1
         MaxValue = 1
         MinValue = 0.1
-        TabOrder = 4
+        TabOrder = 3
         Value = 0.1
       end
       object lColor4: TLabel
@@ -489,7 +489,7 @@ object fmTokenSettings: TfmTokenSettings
         Height = 23
         Top = 175
         Width = 96
-        TabOrder = 5
+        TabOrder = 6
         OnClick = pnColor2Click
       end
       object lAnimationType4: TLabel
@@ -507,7 +507,7 @@ object fmTokenSettings: TfmTokenSettings
         Width = 68
         ItemHeight = 15
         Style = csDropDownList
-        TabOrder = 6
+        TabOrder = 4
       end
       object lAnimationSpeed4: TLabel
         Left = 8
@@ -523,7 +523,7 @@ object fmTokenSettings: TfmTokenSettings
         Top = 147
         Width = 68
         MaxLength = 0
-        TabOrder = 7
+        TabOrder = 5
         MaxValue = 1000
         NullValue = 0
         Value = 100
@@ -539,7 +539,7 @@ object fmTokenSettings: TfmTokenSettings
         Top = 36
         Width = 91
         Caption = 'Lock Position'
-        TabOrder = 0
+        TabOrder = 1
       end
       object lSectorAngle2: TLabel
         Left = 8
@@ -570,7 +570,7 @@ object fmTokenSettings: TfmTokenSettings
         Height = 23
         Top = 91
         Width = 79
-        TabOrder = 1
+        TabOrder = 3
         Text = 'eHeight2'
       end
       object udHeight2: TUpDown
@@ -582,7 +582,7 @@ object fmTokenSettings: TfmTokenSettings
         Max = 1000
         Min = 0
         Position = 100
-        TabOrder = 2
+        TabOrder = 8
       end
       object lHeight2: TLabel
         Left = 8
@@ -607,7 +607,7 @@ object fmTokenSettings: TfmTokenSettings
         Width = 96
         MaxValue = 360
         MinValue = -360
-        TabOrder = 3
+        TabOrder = 4
       end
       object cbVisible2: TCheckBox
         Left = 8
@@ -615,7 +615,7 @@ object fmTokenSettings: TfmTokenSettings
         Top = 8
         Width = 54
         Caption = 'Visible'
-        TabOrder = 4
+        TabOrder = 0
       end
       object lWidth2: TLabel
         Left = 8
@@ -630,7 +630,7 @@ object fmTokenSettings: TfmTokenSettings
         Height = 23
         Top = 63
         Width = 79
-        TabOrder = 5
+        TabOrder = 2
         Text = 'eWidth2'
       end
       object udWidth2: TUpDown
@@ -642,7 +642,7 @@ object fmTokenSettings: TfmTokenSettings
         Max = 1000
         Min = 0
         Position = 100
-        TabOrder = 6
+        TabOrder = 9
       end
       object seSectorAngle2: TSpinEditEx
         Left = 76
@@ -650,7 +650,7 @@ object fmTokenSettings: TfmTokenSettings
         Top = 147
         Width = 96
         MaxLength = 0
-        TabOrder = 7
+        TabOrder = 5
         MaxValue = 360
         NullValue = 0
         Value = 90
@@ -660,7 +660,7 @@ object fmTokenSettings: TfmTokenSettings
         Height = 23
         Top = 175
         Width = 96
-        TabOrder = 8
+        TabOrder = 6
         OnClick = pnColor2Click
       end
       object seAlpha2: TSpinEditEx
@@ -669,7 +669,7 @@ object fmTokenSettings: TfmTokenSettings
         Top = 203
         Width = 96
         MaxLength = 0
-        TabOrder = 9
+        TabOrder = 7
         MaxValue = 255
         NullValue = 0
         Value = 0
@@ -708,7 +708,7 @@ object fmTokenSettings: TfmTokenSettings
         Height = 23
         Top = 35
         Width = 79
-        TabOrder = 0
+        TabOrder = 1
         Text = 'eWidth5'
       end
       object eHeight5: TEdit
@@ -716,7 +716,7 @@ object fmTokenSettings: TfmTokenSettings
         Height = 23
         Top = 63
         Width = 79
-        TabOrder = 1
+        TabOrder = 2
         Text = 'eHeight5'
       end
       object udWidth5: TUpDown
@@ -728,7 +728,7 @@ object fmTokenSettings: TfmTokenSettings
         Max = 2000
         Min = 0
         Position = 100
-        TabOrder = 2
+        TabOrder = 8
       end
       object udHeight5: TUpDown
         Left = 162
@@ -739,7 +739,7 @@ object fmTokenSettings: TfmTokenSettings
         Max = 2000
         Min = 0
         Position = 100
-        TabOrder = 3
+        TabOrder = 9
       end
       object cbActive5: TCheckBox
         Left = 8
@@ -747,7 +747,7 @@ object fmTokenSettings: TfmTokenSettings
         Top = 8
         Width = 53
         Caption = 'Active'
-        TabOrder = 4
+        TabOrder = 0
       end
       object cbParticleType5: TComboBox
         Left = 83
@@ -756,7 +756,7 @@ object fmTokenSettings: TfmTokenSettings
         Width = 96
         ItemHeight = 15
         Style = csDropDownList
-        TabOrder = 5
+        TabOrder = 3
       end
       object cbEmitterShape5: TComboBox
         Left = 83
@@ -765,7 +765,7 @@ object fmTokenSettings: TfmTokenSettings
         Width = 96
         ItemHeight = 15
         Style = csDropDownList
-        TabOrder = 6
+        TabOrder = 4
       end
       object lParticleType5: TLabel
         Left = 8
@@ -793,7 +793,7 @@ object fmTokenSettings: TfmTokenSettings
         Align = alBottom
         MultiLine = True
         TabIndex = 0
-        TabOrder = 8
+        TabOrder = 10
         Visible = False
         Options = [nboMultiLine]
         object tsAngle: TTabSheet
@@ -813,7 +813,7 @@ object fmTokenSettings: TfmTokenSettings
               'ArcSine'
             )
             Style = csDropDownList
-            TabOrder = 0
+            TabOrder = 2
             Text = 'Uniform'
           end
           object fseCenterAngle: TFloatSpinEdit
@@ -822,7 +822,7 @@ object fmTokenSettings: TfmTokenSettings
             Top = 31
             Width = 112
             MaxValue = 360
-            TabOrder = 1
+            TabOrder = 0
           end
           object fseAngleRange: TFloatSpinEdit
             Left = 87
@@ -830,7 +830,7 @@ object fmTokenSettings: TfmTokenSettings
             Top = 59
             Width = 112
             MaxValue = 180
-            TabOrder = 2
+            TabOrder = 1
           end
           object lCenterAngle: TLabel
             Left = 3
@@ -854,6 +854,23 @@ object fmTokenSettings: TfmTokenSettings
             Top = 91
             Width = 65
             Caption = 'Distribution:'
+            ParentColor = False
+          end
+          object fseCenterAngleDir: TFloatSpinEdit
+            Left = 87
+            Height = 23
+            Top = 143
+            Width = 112
+            MaxValue = 180
+            MinValue = -180
+            TabOrder = 3
+          end
+          object lCenterAngleDir: TLabel
+            Left = 3
+            Height = 15
+            Top = 147
+            Width = 72
+            Caption = 'Center Angle:'
             ParentColor = False
           end
         end
@@ -888,7 +905,7 @@ object fmTokenSettings: TfmTokenSettings
           object fseSpeedRange: TFloatSpinEdit
             Left = 87
             Height = 23
-            Top = 59
+            Top = 63
             Width = 112
             MaxValue = 500
             TabOrder = 1
@@ -1304,7 +1321,7 @@ object fmTokenSettings: TfmTokenSettings
             ParentColor = False
           end
           object cbAlphaChangeDistribution: TComboBox
-            Left = 87
+            Left = 88
             Height = 23
             Top = 199
             Width = 112
@@ -1335,7 +1352,7 @@ object fmTokenSettings: TfmTokenSettings
         Top = 147
         Width = 96
         MaxValue = 10000
-        TabOrder = 9
+        TabOrder = 5
       end
       object cbEmitterPresets: TComboBox
         Left = 83
@@ -1345,7 +1362,7 @@ object fmTokenSettings: TfmTokenSettings
         ItemHeight = 15
         OnChange = cbEmitterPresetsChange
         Style = csDropDownList
-        TabOrder = 10
+        TabOrder = 6
       end
       object sbSavePreset: TSpeedButton
         Left = 184

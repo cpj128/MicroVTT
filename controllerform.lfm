@@ -584,7 +584,7 @@ object fmController: TfmController
             Top = 8
             Width = 204
             ItemHeight = 0
-            TabOrder = 0
+            TabOrder = 2
           end
           object bAddCategory: TButton
             Left = 232
@@ -593,7 +593,7 @@ object fmController: TfmController
             Width = 75
             Caption = 'Add'
             OnClick = bAddCategoryClick
-            TabOrder = 1
+            TabOrder = 4
           end
           object bDeleteCategory: TButton
             Left = 232
@@ -602,7 +602,7 @@ object fmController: TfmController
             Width = 75
             Caption = 'Delete'
             OnClick = bDeleteCategoryClick
-            TabOrder = 2
+            TabOrder = 5
           end
           object bOkCategory: TButton
             Left = 8
@@ -611,7 +611,7 @@ object fmController: TfmController
             Width = 75
             Caption = 'Ok'
             OnClick = bOkCategoryClick
-            TabOrder = 3
+            TabOrder = 0
           end
           object bCancelCategory: TButton
             Left = 88
@@ -620,14 +620,14 @@ object fmController: TfmController
             Width = 75
             Caption = 'Cancel'
             OnClick = bCancelCategoryClick
-            TabOrder = 4
+            TabOrder = 1
           end
           object eNewCategory: TEdit
             Left = 232
             Height = 23
             Top = 8
             Width = 120
-            TabOrder = 5
+            TabOrder = 3
             TextHint = 'New category'
           end
         end
@@ -644,7 +644,7 @@ object fmController: TfmController
             Lines.Strings = (
               'mEntryContent'
             )
-            TabOrder = 0
+            TabOrder = 6
           end
           object eEntryName: TEdit
             Left = 48
@@ -652,7 +652,7 @@ object fmController: TfmController
             Top = 16
             Width = 80
             OnKeyPress = eEntryNameKeyPress
-            TabOrder = 1
+            TabOrder = 2
             Text = 'eEntryName'
           end
           object cbCategory: TComboBox
@@ -661,7 +661,7 @@ object fmController: TfmController
             Top = 48
             Width = 100
             ItemHeight = 15
-            TabOrder = 2
+            TabOrder = 3
             Text = 'cbCategory'
           end
           object cbDMOnly: TCheckBox
@@ -670,7 +670,7 @@ object fmController: TfmController
             Top = 88
             Width = 67
             Caption = 'DM Only'
-            TabOrder = 3
+            TabOrder = 4
           end
           object dtpTimestamp: TDateTimePicker
             Left = 48
@@ -680,7 +680,7 @@ object fmController: TfmController
             CenturyFrom = 1941
             MaxDate = 2958465
             MinDate = -53780
-            TabOrder = 4
+            TabOrder = 5
             TrailingSeparator = False
             TextForNullDate = 'NULL'
             LeadingZeros = True
@@ -703,7 +703,7 @@ object fmController: TfmController
             Caption = 'Annotations'
             ClientHeight = 324
             ClientWidth = 366
-            TabOrder = 5
+            TabOrder = 7
             object lvAnnotations: TListView
               Left = 8
               Height = 272
@@ -726,7 +726,7 @@ object fmController: TfmController
                   Caption = 'DM Only'
                   Width = 10
                 end>
-              TabOrder = 0
+              TabOrder = 3
               ViewStyle = vsReport
               OnSelectItem = lvAnnotationsSelectItem
             end
@@ -738,7 +738,7 @@ object fmController: TfmController
               CenturyFrom = 1941
               MaxDate = 2958465
               MinDate = -53780
-              TabOrder = 1
+              TabOrder = 4
               TrailingSeparator = False
               TextForNullDate = 'NULL'
               LeadingZeros = True
@@ -760,7 +760,7 @@ object fmController: TfmController
               Lines.Strings = (
                 'mAnnotationContent'
               )
-              TabOrder = 2
+              TabOrder = 6
             end
             object bAddAnnotation: TButton
               Left = 8
@@ -769,7 +769,7 @@ object fmController: TfmController
               Width = 75
               Caption = 'Add'
               OnClick = bAddAnnotationClick
-              TabOrder = 3
+              TabOrder = 0
             end
             object bEditAnnotation: TButton
               Left = 176
@@ -778,7 +778,7 @@ object fmController: TfmController
               Width = 75
               Caption = 'Edit'
               OnClick = bEditAnnotationClick
-              TabOrder = 4
+              TabOrder = 2
             end
             object bDeleteAnnotation: TButton
               Left = 92
@@ -787,7 +787,7 @@ object fmController: TfmController
               Width = 75
               Caption = 'Delete'
               OnClick = bDeleteAnnotationClick
-              TabOrder = 5
+              TabOrder = 1
             end
             object cbAnnotationDMOnly: TCheckBox
               Left = 176
@@ -795,7 +795,7 @@ object fmController: TfmController
               Top = 36
               Width = 67
               Caption = 'DM Only'
-              TabOrder = 6
+              TabOrder = 5
             end
           end
           object bEntryOK: TButton
@@ -806,7 +806,7 @@ object fmController: TfmController
             Anchors = [akLeft, akBottom]
             Caption = 'Ok'
             OnClick = bEntryOKClick
-            TabOrder = 6
+            TabOrder = 0
           end
           object bEntryCancel: TButton
             Left = 96
@@ -816,7 +816,7 @@ object fmController: TfmController
             Anchors = [akLeft, akBottom]
             Caption = 'Cancel'
             OnClick = bEntryCancelClick
-            TabOrder = 7
+            TabOrder = 1
           end
         end
         object tsEntryListEditor: TTabSheet
@@ -829,7 +829,7 @@ object fmController: TfmController
             Top = 8
             Width = 320
             ItemHeight = 0
-            TabOrder = 0
+            TabOrder = 5
           end
           object bAddEntry: TButton
             Left = 336
@@ -838,7 +838,7 @@ object fmController: TfmController
             Width = 75
             Caption = 'Add'
             OnClick = bAddEntryClick
-            TabOrder = 1
+            TabOrder = 0
           end
           object bDeleteEntry: TButton
             Left = 336
@@ -873,7 +873,7 @@ object fmController: TfmController
             Top = 8
             Width = 120
             OnKeyPress = eEntryNameKeyPress
-            TabOrder = 5
+            TabOrder = 1
             TextHint = 'New Entry'
           end
         end

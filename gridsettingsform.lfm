@@ -49,7 +49,7 @@ object fmGridSettings: TfmGridSettings
     Top = 144
     Width = 120
     ParentColor = False
-    TabOrder = 4
+    TabOrder = 7
     OnClick = pGridColorClick
   end
   object bOk: TButton
@@ -59,7 +59,7 @@ object fmGridSettings: TfmGridSettings
     Width = 75
     Caption = 'OK'
     ModalResult = 1
-    TabOrder = 2
+    TabOrder = 0
   end
   object bCancel: TButton
     Left = 225
@@ -68,7 +68,7 @@ object fmGridSettings: TfmGridSettings
     Width = 75
     Caption = 'Cancel'
     ModalResult = 2
-    TabOrder = 3
+    TabOrder = 1
   end
   object fseGridSizeY: TFloatSpinEditEx
     Left = 97
@@ -76,7 +76,7 @@ object fmGridSettings: TfmGridSettings
     Top = 60
     Width = 120
     MaxLength = 0
-    TabOrder = 1
+    TabOrder = 4
     OnChange = fseGridSizeXChange
     MaxValue = 1000
     MinValue = 1
@@ -89,7 +89,7 @@ object fmGridSettings: TfmGridSettings
     Top = 32
     Width = 120
     MaxLength = 0
-    TabOrder = 0
+    TabOrder = 3
     OnChange = fseGridSizeXChange
     MaxValue = 1000
     MinValue = 1
@@ -149,7 +149,7 @@ object fmGridSettings: TfmGridSettings
     )
     OnChange = fseGridSizeXChange
     Style = csDropDownList
-    TabOrder = 7
+    TabOrder = 2
     Text = 'Rectangle'
   end
   object tbGridAlpha: TTrackBar

@@ -70,6 +70,7 @@ type
     eRange4: TEdit;
     eWidth5: TEdit;
     fseAngleRange: TFloatSpinEdit;
+    fseCenterAngleDir: TFloatSpinEdit;
     fseCenterRotation: TFloatSpinEdit;
     fseCenterSize: TFloatSpinEdit;
     fseCenterAlpha: TFloatSpinEdit;
@@ -90,6 +91,7 @@ type
     fseRotation2: TFloatSpinEdit;
     fseRotation3: TFloatSpinEdit;
     fseRotationRange: TFloatSpinEdit;
+    lCenterAngleDir: TLabel;
     lCenterRotation: TLabel;
     lCenterSize: TLabel;
     lCenterAlpha: TLabel;
@@ -308,6 +310,7 @@ begin
     fseCenterAngle.Value := TParticleEmitterToken(token).CentralAngle;
     fseAngleRange.Value := TParticleEmitterToken(token).AngleRange;
     cbAngleDistribution.ItemIndex := Ord(TParticleEmitterToken(token).AngleDistribution);
+    fseCenterAngleDir.Value := TParticleEmitterToken(token).CentralAngleDir;
 
     fseCenterSpeed.Value := TParticleEmitterToken(token).CentralSpeed;
     fseSpeedRange.Value := TParticleEmitterToken(token).SpeedRange;
@@ -445,6 +448,7 @@ begin
       TParticleEmitterToken(LinkedToken).CentralAngle := fseCenterAngle.Value;
       TParticleEmitterToken(LinkedToken).AngleRange := fseAngleRange.Value;
       TParticleEmitterToken(LinkedToken).AngleDistribution := TRandomDistribution(cbAngleDistribution.ItemIndex);
+      TParticleEmitterToken(LinkedToken).CentralAngleDir := fseCenterAngleDir.Value;
 
       TParticleEmitterToken(LinkedToken).CentralSpeed := fseCenterSpeed.Value;
       TParticleEmitterToken(LinkedToken).SpeedRange := fseSpeedRange.Value;
@@ -651,6 +655,7 @@ begin
   lCenterAngle.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterAngleCenter');
   lAngleRange.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterAngleRange');
   lAngleDistribution.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterAngleDistribution');
+  lCenterAngleDir.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterAngleDir');
 
   tsSpeed.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterSpeedTab');
   lCenterSpeed.Caption := GetString(LangStrings.LanguageID, 'TokenSettingsEmitterSpeedCenter');

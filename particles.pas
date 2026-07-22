@@ -63,16 +63,7 @@ type
     FData: array of TParticleData;
 
     // Future extensions:
-    // Transparency + delta
     // Color modulation H/S/L + delta
-    // Animation...
-
-    // Particle value initialization ranges
-    // These belong into the spawner
-    {FPosXMin, FPosXMax, FPosYMin, FPosYMax: Double;
-    FRotMin, FRotMax: Double;
-    FDPosXMin, FDPosXMax, FDPosYMin, FDPosYMax: Double;
-    FDRotMin, FDRotMax: Double;}
 
     FTTLMin, FTTLMax: Integer;
 

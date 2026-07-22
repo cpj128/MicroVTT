@@ -286,7 +286,8 @@ type
     FParticlesPerSecond: Double;
     FParticleQueue: Double;
 
-    FCentralAngle, FAngleRange: Double;
+    FCentralAngle, FAngleRange, FCentralAngleDir: Double;
+    FAngleTowardsCenter: Boolean;
     FCentralSpeed, FSpeedRange: Double;
     FCentralRotation, FRotationRange: Single;
     FCentralRotationDir, FRotationDirRange: Single;
@@ -327,6 +328,8 @@ type
     property CentralAngle: Double read FCentralAngle write FCentralAngle;
     property AngleRange: Double read FAngleRange write FAngleRange;
     property AngleDistribution: TRandomDistribution read FAngleDistribution write FAngleDistribution;
+
+    property CentralAngleDir: Double read FCentralAngleDir write FCentralAngleDir;
 
     property CentralSpeed: Double read FCentralSpeed write FCentralSpeed;
     property SpeedRange: Double read FSpeedRange write FSpeedRange;
@@ -971,6 +974,8 @@ begin
   begin
     Result := TParticleEmitterToken.Create(saveFile.ReadInteger(SAVESECTIONTOKENS, 'XPos' + IntToStr(idx), 0),
                                            saveFile.ReadInteger(SAVESECTIONTOKENS, 'YPos' + IntToStr(idx), 0));
+    Result.Width  := saveFile.ReadInteger(SAVESECTIONTOKENS, 'Width' + IntToStr(idx), 20);
+    Result.Height := saveFile.ReadInteger(SAVESECTIONTOKENS, 'Height' + IntToStr(idx), 20);
     TParticleEmitterToken(Result).ParticleManager := ParticleManager;
     TParticleEmitterToken(Result).ParticleName := saveFile.ReadString(SAVESECTIONTOKENS, 'ParticleName' + IntToStr(idx), '');
     TParticleEmitterToken(Result).Active := saveFile.ReadBool(SAVESECTIONTOKENS, 'Active' + IntToStr(idx), true);
@@ -1718,6 +1723,7 @@ begin
 
   FCentralAngle      := 0;
   FAngleRange        := 5;
+  FAngleTowardsCenter:= False;
   FCentralSpeed      := 50;
   FSpeedRange        := 0;
   FAngleDistribution := rdUniform;
@@ -1858,9 +1864,12 @@ begin
   begin
     FParticleQueue := FParticleQueue + FParticlesPerSecond * DeltaT;
     while FParticleQueue > 1 do
-    begin
-
-      Ang := FCentralAngle + FRNG.RandomDist(FAngleDistribution) * FAngleRange;
+    begin      
+      pnt := GetNextPoint;
+      if FAngleTowardsCenter and (FShape <> esPoint) then
+        Ang := RadToDeg(ArcTan2(pnt.y - (YPos {+ Width div 2}), pnt.x - (XPos {+ Height div 2})))
+      else
+        Ang := FCentralAngle + FRNG.RandomDist(FAngleDistribution) * FAngleRange;
       speed := FCentralSpeed + FRNG.RandomDist(FSpeedDistribution) * FSpeedRange;
       rot := FCentralRotation + FRNG.RandomDist(FRotationDistribution) * FRotationRange;
       dRot := FCentralRotationDir + FRNG.RandomDist(FRotationDirDistribution) * FRotationDirRange;
@@ -1868,10 +1877,10 @@ begin
       dSize := FCentralSizeChange + FRNG.RandomDist(FSizeChangeDistribution) * FSizeChangeRange;
       alpha := FCentralAlpha + FRNG.RandomDist(FAlphaDistribution) * FAlphaRange;
       dAlpha := FCentralAlphaChange + FRNG.RandomDist(FAlphaChangeDistribution) * FAlphaChangeRange;
-      pnt := GetNextPoint;
       FParticle.AddParticle(pnt.X, pnt.y, rot, size, alpha, Sin(DegToRad(ang)) * speed, Cos(DegToRad(ang)) * speed, dRot, dSize, dAlpha, 50);
       FParticleQueue := FParticleQueue - 1;
     end;
+    FCentralAngle := FCentralAngle + FCentralAngleDir * DeltaT;
   end;
   NeedsUpdate := True;
 end;
@@ -1934,6 +1943,10 @@ begin
     list.Add(FloatToStrF(FCentralAlphaChange, ffNumber, 4, 4, fs));
     list.Add(FloatToStrF(FAlphaChangeRange, ffNumber, 4, 4, fs));
     list.Add(IntToStr(Ord(FAlphaChangeDistribution)));
+    // Central Angle Change
+    list.Add(FloatToStrF(FCentralAngleDir, ffNumber, 4, 4, fs));
+    // Emit towards Center
+    list.Add(IntToStr(Ord(FAngleTowardsCenter)));
 
     Result := list.DelimitedText;
   finally
@@ -1954,7 +1967,7 @@ begin
   list.StrictDelimiter := True;
   list.DelimitedText := str;
   try
-    if List.Count >= 24 then // change this when adding more parameters
+    if List.Count >= 26 then // change this when adding more parameters
     begin
       // angle values
       FCentralAngle            := StrToFloat(list[0], fs);
@@ -1988,6 +2001,10 @@ begin
       FCentralAlphaChange      := StrToFloat(list[21], fs);
       FAlphaChangeRange        := StrToFloat(list[22], fs);
       FAlphaChangeDistribution := TRandomDistribution(StrToInt(list[23]));
+      // central angle change
+      FCentralAngleDir         := StrToFloatDef(list[24], 0, fs);
+      // emit towards center
+      FAngleTowardsCenter      := StrToIntDef(list[25], 0) = 1;
     end;
   finally
     list.Free;
