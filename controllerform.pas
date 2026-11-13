@@ -915,7 +915,19 @@ begin
         end;
       end;
 
+    end
+    else if (ssCtrl in Shift) then
+    begin
+      ClickedToken := GetTokenAtPos(X, Y);
+      if Assigned(ClickedToken) then
+      begin
+        if ClickedToken is TParticleEmitterToken then
+          TParticleEmitterToken(ClickedToken).Active := not TParticleEmitterToken(ClickedToken).Active
+        else
+          ClickedToken.Visible := not ClickedToken.Visible;
+      end;
     end;
+
 
     FIsDragging := False;
     FIsDraggingToken := False;
@@ -1697,6 +1709,11 @@ var
   i: Integer;
   tmpItem: TListItem;
 begin
+  // Default filename: Current date, time, and map
+  sdSaveSession.Filename := FormatDateTime('yyyy-mm-dd hh-mm', Now);
+  if ContentLib.HasMap(FMapFileName) then
+    sdSaveSession.FileName := sdSaveSession.FileName + ' ' + ContentLib.GetMapTitle(FMapFileName);
+  sdSaveSession.FileName := sdSaveSession.FileName + '.xml';
   if sdSaveSession.Execute then
   begin
     try
